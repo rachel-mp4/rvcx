@@ -1,0 +1,10 @@
+github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
+github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/rachel-mp4/lrc v0.0.0-20250407195722-5a8956062fbc h1:aRLZqkE/ufO7aYiWf6V5t/w89E4RwnnhUtqVe1sekhA=
+github.com/rachel-mp4/lrc v0.0.0-20250407195722-5a8956062fbc/go.mod h1:AFAKOwRsDDo643wKe5OBGx96yPWvZQjrGLJZ0lJex+A=
+github.com/rachel-mp4/lrc/lrc v0.0.0-20250407195722-5a8956062fbc h1:0ZtrSZtrWY+yaASyUh3NYy1mRjj+AgeId8+1SQh2lZQ=
+github.com/rachel-mp4/lrc/lrc v0.0.0-20250407195722-5a8956062fbc/go.mod h1:8gurhwhM0qJhpRw4jWNPiTureKGbtql33khlbS17ULc=
+github.com/rachel-mp4/lrc/lrcd v0.0.0-20250407171837-02f3816ed7ef h1:IMj8nB5q+dnCfqcmwRohXOyJf9HboQ5v2r+eNCcUWB4=
+github.com/rachel-mp4/lrc/lrcd v0.0.0-20250407171837-02f3816ed7ef/go.mod h1:V/dWrPAee/3ULiIjm6psRNfep1dKt+AZBGs6/2NvSC4=
+github.com/rachel-mp4/lrc/lrcd v0.0.0-20250407195722-5a8956062fbc h1:UM31U8CDYbtThXUTkBK7lNO3m7USqDfvFthT1pZ13FE=
+github.com/rachel-mp4/lrc/lrcd v0.0.0-20250407195722-5a8956062fbc/go.mod h1:V/dWrPAee/3ULiIjm6psRNfep1dKt+AZBGs6/2NvSC4=
