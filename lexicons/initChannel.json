@@ -1,0 +1,17 @@
+{
+  "lexicon": 1,
+  "id": "org.xcvr.initChannel",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "parameters": {
+        "type": "params",
+        "required": ["band"],
+        "properties": {
+           "band": { "type": "string", "maxLength": 256},
+           "sign": { "type": "string", "maxLength": 64}
+        }
+      }
+    }
+  }
+}

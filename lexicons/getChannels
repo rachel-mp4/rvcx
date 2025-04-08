@@ -1,0 +1,22 @@
+{
+  "lexicon": 1,
+  "id": "org.xcvr.getChannels",
+  "defs": {
+    "main": {
+      "type": "query",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "band": { "type": "string", "maxLength": 256},
+              "sign": { "type": "string", "maxLength": 64}
+            }
+          }
+        }
+      }
+    }
+  }
+}
