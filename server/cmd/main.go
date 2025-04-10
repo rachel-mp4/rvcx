@@ -32,9 +32,11 @@ func main() {
 	createChannel(channel{Band: "general", Sign: "this is the general channel"}, false)
 	createChannel(channel{Band: "sneep", Sign: "snirp"}, true)
 	fmt.Println("hello world")
-	http.HandleFunc("GET /xrpc/getChannels", withCORS(getChannels))
-	http.HandleFunc("POST /xrpc/initChannel", initChannel)
-	http.ListenAndServe(":8080", nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /xrpc/getChannels", getChannels)
+	mux.HandleFunc("POST /xrpc/initChannel", initChannel)
+
+	http.ListenAndServe(":8080", withCORSAll(mux))
 }
 
 func initChannel(w http.ResponseWriter, r *http.Request) {
@@ -72,6 +74,7 @@ const (
 	iePort
 )
 
+//TODO: can changes to bandToServer after unlock create data race?
 func isValidInit(c channel) initError {
 	if c.Band == "" {
 		return ieNoBand
@@ -79,7 +82,9 @@ func isValidInit(c channel) initError {
 	if len(c.Band) > 31 {
 		return ieLongBand
 	}
+	channelsMu.Lock()
 	_, ok := bandToServer[c.Band]
+	channelsMu.Unlock()
 	if ok {
 		return ieCollision
 	}
@@ -166,14 +171,17 @@ func getFreePort() (int, error) {
 	return (nl.Addr().(*net.TCPAddr)).Port, nil
 }
 
-func withCORS(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+
+func withCORSAll(h http.Handler) http.Handler {
+	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+		fmt.Println("incoming request:", r.Method, r.URL.Path)
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		if r.Method == "OPTIONSONS" {
+		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
+			return
 		}
-		h(w, r)
-	}
+		h.ServeHTTP(w, r)
+	})
 }
