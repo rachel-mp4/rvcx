@@ -47,16 +47,26 @@ func initChannel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 	}
 	switch isValidInit(c) {
-	case ieOK:
-		c, err = createChannel(c, true)
 	case ieNoBand:
 		http.Error(w, "must give a band", http.StatusBadRequest)
+		return
 	case ieLongBand:
 		http.Error(w, "band must be shorter than 32 bytes", http.StatusBadRequest)
+		return
 	case ieCollision:
 		http.Error(w, "band must be unique", http.StatusBadRequest)
+		return
 	case ieLongSign:
 		http.Error(w, "sign must be shorter than 51 code points", http.StatusBadRequest)
+		return
+	case iePort:
+		http.Error(w, "should not provide a port", http.StatusBadRequest)
+		return
+	case ieOK:
+		c, err = createChannel(c, true)
+	}
+	if err != nil {
+		http.Error(w, "uh oh", http.StatusTeapot)
 	}
 	fmt.Printf("created a channel on band: %s and call sign: %s\n", c.Band, c.Sign)
 	encoder := json.NewEncoder(w)
@@ -74,7 +84,7 @@ const (
 	iePort
 )
 
-//TODO: can changes to bandToServer after unlock create data race?
+// TODO: can changes to bandToServer after unlock create data race?
 func isValidInit(c channel) initError {
 	if c.Band == "" {
 		return ieNoBand
@@ -114,7 +124,6 @@ func createChannel(c channel, withDelete bool) (channel, error) {
 	c.Port = port
 
 	options := []lrcd.Option{lrcd.WithWSPort(c.Port),
-		lrcd.WithWSPath(c.Band),
 		lrcd.WithWelcome(c.Sign),
 		lrcd.WithLogging(os.Stdout, true),
 	}
@@ -171,9 +180,8 @@ func getFreePort() (int, error) {
 	return (nl.Addr().(*net.TCPAddr)).Port, nil
 }
 
-
 func withCORSAll(h http.Handler) http.Handler {
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("incoming request:", r.Method, r.URL.Path)
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
