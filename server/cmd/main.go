@@ -29,7 +29,7 @@ type channel struct {
 func main() {
 	bandToServer = make(map[string]*lrcd.Server)
 	channels = make([]channel, 0)
-	createChannel(channel{Band: "general", Sign: "this is the general channel"}, false)
+	createChannel(channel{Band: "general", Sign: "Please Keep Memes Out Of #general"}, false)
 	createChannel(channel{Band: "sneep", Sign: "snirp"}, true)
 	fmt.Println("hello world")
 	mux := http.NewServeMux()
