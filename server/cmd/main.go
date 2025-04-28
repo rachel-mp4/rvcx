@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"slices"
@@ -23,20 +22,31 @@ var (
 type channel struct {
 	Band string `json:"band"`
 	Sign string `json:"sign"`
-	Port int    `json:"port"`
 }
 
 func main() {
 	bandToServer = make(map[string]*lrcd.Server)
 	channels = make([]channel, 0)
-	createChannel(channel{Band: "general", Sign: "Please Keep Memes Out Of #general"}, false)
-	createChannel(channel{Band: "sneep", Sign: "snirp"}, true)
+	createChannel(channel{Band: "general", Sign: "hi"}, false)
+	createChannel(channel{Band: "sneep", Sign: "snirp"}, false)
 	fmt.Println("hello world")
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{band}/ws", acceptWebsocket)
 	mux.HandleFunc("GET /xrpc/getChannels", getChannels)
 	mux.HandleFunc("POST /xrpc/initChannel", initChannel)
 
 	http.ListenAndServe(":8080", withCORSAll(mux))
+}
+
+func acceptWebsocket(w http.ResponseWriter, r *http.Request) {
+	band := r.PathValue("band")
+	server, ok := bandToServer[band]
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	h := server.WSHandler()
+	h(w, r)
 }
 
 func initChannel(w http.ResponseWriter, r *http.Request) {
@@ -59,11 +69,8 @@ func initChannel(w http.ResponseWriter, r *http.Request) {
 	case ieLongSign:
 		http.Error(w, "sign must be shorter than 51 code points", http.StatusBadRequest)
 		return
-	case iePort:
-		http.Error(w, "should not provide a port", http.StatusBadRequest)
-		return
 	case ieOK:
-		c, err = createChannel(c, true)
+		c, err = createChannel(c, false)
 	}
 	if err != nil {
 		http.Error(w, "uh oh", http.StatusTeapot)
@@ -81,7 +88,6 @@ const (
 	ieLongBand
 	ieCollision
 	ieLongSign
-	iePort
 )
 
 // TODO: can changes to bandToServer after unlock create data race?
@@ -101,9 +107,6 @@ func isValidInit(c channel) initError {
 	if utf8.RuneCountInString(c.Sign) > 50 {
 		return ieLongSign
 	}
-	if c.Port != 0 {
-		return iePort
-	}
 	return ieOK
 }
 
@@ -116,14 +119,7 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 }
 
 func createChannel(c channel, withDelete bool) (channel, error) {
-	port, err := getFreePort()
-	if err != nil {
-		fmt.Println(err.Error())
-		return channel{}, err
-	}
-	c.Port = port
-
-	options := []lrcd.Option{lrcd.WithWSPort(c.Port),
+	options := []lrcd.Option{
 		lrcd.WithWelcome(c.Sign),
 		lrcd.WithLogging(os.Stdout, true),
 	}
@@ -169,15 +165,6 @@ func createChannel(c channel, withDelete bool) (channel, error) {
 		}()
 	}
 	return c, nil
-}
-
-func getFreePort() (int, error) {
-	nl, err := net.Listen("tcp", ":0")
-	if err != nil {
-		return -1, err
-	}
-	defer nl.Close()
-	return (nl.Addr().(*net.TCPAddr)).Port, nil
 }
 
 func withCORSAll(h http.Handler) http.Handler {
