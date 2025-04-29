@@ -1,0 +1,41 @@
+{
+	"lexicon": 1,
+	"id": "org.xcvr.actor.profile",
+	"defs": {
+		"main": {
+			"type": "record",
+			"key": "literal:self",
+			"record": {
+				"type": "object",
+				"properties": {
+					"displayName": {
+						"type": "string",
+						"maxGraphemes": 64,
+						"maxLength": 640
+					},
+					"defaultNick": {
+						"type": "string",
+						"maxLength": 16,
+						"default": "wanderer"
+					},
+					"status": {
+						"type": "string",
+						"maxGraphemes": 64,
+						"maxLength": 640
+					},
+					"avatar": {
+						"type": "blob",
+						"description": "Small image to be displayed next to posts from account. AKA, 'profile picture'",
+            			"accept": ["image/png", "image/jpeg"],
+            			"maxSize": 1000000
+					}, 
+					"color": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 16777215
+					},
+				}
+			},
+		}
+	}
+}

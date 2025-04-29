@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "org.xcvr.feed.getChannels",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Retrieve a reverse-chronological list of channels.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["channels"],
+          "properties": {
+            "channels": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "org.xcvr.feed.defs#channelView"
+              }
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

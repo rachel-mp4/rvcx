@@ -1,0 +1,39 @@
+{
+	"lexicon": 1,
+	"id": "org.xcvr.channel.defs",
+	"defs": {
+		"profileView": {
+			"type": "object",
+			"required": ["did", "handle"],
+			"properties": {
+				"did": { 
+					"type": "string", 
+					"format": "did"
+				},
+				"handle": { 
+					"type": "string", 
+					"format": "handle"
+				},
+				"displayName": {
+					"type": "string",
+					"maxGraphemes": 64,
+					"maxLength": 640
+				},
+				"status": {
+					"type": "string",
+					"maxGraphemes": 64,
+					"maxLength": 640
+				},
+				"color": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 16777215
+				},
+				"avatar": {
+					"type": "string",
+					"format": "uri"
+				}
+			}
+		}
+	}
+}

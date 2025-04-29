@@ -1,0 +1,34 @@
+{
+	"lexicon": 1,
+	"id": "org.xcvr.feed.defs",
+	"defs": {
+		"channelView": {
+			"type": "object",
+			"required": ["uri", "creator", "title", "connectedCount"],
+			"properties": {
+				"uri": { 
+					"type": "string", 
+					"format": "at-uri" 
+				},
+				"creator": {
+					"type": "ref", 
+					"ref": "org.xcvr.actor.defs#profileView" 
+				},
+				"title": {
+					"type": "string",
+					"maxGraphemes": 64,
+					"maxLength": 640
+				},
+				"topic": {
+					"type": "string",
+					"maxGraphemes": 256,
+					"maxLength": 2560
+				}, 
+				"connectedCount": {
+					"type": "integer",
+					"minimum": 0
+				}
+			}
+		}
+	}
+}

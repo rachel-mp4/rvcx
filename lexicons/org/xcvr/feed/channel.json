@@ -1,0 +1,30 @@
+{
+	"lexicon": 1,
+	"id": "org.xcvr.feed.channel",
+	"defs": {
+		"main": {
+			"type": "record",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["title", "createdAt"],
+				"properties": {
+					"title": {
+						"type": "string",
+						"maxGraphemes": 64,
+						"maxLength": 640
+					},
+					"topic": {
+						"type": "string",
+						"maxGraphemes": 256,
+						"maxLength": 2560
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		}
+	}
+}
