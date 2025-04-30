@@ -1,0 +1,30 @@
+{
+	"lexicon": 1,
+	"id": "org.xcvr.lrc.signet",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "Written to the appview's repo, bearing witness that a given lrc message from a did took place",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["channelURI","lrcID", "author"],
+				"properties": {
+					"channelURI": {
+						"type": "string",
+						"format": "at-uri"
+					},
+					"lrcID": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 4294967295
+					},
+					"author": {
+						"type": "string",
+						"format": "did"
+					}
+				}
+			}
+		}
+	}
+}

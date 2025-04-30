@@ -1,0 +1,33 @@
+{
+	"lexicon": 1,
+	"id": "org.xcvr.lrc.message",
+	"defs": {
+		"main": {
+			"type": "record",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["signetURI", "body"],
+				"properties": {
+					"signetURI": {
+						"type": "string",
+						"format": "at-uri"
+					},
+					"body": {
+						"type": "string",
+					}, 
+					"nick": {
+						"type": "string",
+						"maxLength": 16,
+						"default": "wanderer"
+					},
+					"color": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 16777215
+					}
+				}
+			}
+		}
+	}
+}
