@@ -7,7 +7,7 @@
 			"key": "tid",
 			"record": {
 				"type": "object",
-				"required": ["title", "createdAt"],
+				"required": ["title", "createdAt", "host"],
 				"properties": {
 					"title": {
 						"type": "string",
@@ -22,6 +22,9 @@
 					"createdAt": {
 						"type": "string",
 						"format": "datetime"
+					},
+					"host": {
+						"type": "string"
 					}
 				}
 			}

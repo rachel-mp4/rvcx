@@ -1,0 +1,10 @@
+CREATE TABLE channels (
+	uri TEXT PRIMARY KEY,
+	cid TEXT NOT NULL,
+	did TEXT NOT NULL,
+	host TEXT NOT NULL,
+	title TEXT NOT NULL,
+	topic TEXT,
+	created_at TIMESTAMPTZ NOT NULL,
+	indexed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

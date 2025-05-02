@@ -4,11 +4,14 @@
 	"defs": {
 		"channelView": {
 			"type": "object",
-			"required": ["uri", "creator", "title", "connectedCount"],
+			"required": ["uri", "host", "creator", "title", "connectedCount"],
 			"properties": {
 				"uri": { 
 					"type": "string", 
 					"format": "at-uri" 
+				},
+				"host": {
+					"type": "string"
 				},
 				"creator": {
 					"type": "ref", 

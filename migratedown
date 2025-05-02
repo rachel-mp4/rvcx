@@ -1,0 +1,2 @@
+#!/bin/bash
+migrate -path migrations -database "postgres://xcvr:secret@localhost:15432/xcvrdb?sslmode=disable" down

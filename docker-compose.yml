@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: xcvr
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: xcvrdb
+    ports:
+      - "15432:5432"
+    volumes:
+      - dbdata:/var/lib/posgresql/data
+
+volumes:
+  dbdata:
