@@ -1,2 +1,4 @@
 #!/bin/bash
-migrate -path migrations -database "postgres://xcvr:secret@localhost:15432/xcvrdb?sslmode=disable" up
+source .env
+
+migrate -path migrations -database "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable" up

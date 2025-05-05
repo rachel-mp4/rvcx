@@ -3,11 +3,11 @@ services:
     image: postgres:15
     restart: unless-stopped
     environment:
-      POSTGRES_USER: xcvr
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: xcvrdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "15432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - dbdata:/var/lib/posgresql/data
 

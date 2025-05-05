@@ -1,2 +1,4 @@
 #!/bin/bash
-docker exec -it xcvr-backend-db-1 psql -U xcvr -d xcvrdb
+source .env
+
+docker exec -it xcvr-backend-db-1 psql -U $POSTGRES_USER -d $POSTGRES_DB
