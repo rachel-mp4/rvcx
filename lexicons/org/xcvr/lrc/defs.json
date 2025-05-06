@@ -4,7 +4,7 @@
 	"defs": {
 		"messageView": {
 			"type": "object",
-			"required": ["uri", "author", "body"],
+			"required": ["uri", "author", "body", "startedAt", "postedAt"],
 			"properties": {
 				"uri": { 
 					"type": "string", 
@@ -25,6 +25,14 @@
 					"type": "integer",
 					"minimum": 0,
 					"maximum": 16777215
+				},
+				"startedAt": {
+					"type": "string",
+					"format": "datetime"
+				},
+				"postedAt": {
+					"type": "string",
+					"format": "datetime"
 				}
 			}
 		}

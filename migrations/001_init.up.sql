@@ -35,6 +35,7 @@ CREATE TABLE signets (
 	FOREIGN KEY (channel_uri) REFERENCES channels(uri) ON DELETE CASCADE,
 	message_id INTEGER CHECK (message_id BETWEEN 0 AND 4294967295),
 	cid TEXT NOT NULL,
+	started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	indexed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -49,6 +50,7 @@ CREATE TABLE messages (
 	nick TEXT NOT NULL DEFAULT 'wanderer',
 	color INTEGER CHECK (color BETWEEN 0 AND 16777215),
 	cid TEXT NOT NULL,
+	posted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	indexed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
