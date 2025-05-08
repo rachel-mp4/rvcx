@@ -3,7 +3,7 @@ VALUES
 ('did:example:alice', 'Alice Example', 'alice', 'Chilling', 'bafybeib6...', 'image/png', 16711680, 'at://did:example:alice/app.bsky.actor.profile/self', 'cid1'),
 ('did:example:bob', 'Bob Example', 'bobby', 'Working hard', 'bafybeib7...', 'image/jpeg', 65280, 'at://did:example:bob/app.bsky.actor.profile/self', 'cid2');
 
-INSERT INTO did_handle (handle, did)
+INSERT INTO did_handles (handle, did)
 VALUES
 ('alice.com', 'did:example:alice'),
 ('bob.net', 'did:example:bob');

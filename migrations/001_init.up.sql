@@ -11,7 +11,7 @@ CREATE TABLE profiles (
 	indexed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE did_handle (
+CREATE TABLE did_handles (
 	handle TEXT PRIMARY KEY,
 	did TEXT NOT NULL UNIQUE,
 	indexed_at TIMESTAMPTZ NOT NULL DEFAULT now()

@@ -4,7 +4,7 @@
 	"defs": {
 		"channelView": {
 			"type": "object",
-			"required": ["uri", "host", "creator", "title", "connectedCount"],
+			"required": ["uri", "host", "creator", "title"],
 			"properties": {
 				"uri": { 
 					"type": "string", 
@@ -30,6 +30,10 @@
 				"connectedCount": {
 					"type": "integer",
 					"minimum": 0
+				},
+				"createdAt": {
+					"type": "string",
+					"format": "datetime"
 				}
 			}
 		}
