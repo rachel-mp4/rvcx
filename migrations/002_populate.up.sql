@@ -10,15 +10,15 @@ VALUES
 
 INSERT INTO channels (uri, cid, did, host, title, topic, created_at)
 VALUES
-('at://did:example:alice/org.xcvr.channel/general', 'chanCid1', 'did:example:alice', 'alice.com', 'General Chat', 'All-purpose chatter', now() - interval '2 days'),
-('at://did:example:bob/org.xcvr.channel/help', 'chanCid2', 'did:example:bob', 'bob.net', 'Help Channel', 'Support and help', now() - interval '1 day');
+('at://did:example:alice/org.xcvr.feed.channel/general', 'chanCid1', 'did:example:alice', 'xcvr.org', 'General Chat', 'All-purpose chatter', now() - interval '2 days'),
+('at://did:example:bob/org.xcvr.feed.channel/help', 'chanCid2', 'did:example:bob', 'xcvr.org', 'Help Channel', 'Support and help', now() - interval '1 day');
 
 INSERT INTO signets (uri, did, channel_uri, message_id, cid)
 VALUES
-('at://did:example:alice/org.xcvr.lrc/signet1', 'did:example:alice', 'at://did:example:alice/org.xcvr.channel/general', 1, 'signetCid1'),
-('at://did:example:bob/org.xcvr.lrc/signet2', 'did:example:bob', 'at://did:example:bob/org.xcvr.channel/help', 2, 'signetCid2');
+('at://did:example:xcvr/org.xcvr.lrc.signet/signet1', 'did:example:alice', 'at://did:example:alice/org.xcvr.feed.channel/general', 1, 'signetCid1'),
+('at://did:example:xcvr/org.xcvr.lrc.signet/signet2', 'did:example:bob', 'at://did:example:bob/org.xcvr.feed.channel/help', 2, 'signetCid2');
 
 INSERT INTO messages (uri, did, signet_uri, body, nick, color, cid)
 VALUES
-('at://did:example:alice/org.xcvr.lrc.message/msg1', 'did:example:alice', 'at://did:example:alice/org.xcvr.lrc/signet1', 'Hey, welcome to the general chat!', 'alice', 16711680, 'msgCid1'),
-('at://did:example:bob/org.xcvr.lrc.message/msg2', 'did:example:bob', 'at://did:example:bob/org.xcvr.lrc/signet2', 'How can I help you today?', 'bobby', 65280, 'msgCid2');
+('at://did:example:alice/org.xcvr.lrc.message/msg1', 'did:example:alice', 'at://did:example:xcvr/org.xcvr.lrc.signet/signet1', 'Hey, welcome to the general chat!', 'alice', 16711680, 'msgCid1'),
+('at://did:example:bob/org.xcvr.lrc.message/msg2', 'did:example:bob', 'at://did:example:xcvr/org.xcvr.lrc.signet/signet2', 'How can I help you today?', 'bobby', 65280, 'msgCid2');

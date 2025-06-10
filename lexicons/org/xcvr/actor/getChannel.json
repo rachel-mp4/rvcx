@@ -1,0 +1,41 @@
+{
+	"lexicon": 1,
+	"id": "org.xcvr.actor.resolveChannel",
+	"defs": {
+		"main": {
+			"type": "query",
+			"description": "get the url of a channel",
+			"parameters": {
+				"type": "params"
+				"union": [
+					{
+						"type": "object",
+						"required": ["handle", "rkey"],
+						"properties": {
+							"handle": {"type": "string"},
+							"rkey": {"type": "string"}
+						}
+					},
+					{
+						"type": "object",
+						"required": ["did", "rkey"],
+						"properties": {
+							"did": {"type": "string"},
+							"rkey": {"type": "string"}
+						}
+					}
+				]
+			},
+			"output": {
+				"encoding": "application/json",
+				"schema": {
+					"type": "object",
+					"required": ["url"],
+					"properties": {
+						"url": {"type": "string"}
+					}
+				}
+			}
+		}
+	}
+}

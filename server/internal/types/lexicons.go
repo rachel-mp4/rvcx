@@ -41,6 +41,16 @@ type Channel struct {
 	IndexedAt time.Time
 }
 
+type ResolveChannelRequest struct {
+	DID    *string `json:"did,omitempty"`
+	Handle *string `json:"handle,omitempty"`
+	Rkey   string  `json:"rkey"`
+}
+
+type ResolveChannelResponse struct {
+	URL string `json:"url"`
+}
+
 type GetChannelRequest struct {
 	Limit  *int    `json:"limit,omitempty"`
 	Cursor *string `json:"cursor,omitempty"`

@@ -3,10 +3,12 @@ package main
 import (
 	"net/http"
 	"os"
-	"context"
+	"time"
 	"xcvr-backend/internal/db"
 	"xcvr-backend/internal/handler"
 	"xcvr-backend/internal/log"
+	"xcvr-backend/internal/oauth"
+	"xcvr-backend/internal/model"
 
 	"github.com/joho/godotenv"
 )
@@ -20,13 +22,25 @@ func main() {
 		logger.Println("i think you should make a .env file in the xcvr-backend directory !\n\nExample contents:\n-------------------------------------------------------------------\nPOSTGRES_USER=xcvr\nPOSTGRES_PASSWORD=secret\nPOSTGRES_DB=xcvrdb\nPOSTGRES_PORT=15432\n-------------------------------------------------------------------\n\nGood luck !\n\n")
 		panic(gdeerr)	
 	}
-	conn, err := db.Init()
-	defer conn.Close(context.Background())
+	store, err := db.Init()
+	defer store.Close()
 	if err != nil {
 		logger.Println("failed to init db")
 		panic(err)
 	}
-	h := handler.New(conn, logger)
+	model.Init(store)
+	httpclient := &http.Client{
+		Timeout: 5 * time.Second,
+		Transport: &http.Transport{
+			IdleConnTimeout: 90 * time.Second,
+		},
+	}
+	oauthclient, err := oauth.NewService(httpclient)
+	if err != nil {
+		logger.Println(err.Error())
+		panic(err)
+	}
+	h := handler.New(store, logger, oauthclient)
 	http.ListenAndServe(":8080", h.WithCORSAll())
 	
 }

@@ -1,89 +1,57 @@
 package model
 
 import (
+	"context"
 	"errors"
 	"net/http"
-	"sync"
-	"time"
-	"xcvr-backend/internal/types"
+	"os"
+	"xcvr-backend/internal/db"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/rachel-mp4/lrc/lrcd/pkg/lrcd"
+	"github.com/rachel-mp4/lrcd"
 )
 
 var (
-	channelsMu  sync.Mutex
-	channels    = make([]channel, 0)
+	validServer map[string]bool
 	uriToServer = make(map[string]*lrcd.Server)
-	didToPView = make(map[string]*pView)
 )
 
-type pView struct {
-	profileView types.ProfileView
-	lastUpdated time.Time
-}
-
-type channel struct {
-	Title     string `json:"title"`
-	Topic     string `json:"topic"`
-	CreatedAt string `json:"createdAt"`
-	Host      string `json:"host"`
-}
-
-func GetWSHandlerFrom(uri string, db *pgx.Conn) (http.HandlerFunc, error) {
-	server, ok := uriToServer[uri]
-	if !ok {
-		return nil, errors.New("channel does not exist")
+func GetWSHandlerFrom(uri string) (http.HandlerFunc, error) {
+	server, err := getServer(uri)
+	if err != nil {
+		return nil, err
 	}
 	return server.WSHandler(), nil
 }
 
-// func CreateChannel(title string, topic string) error {
-// 	c := channel{Title: title, Topic: topic}
-// 	_, err := createChannel(c)
-// 	return err
-// }
+func Init(store *db.Store) {
+	uris, err := store.GetChannelURIs(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	validServer = make(map[string]bool, len(uris))
+	myid := os.Getenv("MY_IDENTITY")
+	for _, uri := range uris {
+		validServer[uri.URI] = (uri.Host == myid)
+	}
+}
 
-// func createChannel(c channel) (channel, error) {
-// 	options := []lrcd.Option{
-// 		lrcd.WithWelcome(c.Title),
-// 		lrcd.WithLogging(os.Stdout, true),
-// 	}
-// 	ec := make(chan struct{})
+func getServer(uri string) (*lrcd.Server, error) {
+	if !validServer[uri] {
+		return nil, errors.New("Not a valid server")
+	}
+	server, ok := uriToServer[uri]
+	if !ok {
+		var err error
+		server, err = lrcd.NewServer(lrcd.WithLogging(os.Stdout,true))
+		if err != nil {
+			return nil, errors.New("Error creating server")
+		}
+		uriToServer[uri] = server
+		err = server.Start()
+		if err != nil {
+			return nil, errors.New("Error starting server")
+		}
+	}
+	return server, nil
+}
 
-// 	server, err := lrcd.NewServer(options...)
-
-// 	if err != nil {
-// 		fmt.Println(err.Error())
-// 		return channel{}, err
-// 	}
-// 	fmt.Println("created", c.Title)
-
-// 	err = server.Start()
-// 	if err != nil {
-// 		fmt.Println(err.Error())
-// 		return channel{}, err
-// 	}
-// 	fmt.Println("started", c.Title)
-
-// 	channelsMu.Lock()
-// 	defer channelsMu.Unlock()
-// 	uriToServer[c.Band] = server
-// 	channels = append(channels, c)
-// 	if withDelete {
-// 		go func() {
-// 			<-ec
-// 			channelsMu.Lock()
-// 			idx := slices.Index(channels, c)
-// 			channels = slices.Delete(channels, idx, idx+1)
-// 			err = bandToServer[c.Band].Stop()
-// 			if err != nil {
-// 				fmt.Println(err.Error())
-// 			}
-// 			delete(bandToServer, c.Band)
-// 			channelsMu.Unlock()
-// 			fmt.Println("deleted", c.Band)
-// 		}()
-// 	}
-// 	return c, nil
-// }

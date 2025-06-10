@@ -3,33 +3,69 @@ package db
 import (
 	"context"
 	"fmt"
-	"xcvr-backend/internal/types"
 	"os"
+	"xcvr-backend/internal/types"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Init() (*pgx.Conn, error) {
+type Store struct {
+	pool *pgxpool.Pool
+}
+
+func Init() (*Store, error) {
+	pool, err := initialize()
+	return &Store{pool}, err
+}
+
+func (s *Store) Close() {
+	s.pool.Close()
+}
+
+func initialize() (*pgxpool.Pool, error) {
 	dbuser := os.Getenv("POSTGRES_USER")
 	dbpass := os.Getenv("POSTGRES_PASSWORD")
 	dbhost := "localhost"
 	dbport := os.Getenv("POSTGRES_PORT")
 	dbdb := os.Getenv("POSTGRES_DB")
 	dburl := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbuser, dbpass, dbhost, dbport, dbdb)
-	conn, err := pgx.Connect(context.Background(), dburl)
+	pool, err := pgxpool.New(context.Background(), dburl)
 	if err != nil {
-		return conn, err
+		return nil, err
 	}
-	pingErr := conn.Ping(context.Background())
+	pingErr := pool.Ping(context.Background())
 	if pingErr != nil {
-		return conn, pingErr
+		return nil, pingErr
 	}
 	fmt.Println("connected!")
-	return conn, nil
+	return pool, nil
 }
 
-func GetMessages(channelURI string, limit int,ctx context.Context, db *pgx.Conn) ([]types.Message, error) {
-	rows, err := db.Query(ctx, `
+
+func (s *Store) ResolveHandle(handle string, ctx context.Context) (string, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT
+			h.did
+		FROM did_handles h
+		WHERE h.handle = $1
+		LIMIT 1
+	`, handle)
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+	var did string
+	for rows.Next() {
+		err := rows.Scan(&did)
+		if err != nil {
+			return "", err
+		}
+	}
+	return did, nil
+}
+
+func (s *Store) GetMessages(channelURI string, limit int, ctx context.Context) ([]types.Message, error) {
+	rows, err := s.pool.Query(ctx, `
 		SELECT 
 			m.uri, m.did, m.signet_uri, m.body, m.nick, m.color, m.posted_at
 		FROM messages m 
@@ -41,7 +77,8 @@ func GetMessages(channelURI string, limit int,ctx context.Context, db *pgx.Conn)
 	if err != nil {
 		return nil, err
 	}
-	var msgs = make([]types.Message, 0, limit) 
+	defer rows.Close()
+	var msgs = make([]types.Message, 0, limit)
 	for rows.Next() {
 		var msg types.Message
 		err := rows.Scan(&msg.URI, &msg.DID, &msg.SignetURI, &msg.Body, &msg.Nick, &msg.PostedAt)
@@ -53,31 +90,59 @@ func GetMessages(channelURI string, limit int,ctx context.Context, db *pgx.Conn)
 	return msgs, nil
 }
 
-func GetChannels(limit int, ctx context.Context, db *pgx.Conn) ([]types.Channel, error) {
-	rows, err := db.Query(ctx, `
-		SELECT 
-			c.uri, c.did, c.host, c.title, c.topic, c.created_at
-		FROM channels c
-		ORDER BY s.message_id DESC
-		LIMIT $2
-		`, limit)
+func (s *Store) GetChannelURI(handle string, title string, ctx context.Context) (string, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT
+			channels.uri
+		FROM channels
+		LEFT JOIN did_handles ON channels.did = did_handles.did
+		WHERE channels.title = $1 AND did_handles.handle = $2
+		ORDER BY channels.created_at DESC
+		LIMIT 1
+		`, title, handle)
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+	var uri string
+	rows.Next()
+	err = rows.Scan(&uri)
+	if err != nil {
+		return "", err
+	}
+	return uri, nil
+}
+
+type URIHost struct {
+	URI  string
+	Host string
+}
+
+func (s *Store) GetChannelURIs(ctx context.Context) ([]URIHost, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT
+			channels.uri,
+			channels.host
+		FROM channels
+		`)
 	if err != nil {
 		return nil, err
 	}
-	var chans = make([]types.Channel, 0, limit) 
+	defer rows.Close()
+	var urihosts = make([]URIHost, 0, 100)
 	for rows.Next() {
-		var c types.Channel
-		err := rows.Scan(&c.URI, &c.DID, &c.Host, &c.Title, &c.Topic, &c.CreatedAt)
+		var urihost URIHost
+		err := rows.Scan(&urihost.URI, &urihost.Host)
 		if err != nil {
 			return nil, err
 		}
-		chans = append(chans, c)
+		urihosts = append(urihosts, urihost)
 	}
-	return chans, nil
+	return urihosts, nil
 }
 
-func GetChannelViews(limit int, ctx context.Context, db *pgx.Conn) ([]types.ChannelView, error) {
-	rows, err := db.Query(ctx, `
+func (s *Store) GetChannelViews(limit int, ctx context.Context) ([]types.ChannelView, error) {
+	rows, err := s.pool.Query(ctx, `
 		SELECT 
 			channels.uri,  
 			channels.host, 
@@ -99,7 +164,8 @@ func GetChannelViews(limit int, ctx context.Context, db *pgx.Conn) ([]types.Chan
 	if err != nil {
 		return nil, err
 	}
-	var chans = make([]types.ChannelView, 0, limit) 
+	defer rows.Close()
+	var chans = make([]types.ChannelView, 0, limit)
 	for rows.Next() {
 		var c types.ChannelView
 		var p types.ProfileView
@@ -112,4 +178,5 @@ func GetChannelViews(limit int, ctx context.Context, db *pgx.Conn) ([]types.Chan
 	}
 	return chans, nil
 }
+
 
