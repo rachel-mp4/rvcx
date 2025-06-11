@@ -8,4 +8,5 @@ DROP TABLE channels;
 DROP TABLE did_handles;
 DROP TABLE profiles;
 
-DROP TABLE 
+DROP TABLE oauthrequests;
+DROP TABLE oauthsessions;

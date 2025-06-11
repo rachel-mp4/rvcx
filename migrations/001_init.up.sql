@@ -68,7 +68,6 @@ CREATE TABLE oauthrequests (
 	UNIQUE(did, state)
 );
 
-
 CREATE TABLE oauthsessions (
 	id SERIAL PRIMARY KEY,
 	authserver_iss TEXT,
@@ -81,6 +80,6 @@ CREATE TABLE oauthsessions (
 	dpop_pds_nonce TEXT,	
 	access_token TEXT,
 	refresh_token TEXT,
-	expiration TIMESTAMPTZ
+	expiration TIMESTAMPTZ,
 	UNIQUE(did, state)
 );
