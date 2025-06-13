@@ -125,7 +125,7 @@ func (s *Service) makeOAuthRequest(ctx context.Context, did string, handle strin
 	}
 	meta, err = s.oauth.FetchAuthServerMetadata(ctx, service)
 	if err != nil {
-		err = errors.New("error fetching auth server metadata:" + err.Error())
+		err = errors.New("error fetching "+ service + " metadata:" + err.Error())
 		return
 	}
 	resp, err = s.oauth.SendParAuthRequest(ctx, authserver, meta, handle, "atproto transition:generic", dpop)
