@@ -62,7 +62,7 @@ func (s *Store) GetOauthRequest(state string, ctx context.Context) (*oauth.OAuth
 			r.authserver_iss,
 			r.did,
 			r.pds_url,
-			r.pkce_verifier
+			r.pkce_verifier,
 			r.dpop_auth_server_nonce,
 			r.dpop_private_jwk
 		FROM oauthrequests r
@@ -91,7 +91,7 @@ func (s *Store) GetOauthSesson(did string, ctx context.Context) (*oauth.Session,
 			r.authserver_iss,
 			r.did,
 			r.pds_url,
-			r.pkce_verifier
+			r.pkce_verifier,
 			r.dpop_auth_server_nonce,
 			r.dpop_private_jwk,
 			r.dpop_pds_nonce,
