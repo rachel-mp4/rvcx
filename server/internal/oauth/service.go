@@ -130,7 +130,7 @@ func (s *Service) makeOAuthRequest(ctx context.Context, did string, handle strin
 	}
 	resp, err = s.oauth.SendParAuthRequest(ctx, authserver, meta, handle, "atproto transition:generic", dpop)
 	if err != nil {
-		err = errors.New("error sending PAR auth request:" + err.Error())
+		err = errors.New("error sending PAR auth request to " + authserver + " h: "+ handle + err.Error())
 	}
 	return
 }
