@@ -25,7 +25,7 @@ type ClientMetadata struct {
 	DPOPBoundAccessTokens       bool     `json:"dpop_bound_access_tokens"`
 	JWKSUri                     string   `json:"jwks_uri"`
 	Scope                       string   `json:"scope"`
-	TokenEndpointAuthMethod     string   `json:"token_endpoing_auth_method"`
+	TokenEndpointAuthMethod     string   `json:"token_endpoint_auth_method"`
 	TokenEndpointAuthSigningAlg string   `json:"token_endpoint_auth_signing_alg"`
 }
 
