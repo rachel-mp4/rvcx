@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	mi             = os.Getenv("MY_IDENTITY")
-	mp             = os.Getenv("MY_METADATA_PATH")
+	mi             string
+	mp             string
 	clientMetadata *ClientMetadata
 )
 
@@ -31,6 +31,8 @@ type ClientMetadata struct {
 
 func GetClientMetadata() ClientMetadata {
 	if clientMetadata == nil {
+		mi = os.Getenv("MY_IDENTITY")
+		mp = os.Getenv("MY_METADATA_PATH")
 		clientMetadata = &ClientMetadata{
 			ClientId:                    getClientId(),
 			ClientName:                  getClientName(),
