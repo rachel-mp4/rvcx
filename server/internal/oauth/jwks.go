@@ -14,7 +14,7 @@ func GetJWKS() (*jwk.Key, error) {
 	if key != nil {
 		return key, nil
 	}
-	b, err := os.ReadFile("../jwk.json")
+	b, err := os.ReadFile("../jwks.json")
 	if err != nil {
 		return nil, err
 	}
