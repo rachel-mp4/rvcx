@@ -79,19 +79,19 @@ type Session struct {
 func (s *Service) StartAuthFlow(ctx context.Context, handle string) (*OAuthRequest, *OauthFlowResult, error) {
 	did, err := s.resolveHandle(handle)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.New("error resolving handle:" + err.Error())
 	}
 	dpopPrivKey, err := helpers.GenerateKey(nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.New("error generating key:" + err.Error())
 	}
 	dpopPrivKeyJson, err := json.Marshal(dpopPrivKey)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.New("error marshaling privkey to json:" + err.Error())
 	}
 	parResp, metadata, service, err := s.makeOAuthRequest(ctx, did, handle, dpopPrivKey)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.New("error making oauth request:" + err.Error())
 	}
 	oauthReq := OAuthRequest{
 		AuthserverIss:       metadata.Issuer,
@@ -115,17 +115,23 @@ func (s *Service) StartAuthFlow(ctx context.Context, handle string) (*OAuthReque
 func (s *Service) makeOAuthRequest(ctx context.Context, did string, handle string, dpop jwk.Key) (resp *atoauth.SendParAuthResponse, meta *atoauth.OauthAuthorizationMetadata, service string, err error) {
 	service, err = s.resolveService(ctx, did)
 	if err != nil {
-		return
+		err = errors.New("error resolving service:" + err.Error())
+		return 
 	}
 	authserver, err := s.oauth.ResolvePdsAuthServer(ctx, service)
 	if err != nil {
+		err = errors.New("error resolving pds service:" + err.Error())
 		return
 	}
 	meta, err = s.oauth.FetchAuthServerMetadata(ctx, service)
 	if err != nil {
+		err = errors.New("error fetching auth server metadata:" + err.Error())
 		return
 	}
 	resp, err = s.oauth.SendParAuthRequest(ctx, authserver, meta, handle, "atproto transition:generic", dpop)
+	if err != nil {
+		err = errors.New("error sending PAR auth request:" + err.Error())
+	}
 	return
 }
 
@@ -147,11 +153,11 @@ func (s *Service) resolveService(ctx context.Context, did string) (string, error
 	}
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		return "", err
+		return "", errors.New("error crafting request:" + err.Error())
 	}
 	resp, err := s.http.Do(req)
 	if err != nil {
-		return "", err
+		return "", errors.New("error evaluating request:" + err.Error())
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
@@ -159,12 +165,12 @@ func (s *Service) resolveService(ctx context.Context, did string) (string, error
 	}
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return "", errors.New("error reading response body:" + err.Error())
 	}
 	var identity Identity
 	err = json.Unmarshal(b, &identity)
 	if err != nil {
-		return "", err
+		return "", errors.New("error unmarshaling to identity:" + err.Error())
 	}
 	var service *string
 	for _, svc := range identity.Service {
@@ -185,7 +191,7 @@ func (s *Service) resolveHandle(handle string) (string, error) {
 	reqUrl := "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?" + params.Encode()
 	resp, err := s.http.Get(reqUrl)
 	if err != nil {
-		return "", err
+		return "", errors.New("error making handle -> did resolution request:" + err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -194,12 +200,12 @@ func (s *Service) resolveHandle(handle string) (string, error) {
 	}
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return "", errors.New("error reading handle -> did resolution response" + err.Error())
 	}
 	var resDid did
 	err = json.Unmarshal(b, &resDid)
 	if err != nil {
-		return "", err
+		return "", errors.New("error unmarshaling resDid:" + err.Error())
 	}
 	return resDid.Did, nil
 }
@@ -207,11 +213,11 @@ func (s *Service) resolveHandle(handle string) (string, error) {
 func (s *Service) OauthCallback(ctx context.Context, oauthRequest *OAuthRequest, params CallbackParams) (*Session, error) {
 	jwk, err := helpers.ParseJWKFromBytes([]byte(oauthRequest.DpopPrivKey))
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error parsing jwk:" + err.Error())
 	}
 	initialTokenResp, err := s.oauth.InitialTokenRequest(ctx, params.Code, params.Iss, oauthRequest.PkceVerifier, oauthRequest.DpopAuthServerNonce, jwk)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error in initialTokenRequest:"+ err.Error())
 	}
 	if initialTokenResp.Scope != "atproto transition:generic" {
 		return nil, errors.New(fmt.Sprintf("incorrect scope: %s", initialTokenResp.Scope))
