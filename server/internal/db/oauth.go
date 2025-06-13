@@ -53,7 +53,7 @@ func (s *Store) StoreOAuthSession(session *oauth.Session, ctx context.Context) e
 		session.AccessToken,
 		session.RefreshToken,
 		session.Expiration)
-	return err
+	return errors.New("error storing oauth session" + err.Error())
 }
 
 func (s *Store) GetOauthRequest(state string, ctx context.Context) (*oauth.OAuthRequest, error) {
@@ -70,7 +70,7 @@ func (s *Store) GetOauthRequest(state string, ctx context.Context) (*oauth.OAuth
 		LIMIT 1
 		`, state)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error querying for oauth request:" + err.Error())
 	}
 	defer rows.Close()
 	var req oauth.OAuthRequest
@@ -80,7 +80,7 @@ func (s *Store) GetOauthRequest(state string, ctx context.Context) (*oauth.OAuth
 	}
 	err = rows.Scan(&req.AuthserverIss, &req.Did, &req.PdsUrl, &req.PkceVerifier, &req.DpopAuthServerNonce, &req.DpopPrivKey)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error scanning rows while getting oauth request:" + err.Error())
 	}
 	return &req, nil
 }
@@ -103,7 +103,7 @@ func (s *Store) GetOauthSesson(did string, ctx context.Context) (*oauth.Session,
 		LIMIT 1
 		`, did)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error querying oauthsessions:" + err.Error())
 	}
 	defer rows.Close()
 	var session oauth.Session
@@ -123,7 +123,7 @@ func (s *Store) GetOauthSesson(did string, ctx context.Context) (*oauth.Session,
 		&session.RefreshToken,
 		&session.Expiration)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error scanning oauthsession row: " + err.Error())
 	}
 	return &session, nil
 }
@@ -132,5 +132,5 @@ func (s *Store) DeleteOauthRequest(state string, ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `
 		DELETE FROM oauthrequests r WHERE r.state = $1
 		`, state)
-	return err
+	return errors.New("error deleting oauth request:" + err.Error())
 }
