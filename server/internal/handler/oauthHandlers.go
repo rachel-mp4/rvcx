@@ -13,11 +13,16 @@ import (
 )
 
 func (h *Handler) serveJWKS(w http.ResponseWriter, r *http.Request) {
-	pubKey, err := oauth.GetJWKS()
+	key, err := oauth.GetJWKS()
 	if err != nil {
 		h.serverError(w, err)
 	}
-	ro := helpers.CreateJwksResponseObject(*pubKey)
+	pubKey, err := (*key).PublicKey()
+	if err != nil {
+		h.serverError(w, err)
+	}
+	ro := helpers.CreateJwksResponseObject(pubKey)
+	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(ro)
 }
@@ -140,6 +145,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not authenticated", http.StatusUnauthorized)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
 		"did": did,
 	})

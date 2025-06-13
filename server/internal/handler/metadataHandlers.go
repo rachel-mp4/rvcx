@@ -9,6 +9,7 @@ import (
 
 func (h *Handler) serveClientMetadata(w http.ResponseWriter, r *http.Request) {
 	metadata := oauth.GetClientMetadata()
+	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(metadata)
 }

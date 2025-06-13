@@ -24,6 +24,7 @@ func (h *Handler) getChannels(w http.ResponseWriter, r *http.Request) {
 		h.logger.Printf("db.GetChannels failed! %s", err.Error())
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(cvs)
 }
@@ -50,6 +51,7 @@ func (h *Handler) resolveChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	url := fmt.Sprintf("/lrc/%s/%s/ws", did, rkey)
 	rchanres := types.ResolveChannelResponse{URL: url}
+	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(rchanres)
 }
