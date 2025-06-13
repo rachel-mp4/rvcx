@@ -130,7 +130,7 @@ func (s *Store) GetOauthSesson(did string, ctx context.Context) (*oauth.Session,
 
 func (s *Store) DeleteOauthRequest(state string, ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `
-		DELETE FROM oauthrequests WHERE r.state = $1
+		DELETE FROM oauthrequests r WHERE r.state = $1
 		`, state)
 	return err
 }
