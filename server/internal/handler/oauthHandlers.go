@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"xcvr-backend/internal/oauth"
+	"github.com/haileyok/atproto-oauth-golang/helpers"
 )
 
 func (h *Handler) serveJWKS(w http.ResponseWriter, r *http.Request) {
@@ -16,8 +17,9 @@ func (h *Handler) serveJWKS(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.serverError(w, err)
 	}
+	ro := helpers.CreateJwksResponseObject(*pubKey)
 	encoder := json.NewEncoder(w)
-	encoder.Encode(pubKey)
+	encoder.Encode(ro)
 }
 
 func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
