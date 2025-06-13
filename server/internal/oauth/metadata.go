@@ -55,6 +55,8 @@ func GetClientMetadata() ClientMetadata {
 }
 
 func getClientId() string {
+	mi = os.Getenv("MY_IDENTITY")
+	mp = os.Getenv("MY_METADATA_PATH")
 	return fmt.Sprintf("https://%s%s", mi, mp)
 }
 
