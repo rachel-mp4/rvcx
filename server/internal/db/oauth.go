@@ -132,5 +132,8 @@ func (s *Store) DeleteOauthRequest(state string, ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `
 		DELETE FROM oauthrequests r WHERE r.state = $1
 		`, state)
-	return errors.New("error deleting oauth request:" + err.Error())
+	if err != nil {
+		return errors.New("error deleting oauth request:" + err.Error())
+	}
+	return nil
 }
