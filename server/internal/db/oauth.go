@@ -53,7 +53,10 @@ func (s *Store) StoreOAuthSession(session *oauth.Session, ctx context.Context) e
 		session.AccessToken,
 		session.RefreshToken,
 		session.Expiration)
-	return errors.New("error storing oauth session" + err.Error())
+	if err != nil {
+		return errors.New("error storing oauth session" + err.Error())
+	}
+	return nil
 }
 
 func (s *Store) GetOauthRequest(state string, ctx context.Context) (*oauth.OAuthRequest, error) {
