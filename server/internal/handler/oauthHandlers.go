@@ -1,14 +1,17 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/sessions"
 	"net/http"
 	"net/url"
 	"os"
+	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/oauth"
+
+	"github.com/gorilla/sessions"
 	"github.com/haileyok/atproto-oauth-golang/helpers"
 )
 
@@ -62,6 +65,12 @@ func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	go func() {
+		err := h.db.StoreDidHandle(res.DID, handle, context.Background())
+		if err != nil {
+			h.logger.Deprintln("failed to store did handle: " + err.Error())
+		}
+	}()
 	http.Redirect(w, r, u.String(), http.StatusFound)
 }
 
@@ -145,8 +154,23 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not authenticated", http.StatusUnauthorized)
 		return
 	}
+	handle, err := h.db.ResolveDid(did, r.Context())
+	if err != nil {
+		handle, err = atputils.GetHandleFromDid(r.Context(), did)
+		if err != nil {
+			h.serverError(w, errors.New("error resolving handle"))
+			return
+		}
+		err = h.db.StoreDidHandle(did, handle, r.Context())
+		if err != nil {
+			h.logger.Deprintln("error storing did_handle in getSession: " + err.Error())
+		}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"did": did,
+		"id": map[string]any{
+			"did":    did,
+			"handle": handle,
+		},
 	})
 }

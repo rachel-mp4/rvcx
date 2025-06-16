@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"xcvr-backend/internal/types"
@@ -41,7 +42,6 @@ func initialize() (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-
 func (s *Store) ResolveHandle(handle string, ctx context.Context) (string, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT
@@ -62,6 +62,27 @@ func (s *Store) ResolveHandle(handle string, ctx context.Context) (string, error
 		}
 	}
 	return did, nil
+}
+
+func (s *Store) ResolveDid(did string, ctx context.Context) (string, error) {
+	row := s.pool.QueryRow(ctx, `SELECT h.handle FROM did_handles h WHERE h.did = $1`, did)
+	var handle string
+	err := row.Scan(&handle)
+	if err != nil {
+		return "", errors.New("error scanning row for handle: " + err.Error())
+	}
+	return handle, nil
+}
+
+func (s *Store) StoreDidHandle(did string, handle string, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `INSERT INTO did_handles (
+			handle
+			did
+		) VALUES ($1, $2)`, handle, did)
+	if err != nil {
+		return errors.New("error storing did/handle: " + err.Error())
+	}
+	return nil
 }
 
 func (s *Store) GetMessages(channelURI string, limit int, ctx context.Context) ([]types.Message, error) {
@@ -178,5 +199,3 @@ func (s *Store) GetChannelViews(limit int, ctx context.Context) ([]types.Channel
 	}
 	return chans, nil
 }
-
-

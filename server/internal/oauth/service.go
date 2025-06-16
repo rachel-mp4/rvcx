@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 	"net/http"
-	"net/url"
 	"strings"
+	"time"
+	"xcvr-backend/internal/atputils"
 
 	atoauth "github.com/haileyok/atproto-oauth-golang"
 	"github.com/haileyok/atproto-oauth-golang/helpers"
@@ -70,14 +70,14 @@ type CallbackParams struct {
 
 type Session struct {
 	OAuthRequest
-	DpopPdsNonce        string
-	AccessToken         string
-	RefreshToken        string
-	Expiration          time.Time
+	DpopPdsNonce string
+	AccessToken  string
+	RefreshToken string
+	Expiration   time.Time
 }
 
 func (s *Service) StartAuthFlow(ctx context.Context, handle string) (*OAuthRequest, *OauthFlowResult, error) {
-	did, err := s.resolveHandle(handle)
+	did, err := atputils.GetDidFromHandle(ctx, handle)
 	if err != nil {
 		return nil, nil, errors.New("error resolving handle:" + err.Error())
 	}
@@ -116,7 +116,7 @@ func (s *Service) makeOAuthRequest(ctx context.Context, did string, handle strin
 	service, err = s.resolveService(ctx, did)
 	if err != nil {
 		err = errors.New("error resolving service:" + err.Error())
-		return 
+		return
 	}
 	authserver, err := s.oauth.ResolvePdsAuthServer(ctx, service)
 	if err != nil {
@@ -125,12 +125,12 @@ func (s *Service) makeOAuthRequest(ctx context.Context, did string, handle strin
 	}
 	meta, err = s.oauth.FetchAuthServerMetadata(ctx, authserver)
 	if err != nil {
-		err = errors.New("error fetching "+ authserver + " metadata:" + err.Error())
+		err = errors.New("error fetching " + authserver + " metadata:" + err.Error())
 		return
 	}
 	resp, err = s.oauth.SendParAuthRequest(ctx, authserver, meta, handle, "atproto transition:generic", dpop)
 	if err != nil {
-		err = errors.New("error sending PAR auth request to " + authserver + " h: "+ handle + err.Error())
+		err = errors.New("error sending PAR auth request to " + authserver + " h: " + handle + err.Error())
 	}
 	return
 }
@@ -184,31 +184,31 @@ func (s *Service) resolveService(ctx context.Context, did string) (string, error
 	return *service, nil
 }
 
-func (s *Service) resolveHandle(handle string) (string, error) {
-	params := url.Values{
-		"handle": []string{handle},
-	}
-	reqUrl := "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?" + params.Encode()
-	resp, err := s.http.Get(reqUrl)
-	if err != nil {
-		return "", errors.New("error making handle -> did resolution request:" + err.Error())
-	}
-	defer resp.Body.Close()
-
-	type did struct {
-		Did string
-	}
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.New("error reading handle -> did resolution response" + err.Error())
-	}
-	var resDid did
-	err = json.Unmarshal(b, &resDid)
-	if err != nil {
-		return "", errors.New("error unmarshaling resDid:" + err.Error())
-	}
-	return resDid.Did, nil
-}
+// func (s *Service) resolveHandle(handle string) (string, error) {
+// 	params := url.Values{
+// 		"handle": []string{handle},
+// 	}
+// 	reqUrl := "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?" + params.Encode()
+// 	resp, err := s.http.Get(reqUrl)
+// 	if err != nil {
+// 		return "", errors.New("error making handle -> did resolution request:" + err.Error())
+// 	}
+// 	defer resp.Body.Close()
+//
+// 	type did struct {
+// 		Did string
+// 	}
+// 	b, err := io.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return "", errors.New("error reading handle -> did resolution response" + err.Error())
+// 	}
+// 	var resDid did
+// 	err = json.Unmarshal(b, &resDid)
+// 	if err != nil {
+// 		return "", errors.New("error unmarshaling resDid:" + err.Error())
+// 	}
+// 	return resDid.Did, nil
+// }
 
 func (s *Service) OauthCallback(ctx context.Context, oauthRequest *OAuthRequest, params CallbackParams) (*Session, error) {
 	jwk, err := helpers.ParseJWKFromBytes([]byte(oauthRequest.DpopPrivKey))
@@ -217,16 +217,16 @@ func (s *Service) OauthCallback(ctx context.Context, oauthRequest *OAuthRequest,
 	}
 	initialTokenResp, err := s.oauth.InitialTokenRequest(ctx, params.Code, params.Iss, oauthRequest.PkceVerifier, oauthRequest.DpopAuthServerNonce, jwk)
 	if err != nil {
-		return nil, errors.New("error in initialTokenRequest:"+ err.Error())
+		return nil, errors.New("error in initialTokenRequest:" + err.Error())
 	}
 	if initialTokenResp.Scope != "atproto transition:generic" {
 		return nil, errors.New(fmt.Sprintf("incorrect scope: %s", initialTokenResp.Scope))
 	}
 	oauthSession := Session{
-		OAuthRequest: *oauthRequest, 
-		AccessToken: initialTokenResp.AccessToken, 
-		RefreshToken: initialTokenResp.RefreshToken, 
-		Expiration: time.Now().Add(time.Duration(int(time.Second) * int(initialTokenResp.ExpiresIn))),
+		OAuthRequest: *oauthRequest,
+		AccessToken:  initialTokenResp.AccessToken,
+		RefreshToken: initialTokenResp.RefreshToken,
+		Expiration:   time.Now().Add(time.Duration(int(time.Second) * int(initialTokenResp.ExpiresIn))),
 	}
 	return &oauthSession, nil
 }
