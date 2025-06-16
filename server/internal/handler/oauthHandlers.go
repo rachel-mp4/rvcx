@@ -67,6 +67,7 @@ func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	go func() {
 		err := h.db.StoreDidHandle(res.DID, handle, context.Background())
+		h.logger.Deprintln("storing....")
 		if err != nil {
 			h.logger.Deprintln("failed to store did handle: " + err.Error())
 		}
@@ -161,6 +162,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 			h.serverError(w, errors.New("error resolving handle"))
 			return
 		}
+		h.logger.Deprintln("storing...")
 		err = h.db.StoreDidHandle(did, handle, r.Context())
 		if err != nil {
 			h.logger.Deprintln("error storing did_handle in getSession: " + err.Error())
@@ -168,9 +170,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"id": map[string]any{
-			"did":    did,
-			"handle": handle,
-		},
+		"did":    did,
+		"handle": handle,
 	})
 }

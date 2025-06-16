@@ -3,7 +3,7 @@ module xcvr-backend
 go 1.24.2
 
 require (
-	github.com/bluesky-social/indigo v0.0.0-20250612212613-34115b57349c
+	github.com/bluesky-social/indigo v0.0.0-20250616202859-d4516ea1d6cf
 	github.com/gorilla/sessions v1.4.0
 	github.com/haileyok/atproto-oauth-golang v0.0.2
 	github.com/jackc/pgx/v5 v5.7.4
@@ -22,7 +22,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
@@ -89,3 +89,5 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 	lukechampine.com/blake3 v1.2.1 // indirect
 )
+
+replace github.com/haileyok/atproto-oauth-golang => github.com/rachel-mp4/atproto-oauth-golang v0.0.0-20250616212213-a55a5f62b82d

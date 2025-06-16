@@ -36,7 +36,7 @@ func New(db *db.Store, logger log.Logger, oauth *oauth.Service) *Handler {
 	// oauth handlers
 	mux.HandleFunc(oauthJWKSPath(), h.serveJWKS)
 	mux.HandleFunc("POST /oauth/login", h.oauthLogin)
-	mux.HandleFunc("GET /oauth", h.getSession)
+	mux.HandleFunc("GET /oauth/whoami", h.getSession)
 	mux.HandleFunc(oauthCallbackPath(), h.oauthCallback)
 	return h
 }

@@ -76,7 +76,7 @@ func (s *Store) ResolveDid(did string, ctx context.Context) (string, error) {
 
 func (s *Store) StoreDidHandle(did string, handle string, ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `INSERT INTO did_handles (
-			handle
+			handle,
 			did
 		) VALUES ($1, $2)`, handle, did)
 	if err != nil {
