@@ -15,7 +15,7 @@ CREATE TABLE profile_records (
 	FOREIGN KEY (profile_did) REFERENCES profiles(did) ON DELETE CASCADE, 
 	cid TEXT NOT NULL,
 	indexed_at TIMESTAMPTZ NOT NULL DEFAULT now()
-)
+);
 
 CREATE TABLE did_handles (
 	handle TEXT PRIMARY KEY,
