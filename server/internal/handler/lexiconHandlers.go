@@ -76,6 +76,7 @@ func (h *Handler) getProfileView(w http.ResponseWriter, r *http.Request) {
 		h.notFound(w, errors.New(fmt.Sprintf("couldn't find profile for handle %s / did %s: %s", handle, did, err.Error())))
 		return
 	}
+	profile.Handle = handle
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(profile)
