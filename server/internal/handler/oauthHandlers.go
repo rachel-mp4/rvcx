@@ -71,6 +71,11 @@ func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			h.logger.Deprintln("failed to store did handle: " + err.Error())
 		}
+		err = h.db.InitializeProfile(res.DID, handle, context.Background())
+		h.logger.Deprintln("initializing....")
+		if err != nil {
+			h.logger.Deprintln("failed to initialize profile: " + err.Error())
+		}
 	}()
 	http.Redirect(w, r, u.String(), http.StatusFound)
 }
@@ -174,3 +179,5 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 		"handle": handle,
 	})
 }
+
+

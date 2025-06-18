@@ -32,7 +32,11 @@
 				"avatar": {
 					"type": "string",
 					"format": "uri"
-				}
+				},
+				"defaultNick": {
+					"type": "string",
+					"maxLength": 16
+				} 
 			}
 		}
 	}

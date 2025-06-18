@@ -6,10 +6,16 @@ CREATE TABLE profiles (
 	avatar_cid TEXT,
 	avatar_mime TEXT,
 	color INTEGER CHECK (color BETWEEN 0 and 16777215),
-	uri TEXT NOT NULL UNIQUE,
-	cid TEXT NOT NULL,
 	indexed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE profile_records (
+	uri TEXT NOT NULL PRIMARY KEY,
+	profile_did TEXT NOT NULL,
+	FOREIGN KEY (profile_did) REFERENCES profiles(did) ON DELETE CASCADE, 
+	cid TEXT NOT NULL,
+	indexed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+)
 
 CREATE TABLE did_handles (
 	handle TEXT PRIMARY KEY,

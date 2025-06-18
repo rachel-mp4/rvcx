@@ -25,10 +25,13 @@ func New(db *db.Store, logger log.Logger, oauth *oauth.Service) *Handler {
 	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.acceptWebsocket)
 	mux.HandleFunc("POST /lrc/channel", postChannel)
 	mux.HandleFunc("POST /lrc/message", postMessage)
+	// beep handlers
+	mux.HandleFunc("POST /xcvr/profile", h.postProfile)
 	// lexicon handlers
 	mux.HandleFunc("GET /xrpc/org.xcvr.feed.getChannels", h.getChannels)
 	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getMessages", h.getMessages)
 	mux.HandleFunc("GET /xrpc/org.xcvr.actor.resolveChannel", h.resolveChannel)
+	mux.HandleFunc("GET /xrpc/org.xcvr.actor.getProfileView", h.getProfileView)
 	// backend metadata handlers
 	mux.HandleFunc(clientMetadataPath(), h.serveClientMetadata)
 	mux.HandleFunc(clientTOSPath(), h.serveTOS)
@@ -43,12 +46,20 @@ func New(db *db.Store, logger log.Logger, oauth *oauth.Service) *Handler {
 
 func (h *Handler) badRequest(w http.ResponseWriter, err error) {
 	h.logger.Deprintln(err.Error())
+	w.Header().Set("Content-Type", "application/json")
 	http.Error(w, `{"error":"Invalid JSON","message":"Could not parse request body"}`, http.StatusBadRequest)
 }
 
 func (h *Handler) serverError(w http.ResponseWriter, err error) {
 	h.logger.Println(err.Error())
+	w.Header().Set("Content-Type", "application/json")
 	http.Error(w, `{"error":"Internal server error","message":"Something went wrong"}`, http.StatusInternalServerError)
+}
+
+func (h *Handler) notFound(w http.ResponseWriter, err error) {
+	h.logger.Println(err.Error())
+	w.Header().Set("Content-Type", "application/json")
+	http.Error(w, `{"error":"Not Found","message":"I couldn't find your resource"}`, http.StatusNotFound)
 }
 
 func (h *Handler) WithCORSAll() http.Handler {

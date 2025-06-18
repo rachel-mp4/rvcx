@@ -6,6 +6,7 @@ DROP TABLE signets;
 
 DROP TABLE channels;
 DROP TABLE did_handles;
+DROP TABLE profile_records;
 DROP TABLE profiles;
 
 DROP TABLE oauthrequests;

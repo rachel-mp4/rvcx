@@ -1,12 +1,12 @@
 package handler
 
 import (
-	"xcvr-backend/internal/types"
-	"errors"
-	"strconv"
-	"fmt"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
+	"xcvr-backend/internal/types"
 )
 
 func (h *Handler) getChannels(w http.ResponseWriter, r *http.Request) {
@@ -54,4 +54,29 @@ func (h *Handler) resolveChannel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(rchanres)
+}
+
+func (h *Handler) getProfileView(w http.ResponseWriter, r *http.Request) {
+	handle := r.URL.Query().Get("handle")
+	did := r.URL.Query().Get("did")
+	if did == "" {
+		if handle == "" {
+			h.badRequest(w, errors.New("did not provide did or handle"))
+			return
+		}
+		var err error
+		did, err = h.db.ResolveHandle(handle, r.Context())
+		if err != nil {
+			h.serverError(w, err)
+			return
+		}
+	}
+	profile, err := h.db.GetProfileView(did, r.Context())
+	if err != nil {
+		h.notFound(w, errors.New(fmt.Sprintf("couldn't find profile for handle %s / did %s: %s", handle, did, err.Error())))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	encoder.Encode(profile)
 }
