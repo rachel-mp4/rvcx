@@ -15,7 +15,7 @@ func (s *Store) InitializeProfile(did string, handle string, ctx context.Context
 			display_name,
 			default_nick,
 			status,
-			color,
+			color
 		) VALUES (
 		$1, $2, $3, $4, $5
 		) ON CONFLICT (did) DO NOTHING
