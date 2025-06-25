@@ -20,8 +20,8 @@
 					},
 					"status": {
 						"type": "string",
-						"maxGraphemes": 64,
-						"maxLength": 640
+						"maxGraphemes": 640,
+						"maxLength": 6400
 					},
 					"avatar": {
 						"type": "blob",

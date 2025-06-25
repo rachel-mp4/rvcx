@@ -166,7 +166,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) findDidAndHandle(w http.ResponseWriter, r *http.Request) (did, handle string, err error) {
+func (h *Handler) findDidAndHandle(w http.ResponseWriter, r *http.Request) (string, string, error) {
 	session, _ := h.sessionStore.Get(r, "oauthsession")
 	did, ok := session.Values["did"].(string)
 	if !ok || did == "" {
