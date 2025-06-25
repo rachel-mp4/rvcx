@@ -9,10 +9,9 @@ import (
 )
 
 func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
-	session, _ := h.sessionStore.Get(r, "oauthsession")
-	did, ok := session.Values["did"].(string)
-	if !ok || did == "" {
-		http.Error(w, "not authenticated", http.StatusUnauthorized)
+	did, handle, err := h.findDidAndHandle(w, r)
+	if err != nil {
+		h.handleFindDidAndHandleError(w,r, err)
 		return
 	}
 	var p types.PostProfileRequest
@@ -49,5 +48,5 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, errors.New("error updating profile: " + err.Error()))
 		return
 	}
-	h.getProfileView(w,r)
+	h.serveProfileView(did, handle, w,r)
 }

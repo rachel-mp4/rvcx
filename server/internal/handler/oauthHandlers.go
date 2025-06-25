@@ -154,24 +154,10 @@ func oauthJWKSPath() string {
 }
 
 func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
-	session, _ := h.sessionStore.Get(r, "oauthsession")
-	did, ok := session.Values["did"].(string)
-	if !ok || did == "" {
-		http.Error(w, "not authenticated", http.StatusUnauthorized)
-		return
-	}
-	handle, err := h.db.ResolveDid(did, r.Context())
+	did, handle, err := h.findDidAndHandle(w, r)
 	if err != nil {
-		handle, err = atputils.GetHandleFromDid(r.Context(), did)
-		if err != nil {
-			h.serverError(w, errors.New("error resolving handle"))
-			return
-		}
-		h.logger.Deprintln("storing...")
-		err = h.db.StoreDidHandle(did, handle, r.Context())
-		if err != nil {
-			h.logger.Deprintln("error storing did_handle in getSession: " + err.Error())
-		}
+		h.handleFindDidAndHandleError(w, r, err)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
@@ -180,4 +166,35 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *Handler) findDidAndHandle(w http.ResponseWriter, r *http.Request) (did, handle string, err error) {
+	session, _ := h.sessionStore.Get(r, "oauthsession")
+	did, ok := session.Values["did"].(string)
+	if !ok || did == "" {
+		return "", "", errors.New("not authenticated")
+	}
+	handle, err := h.db.ResolveDid(did, r.Context())
+	if err != nil {
+		handle, err = atputils.GetHandleFromDid(r.Context(), did)
+		if err != nil {
+			return "", "", errors.New("error resolving handle" + err.Error())
+		}
+		h.logger.Deprintln("storing...")
+		err = h.db.StoreDidHandle(did, handle, r.Context())
+		if err != nil {
+			h.logger.Deprintln("error storing did_handle in findDidAndHandle: " + err.Error())
+		}
+	}
+	return did, handle, nil
+}
 
+func (h *Handler) handleFindDidAndHandleError(w http.ResponseWriter, r *http.Request, err error) {
+	if err != nil {
+		if err.Error() == "not authenticated" {
+			http.Error(w, "not authenticated", http.StatusUnauthorized)
+			return
+		}
+		h.serverError(w, err)
+		return
+	}
+	h.logger.Deprintln("handling nil error?")
+}

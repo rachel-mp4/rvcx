@@ -71,6 +71,10 @@ func (h *Handler) getProfileView(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	h.serveProfileView(did, handle, w, r)
+}
+
+func (h *Handler) serveProfileView(did string, handle string, w http.ResponseWriter, r *http.Request) {
 	profile, err := h.db.GetProfileView(did, r.Context())
 	if err != nil {
 		h.notFound(w, errors.New(fmt.Sprintf("couldn't find profile for handle %s / did %s: %s", handle, did, err.Error())))
