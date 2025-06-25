@@ -44,5 +44,10 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 		pu.Color = p.Color
 		pu.UpdateColor = true
 	}	
-	h.db.UpdateProfile(pu, r.Context())
+	err = h.db.UpdateProfile(pu, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("error updating profile: " + err.Error()))
+		return
+	}
+	h.getProfileView(w,r)
 }
