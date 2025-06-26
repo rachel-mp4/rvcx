@@ -103,9 +103,9 @@ func (c *Client) UpdateXCVRProfile(profile lex.ProfileRecord, s *types.Session, 
 		Record:     &util.LexiconTypeDecoder{Val: &profile},
 	}
 	var out atproto.RepoPutRecord_Output
-	err = c.xrpccli.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, &out)
+	err = c.xrpccli.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.putRecord", nil, input, &out)
 	if err != nil {
-		return errors.New("oops! failed to create a profile: " + err.Error())
+		return errors.New("oops! failed to update a profile: " + err.Error())
 	}
 	return nil
 }
