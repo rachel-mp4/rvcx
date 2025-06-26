@@ -144,7 +144,10 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 			Status:      &status,
 			Color:       &color,
 		}
-		h.xrpc.CreateXCVRProfile(defaultprofilerecord, OauthSession, context.Background())
+		err = h.xrpc.CreateXCVRProfile(defaultprofilerecord, OauthSession, context.Background())
+		if err != nil {
+			h.logger.Println("#that happened (something went wrong when creating profile) " + err.Error())
+		}
 	}()
 
 	session.Options = &sessions.Options{
