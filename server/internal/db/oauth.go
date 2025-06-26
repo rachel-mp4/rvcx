@@ -3,10 +3,11 @@ package db
 import (
 	"context"
 	"errors"
-	"xcvr-backend/internal/oauth"
+	"fmt"
+	"xcvr-backend/internal/types"
 )
 
-func (s *Store) StoreOAuthRequest(req *oauth.OAuthRequest, ctx context.Context) error {
+func (s *Store) StoreOAuthRequest(req *types.OAuthRequest, ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO oauthrequests (
 		authserver_iss,
@@ -27,7 +28,7 @@ func (s *Store) StoreOAuthRequest(req *oauth.OAuthRequest, ctx context.Context) 
 	return err
 }
 
-func (s *Store) StoreOAuthSession(session *oauth.Session, ctx context.Context) error {
+func (s *Store) StoreOAuthSession(session *types.Session, ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO oauthsessions (
 		authserver_iss,
@@ -59,7 +60,7 @@ func (s *Store) StoreOAuthSession(session *oauth.Session, ctx context.Context) e
 	return nil
 }
 
-func (s *Store) GetOauthRequest(state string, ctx context.Context) (*oauth.OAuthRequest, error) {
+func (s *Store) GetOauthRequest(state string, ctx context.Context) (*types.OAuthRequest, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT
 			r.authserver_iss,
@@ -76,7 +77,7 @@ func (s *Store) GetOauthRequest(state string, ctx context.Context) (*oauth.OAuth
 		return nil, errors.New("error querying for oauth request:" + err.Error())
 	}
 	defer rows.Close()
-	var req oauth.OAuthRequest
+	var req types.OAuthRequest
 	ok := rows.Next()
 	if !ok {
 		return nil, errors.New("no rows")
@@ -88,7 +89,7 @@ func (s *Store) GetOauthRequest(state string, ctx context.Context) (*oauth.OAuth
 	return &req, nil
 }
 
-func (s *Store) GetOauthSesson(did string, ctx context.Context) (*oauth.Session, error) {
+func (s *Store) GetOauthSesson(did string, ctx context.Context) (*types.Session, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT
 			r.authserver_iss,
@@ -109,7 +110,7 @@ func (s *Store) GetOauthSesson(did string, ctx context.Context) (*oauth.Session,
 		return nil, errors.New("error querying oauthsessions:" + err.Error())
 	}
 	defer rows.Close()
-	var session oauth.Session
+	var session types.Session
 	ok := rows.Next()
 	if !ok {
 		return nil, errors.New("no rows")
@@ -137,6 +138,16 @@ func (s *Store) DeleteOauthRequest(state string, ctx context.Context) error {
 		`, state)
 	if err != nil {
 		return errors.New("error deleting oauth request:" + err.Error())
+	}
+	return nil
+}
+
+func (s *Store) SetDpopPdsNonce(did, dpopnonce string) error {
+	_, err := s.pool.Exec(context.Background(), `
+			UPDATE oauthsessions SET dpop_pds_nonce = $1 WHERE did = $2
+		`, dpopnonce, did)
+	if err != nil {
+		return errors.New(fmt.Sprintf("error updating dpop nonce for did %s: %s", did, err.Error()))
 	}
 	return nil
 }

@@ -1,32 +1,35 @@
 package handler
 
 import (
+	"github.com/gorilla/sessions"
 	"net/http"
 	"os"
-	"github.com/gorilla/sessions"
 	"xcvr-backend/internal/db"
 	"xcvr-backend/internal/log"
 	"xcvr-backend/internal/oauth"
 )
 
 type Handler struct {
-	db       *db.Store
+	db           *db.Store
 	sessionStore *sessions.CookieStore
-	router   *http.ServeMux
-	logger   log.Logger
-	oauth    *oauth.Service
+	router       *http.ServeMux
+	logger       *log.Logger
+	oauth        *oauth.Service
+	xrpc         *oauth.Client
 }
 
-func New(db *db.Store, logger log.Logger, oauth *oauth.Service) *Handler {
+func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service) *Handler {
 	mux := http.NewServeMux()
 	sessionStore := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-	h := &Handler{db, sessionStore, mux, logger, oauth}
+	xrpc := oauth.NewXRPCClient(db, logger)
+	h := &Handler{db, sessionStore, mux, logger, oauthserv, xrpc}
 	// lrc handlers
 	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.acceptWebsocket)
 	mux.HandleFunc("POST /lrc/channel", postChannel)
 	mux.HandleFunc("POST /lrc/message", postMessage)
 	// beep handlers
 	mux.HandleFunc("POST /xcvr/profile", h.postProfile)
+	mux.HandleFunc("POST /xcvr/beep", h.beep)
 	// lexicon handlers
 	mux.HandleFunc("GET /xrpc/org.xcvr.feed.getChannels", h.getChannels)
 	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getMessages", h.getMessages)

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 	"xcvr-backend/internal/atputils"
+	"xcvr-backend/internal/types"
 
 	atoauth "github.com/haileyok/atproto-oauth-golang"
 	"github.com/haileyok/atproto-oauth-golang/helpers"
@@ -44,39 +45,13 @@ func NewService(httpClient *http.Client) (*Service, error) {
 	}, nil
 }
 
-type OauthFlowResult struct {
-	AuthzEndpoint string
-	State         string
-	DID           string
-	RequestUri    string
-}
-
-type OAuthRequest struct {
-	ID                  uint
-	AuthserverIss       string
-	State               string
-	Did                 string
-	PdsUrl              string
-	PkceVerifier        string
-	DpopAuthServerNonce string
-	DpopPrivKey         string
-}
-
 type CallbackParams struct {
 	Iss   string
 	State string
 	Code  string
 }
 
-type Session struct {
-	OAuthRequest
-	DpopPdsNonce string
-	AccessToken  string
-	RefreshToken string
-	Expiration   time.Time
-}
-
-func (s *Service) StartAuthFlow(ctx context.Context, handle string) (*OAuthRequest, *OauthFlowResult, error) {
+func (s *Service) StartAuthFlow(ctx context.Context, handle string) (*types.OAuthRequest, *types.OauthFlowResult, error) {
 	did, err := atputils.GetDidFromHandle(ctx, handle)
 	if err != nil {
 		return nil, nil, errors.New("error resolving handle:" + err.Error())
@@ -93,7 +68,7 @@ func (s *Service) StartAuthFlow(ctx context.Context, handle string) (*OAuthReque
 	if err != nil {
 		return nil, nil, errors.New("error making oauth request:" + err.Error())
 	}
-	oauthReq := OAuthRequest{
+	oauthReq := types.OAuthRequest{
 		AuthserverIss:       metadata.Issuer,
 		State:               parResp.State,
 		Did:                 did,
@@ -102,7 +77,7 @@ func (s *Service) StartAuthFlow(ctx context.Context, handle string) (*OAuthReque
 		DpopPrivKey:         string(dpopPrivKeyJson),
 		PdsUrl:              service,
 	}
-	oauthFlowResult := OauthFlowResult{
+	oauthFlowResult := types.OauthFlowResult{
 		AuthzEndpoint: metadata.AuthorizationEndpoint,
 		State:         parResp.State,
 		DID:           did,
@@ -210,7 +185,7 @@ func (s *Service) resolveService(ctx context.Context, did string) (string, error
 // 	return resDid.Did, nil
 // }
 
-func (s *Service) OauthCallback(ctx context.Context, oauthRequest *OAuthRequest, params CallbackParams) (*Session, error) {
+func (s *Service) OauthCallback(ctx context.Context, oauthRequest *types.OAuthRequest, params CallbackParams) (*types.Session, error) {
 	jwk, err := helpers.ParseJWKFromBytes([]byte(oauthRequest.DpopPrivKey))
 	if err != nil {
 		return nil, errors.New("error parsing jwk:" + err.Error())
@@ -222,7 +197,7 @@ func (s *Service) OauthCallback(ctx context.Context, oauthRequest *OAuthRequest,
 	if initialTokenResp.Scope != "atproto transition:generic" {
 		return nil, errors.New(fmt.Sprintf("incorrect scope: %s", initialTokenResp.Scope))
 	}
-	oauthSession := Session{
+	oauthSession := types.Session{
 		OAuthRequest: *oauthRequest,
 		AccessToken:  initialTokenResp.AccessToken,
 		RefreshToken: initialTokenResp.RefreshToken,

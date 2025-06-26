@@ -154,9 +154,9 @@ func oauthJWKSPath() string {
 }
 
 func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
-	did, handle, err := h.findDidAndHandle(w, r)
+	did, handle, err := h.findDidAndHandle(r)
 	if err != nil {
-		h.handleFindDidAndHandleError(w, r, err)
+		h.handleFindDidAndHandleError(w, err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -166,7 +166,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) findDidAndHandle(w http.ResponseWriter, r *http.Request) (string, string, error) {
+func (h *Handler) findDidAndHandle(r *http.Request) (string, string, error) {
 	session, _ := h.sessionStore.Get(r, "oauthsession")
 	did, ok := session.Values["did"].(string)
 	if !ok || did == "" {
@@ -187,7 +187,7 @@ func (h *Handler) findDidAndHandle(w http.ResponseWriter, r *http.Request) (stri
 	return did, handle, nil
 }
 
-func (h *Handler) handleFindDidAndHandleError(w http.ResponseWriter, r *http.Request, err error) {
+func (h *Handler) handleFindDidAndHandleError(w http.ResponseWriter, err error) {
 	if err != nil {
 		if err.Error() == "not authenticated" {
 			http.Error(w, "not authenticated", http.StatusUnauthorized)

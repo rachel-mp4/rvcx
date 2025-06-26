@@ -11,9 +11,9 @@ import (
 )
 
 func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
-	did, handle, err := h.findDidAndHandle(w, r)
+	did, handle, err := h.findDidAndHandle(r)
 	if err != nil {
-		h.handleFindDidAndHandleError(w, r, err)
+		h.handleFindDidAndHandleError(w, err)
 		return
 	}
 	var p types.PostProfileRequest
@@ -80,5 +80,19 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, errors.New("error updating profile: "+err.Error()))
 		return
 	}
+
 	h.serveProfileView(did, handle, w, r)
+}
+
+func (h *Handler) beep(w http.ResponseWriter, r *http.Request) {
+	session, _ := h.sessionStore.Get(r, "oauthsession")
+	did, ok := session.Values["did"].(string)
+	if !ok || did == "" {
+		h.badRequest(w, errors.New("cannot beep, not authenticated"))
+	}
+	s, err := h.db.GetOauthSesson(did, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("error finding session: "+err.Error()))
+	}
+	h.xrpc.MakeBskyPost("beep_", s, r.Context())
 }

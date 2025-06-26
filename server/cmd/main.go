@@ -7,12 +7,11 @@ import (
 	"xcvr-backend/internal/db"
 	"xcvr-backend/internal/handler"
 	"xcvr-backend/internal/log"
-	"xcvr-backend/internal/oauth"
 	"xcvr-backend/internal/model"
+	"xcvr-backend/internal/oauth"
 
 	"github.com/joho/godotenv"
 )
-
 
 func main() {
 	logger := log.New(os.Stdout, true)
@@ -20,7 +19,7 @@ func main() {
 	gdeerr := godotenv.Load("../.env")
 	if gdeerr != nil {
 		logger.Println("i think you should make a .env file in the xcvr-backend directory !\n\nExample contents:\n-------------------------------------------------------------------\nPOSTGRES_USER=xcvr\nPOSTGRES_PASSWORD=secret\nPOSTGRES_DB=xcvrdb\nPOSTGRES_PORT=15432\n-------------------------------------------------------------------\n\nGood luck !\n\n")
-		panic(gdeerr)	
+		panic(gdeerr)
 	}
 	store, err := db.Init()
 	defer store.Close()
@@ -40,9 +39,9 @@ func main() {
 		logger.Println(err.Error())
 		panic(err)
 	}
-	h := handler.New(store, logger, oauthclient)
+	h := handler.New(store, &logger, oauthclient)
 	http.ListenAndServe(":8080", h.WithCORSAll())
-	
+
 }
 
 // func initChannel(w http.ResponseWriter, r *http.Request) {
@@ -105,5 +104,3 @@ func main() {
 // 	}
 // 	return ieOK
 // }
-
-
