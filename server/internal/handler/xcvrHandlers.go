@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"unicode/utf16"
 	"xcvr-backend/internal/db"
+	"xcvr-backend/internal/lex"
 	"xcvr-backend/internal/types"
 )
 
@@ -81,6 +82,24 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//TODO switch order, only update db after we know the xrpc req went through correctly!
+
+	session, _ := h.sessionStore.Get(r, "oauthsession")
+	did, ok := session.Values["did"].(string)
+	if !ok || did == "" {
+		h.badRequest(w, errors.New("cannot beep, not authenticated"))
+	}
+	s, err := h.db.GetOauthSesson(did, r.Context())
+	profilerecord := lex.ProfileRecord{
+		DisplayName: p.DisplayName,
+		DefaultNick: p.DefaultNick,
+		Status:      p.Status,
+		Color:       p.Color,
+	}
+	err = h.xrpc.UpdateXCVRProfile(profilerecord, s, r.Context())
+	if err != nil {
+		h.logger.Deprintf("error updating profilerecord: %s", err.Error())
+	}
 	h.serveProfileView(did, handle, w, r)
 }
 

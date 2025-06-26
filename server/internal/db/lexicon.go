@@ -1,11 +1,11 @@
 package db
 
 import (
-	"strings"
 	"context"
-	"fmt"
-	"xcvr-backend/internal/types"
 	"errors"
+	"fmt"
+	"strings"
+	"xcvr-backend/internal/types"
 )
 
 func (s *Store) InitializeProfile(did string, handle string, ctx context.Context) error {
@@ -19,7 +19,7 @@ func (s *Store) InitializeProfile(did string, handle string, ctx context.Context
 		) VALUES (
 		$1, $2, $3, $4, $5
 		) ON CONFLICT (did) DO NOTHING
-		`, did, handle, "wanderer", "just setting up my xcvr", 12517472)
+		`, did, handle, "wanderer", "just setting up my xcvr", 3702605)
 	if err != nil {
 		return errors.New("i'm not sure what happened: " + err.Error())
 	}
@@ -38,7 +38,7 @@ type ProfileUpdate struct {
 	UpdateAvatar bool
 	Mime         *string
 	UpdateMime   bool
-	Color        *uint32
+	Color        *uint64
 	UpdateColor  bool
 }
 
@@ -79,7 +79,7 @@ func (s *Store) UpdateProfile(to ProfileUpdate, ctx context.Context) error {
 	if idx == 2 {
 		return nil
 	}
-	sql := fmt.Sprintf("UPDATE profiles SET %s WHERE did = $1", 
+	sql := fmt.Sprintf("UPDATE profiles SET %s WHERE did = $1",
 		strings.Join(setParts, ", "))
 	_, err := s.pool.Exec(ctx, sql, args...)
 	if err != nil {
@@ -100,18 +100,13 @@ func (s *Store) GetProfileView(did string, ctx context.Context) (*types.ProfileV
 		`, did)
 	var p types.ProfileView
 	p.DID = did
-	err := row.Scan(&p.DisplayName, 
-		&p.DefaultNick, 
-		&p.Status, 
-		&p.Avatar, 
+	err := row.Scan(&p.DisplayName,
+		&p.DefaultNick,
+		&p.Status,
+		&p.Avatar,
 		&p.Color)
 	if err != nil {
 		return nil, errors.New("error scanning profile: " + err.Error())
 	}
 	return &p, nil
 }
-
-
-
-
-

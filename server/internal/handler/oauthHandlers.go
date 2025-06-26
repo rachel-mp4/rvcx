@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"xcvr-backend/internal/atputils"
+	"xcvr-backend/internal/lex"
 	"xcvr-backend/internal/oauth"
 
 	"github.com/gorilla/sessions"
@@ -127,6 +128,24 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	go func() {
+		nick := "wanderer"
+		status := "just setting up my xcvr"
+		color := uint64(3602605)
+		handle, err := h.db.ResolveDid(req.Did, context.Background())
+		if err != nil {
+			h.logger.Println("i couldn't find the handle, so i couldn't create default profile record. gootbye")
+			return
+		}
+
+		defaultprofilerecord := lex.ProfileRecord{
+			DisplayName: &handle,
+			DefaultNick: &nick,
+			Status:      &status,
+			Color:       &color,
+		}
+		h.xrpc.CreateXCVRProfile(defaultprofilerecord, OauthSession, context.Background())
+	}()
 
 	session.Options = &sessions.Options{
 		Path:     "/",

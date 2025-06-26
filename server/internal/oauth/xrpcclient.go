@@ -9,7 +9,9 @@ import (
 	"github.com/bluesky-social/indigo/lex/util"
 	"github.com/haileyok/atproto-oauth-golang"
 	"github.com/haileyok/atproto-oauth-golang/helpers"
+
 	"xcvr-backend/internal/db"
+	"xcvr-backend/internal/lex"
 	"xcvr-backend/internal/log"
 	"xcvr-backend/internal/types"
 )
@@ -64,6 +66,46 @@ func (c *Client) MakeBskyPost(text string, s *types.Session, ctx context.Context
 	err = c.xrpccli.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, &out)
 	if err != nil {
 		return errors.New("oops! failed to make post: " + err.Error())
+	}
+	return nil
+}
+
+func (c *Client) CreateXCVRProfile(profile lex.ProfileRecord, s *types.Session, ctx context.Context) error {
+	authargs, err := getOauthSessionAuthArgs(s)
+	if err != nil {
+		return errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
+	}
+	rkey := "self"
+	input := atproto.RepoCreateRecord_Input{
+		Collection: "org.xcvr.actor.profile",
+		Repo:       authargs.Did,
+		Rkey:       &rkey,
+		Record:     &util.LexiconTypeDecoder{Val: &profile},
+	}
+	var out atproto.RepoCreateRecord_Output
+	err = c.xrpccli.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, &out)
+	if err != nil {
+		return errors.New("oops! failed to create a profile: " + err.Error())
+	}
+	return nil
+}
+
+func (c *Client) UpdateXCVRProfile(profile lex.ProfileRecord, s *types.Session, ctx context.Context) error {
+	authargs, err := getOauthSessionAuthArgs(s)
+	if err != nil {
+		return errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
+	}
+	rkey := "self"
+	input := atproto.RepoPutRecord_Input{
+		Collection: "org.xcvr.actor.profile",
+		Repo:       authargs.Did,
+		Rkey:       rkey,
+		Record:     &util.LexiconTypeDecoder{Val: &profile},
+	}
+	var out atproto.RepoPutRecord_Output
+	err = c.xrpccli.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, &out)
+	if err != nil {
+		return errors.New("oops! failed to create a profile: " + err.Error())
 	}
 	return nil
 }

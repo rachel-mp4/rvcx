@@ -9,14 +9,14 @@ type Profile struct {
 	Status      *string
 	AvatarCID   *string
 	AvatarMIME  *string
-	Color       *uint32
+	Color       *uint64
 	IndexedAt   time.Time
 }
 
 type PostProfileRequest struct {
 	DisplayName *string `json:"displayName,omitempty"`
 	Status      *string `json:"status,omitempty"`
-	Color       *uint32 `json:"color,omitempty"`
+	Color       *uint64 `json:"color,omitempty"`
 	Avatar      *string `json:"avatar,omitempty"`
 	DefaultNick *string `json:"defaultNick,omitempty"`
 }
@@ -26,7 +26,7 @@ type ProfileView struct {
 	Handle      string  `json:"handle"`
 	DisplayName *string `json:"displayName,omitempty"`
 	Status      *string `json:"status,omitempty"`
-	Color       *uint32 `json:"color,omitempty"`
+	Color       *uint64 `json:"color,omitempty"`
 	Avatar      *string `json:"avatar,omitempty"`
 	DefaultNick *string `json:"defaultNick,omitempty"`
 }
