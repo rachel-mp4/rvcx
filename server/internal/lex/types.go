@@ -3,6 +3,9 @@ package lex
 import (
 	"github.com/bluesky-social/indigo/lex/util"
 )
+func init() {
+	util.RegisterType("org.xcvr.actor.profile", &ProfileRecord{})
+}
 
 type ProfileRecord struct {
 	LexiconTypeID string        `json:"$type,const=org.xcvr.actor.profile" cborgen:"$type,const=org.xcvr.actor.profile"`
