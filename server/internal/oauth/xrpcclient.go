@@ -97,7 +97,10 @@ func (c *Client) UpdateXCVRProfile(profile lex.ProfileRecord, s *types.Session, 
 		return errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
 	}
 	cli := client.NewAPIClient(authargs.PdsUrl)
-	getOut, err := atproto.RepoGetRecord(ctx, cli, "", "orx.xcvr.actor.profile", authargs.Did, "self")
+	getOut, err := atproto.RepoGetRecord(ctx, cli, "", "org.xcvr.actor.profile", authargs.Did, "self")
+	if err != nil {
+		return errors.New("messed that up! " + err.Error())
+	}
 	if getOut.Cid == nil {
 		return c.CreateXCVRProfile(profile, s, ctx)
 	}
