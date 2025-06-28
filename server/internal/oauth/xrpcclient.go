@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/bluesky-social/indigo/api/atproto"
 	"github.com/bluesky-social/indigo/api/bsky"
+	"github.com/bluesky-social/indigo/atproto/client"
 	"github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/bluesky-social/indigo/lex/util"
 	"github.com/haileyok/atproto-oauth-golang"
@@ -95,12 +96,18 @@ func (c *Client) UpdateXCVRProfile(profile lex.ProfileRecord, s *types.Session, 
 	if err != nil {
 		return errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
 	}
+	cli := client.NewAPIClient(authargs.PdsUrl)
+	getOut, err := atproto.RepoGetRecord(ctx, cli, "", "orx.xcvr.actor.profile", authargs.Did, "self")
+	if getOut.Cid == nil {
+		return c.CreateXCVRProfile(profile, s, ctx)
+	}
 	rkey := "self"
 	input := atproto.RepoPutRecord_Input{
 		Collection: "org.xcvr.actor.profile",
 		Repo:       authargs.Did,
 		Rkey:       rkey,
 		Record:     &util.LexiconTypeDecoder{Val: &profile},
+		SwapRecord: getOut.Cid,
 	}
 	var out atproto.RepoPutRecord_Output
 	err = c.xrpccli.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.putRecord", nil, input, &out)
