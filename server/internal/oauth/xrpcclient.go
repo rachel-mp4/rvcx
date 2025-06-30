@@ -145,12 +145,12 @@ func (c *Client) CreateSession(ctx context.Context) error {
 	c.logger.Deprintln("creating session...")
 	secret := os.Getenv("MY_SECRET")
 	identity := os.Getenv("MY_IDENTITY")
-	params := map[string]any{
-		"identifier": &identity,
-		"password":   &secret,
+	input := atproto.ServerCreateSession_Input{
+		Identifier: identity,
+		Password:   secret,
 	}
 	var out atproto.ServerCreateSession_Output
-	err := c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.server.createSession", params, nil, out)
+	err := c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.server.createSession", nil, input, out)
 	if err != nil {
 		return errors.New("I couldn't create a session: " + err.Error())
 	}
