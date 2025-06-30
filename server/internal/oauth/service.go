@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"strings"
 	"time"
 	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/types"
@@ -111,52 +109,7 @@ func (s *Service) makeOAuthRequest(ctx context.Context, did string, handle strin
 }
 
 func (s *Service) resolveService(ctx context.Context, did string) (string, error) {
-	type Identity struct {
-		Service []struct {
-			ID              string `json:"id"`
-			Type            string `json:"type"`
-			ServiceEndpoint string `json:"serviceEndpoint"`
-		} `json:"service"`
-	}
-	var url string
-	if strings.HasPrefix(did, "did:plc:") {
-		url = fmt.Sprintf("https://plc.directory/%s", did)
-	} else if strings.HasPrefix(did, "did:web:") {
-		url = fmt.Sprintf("https://%s/.well-known/did.json", strings.TrimPrefix(did, "did:web:"))
-	} else {
-		return "", errors.New("did type not supported")
-	}
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return "", errors.New("error crafting request:" + err.Error())
-	}
-	resp, err := s.http.Do(req)
-	if err != nil {
-		return "", errors.New("error evaluating request:" + err.Error())
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return "", errors.New("could not resolve did to service")
-	}
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.New("error reading response body:" + err.Error())
-	}
-	var identity Identity
-	err = json.Unmarshal(b, &identity)
-	if err != nil {
-		return "", errors.New("error unmarshaling to identity:" + err.Error())
-	}
-	var service *string
-	for _, svc := range identity.Service {
-		if svc.ID == "#atproto_pds" {
-			service = &svc.ServiceEndpoint
-		}
-	}
-	if service == nil {
-		return "", errors.New("could not find atproto_pds service in resolved did's services")
-	}
-	return *service, nil
+	return atputils.GetPDSFromDid(ctx, did, s.http)
 }
 
 // func (s *Service) resolveHandle(handle string) (string, error) {

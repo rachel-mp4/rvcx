@@ -21,7 +21,6 @@
 					},
 					"author": {
 						"type": "string",
-						"format": "did"
 					},
 					"startedAt": {
 						"type": "string",

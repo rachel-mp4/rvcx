@@ -26,4 +26,3 @@ go.work.sum
 
 jwks.json
 
-server/internal/lex/lexicons_cbor.go

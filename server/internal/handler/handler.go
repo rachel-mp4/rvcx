@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"context"
 	"github.com/gorilla/sessions"
 	"net/http"
+
 	"os"
+	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/db"
+	"xcvr-backend/internal/lex"
 	"xcvr-backend/internal/log"
 	"xcvr-backend/internal/oauth"
 )
@@ -21,12 +25,25 @@ type Handler struct {
 func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service) *Handler {
 	mux := http.NewServeMux()
 	sessionStore := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-	xrpc := oauth.NewXRPCClient(db, logger)
+	did, err := atputils.GetDidFromHandle(context.Background(), os.Getenv("MY_IDENTITY"))
+	if err != nil {
+		panic(err)
+	}
+	pdshost, err := atputils.GetPDSFromDid(context.Background(), did, http.DefaultClient)
+	if err != nil {
+		panic(err)
+	}
+	xrpc := oauth.NewXRPCClient(db, logger, pdshost, did)
+	xrpc.CreateXCVRSignet(lex.SignetRecord{
+		ChannelURI: "beep.boop",
+		LRCID:      11,
+		Author:     "sneep.snirp",
+	}, context.Background())
 	h := &Handler{db, sessionStore, mux, logger, oauthserv, xrpc}
 	// lrc handlers
 	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.acceptWebsocket)
-	mux.HandleFunc("POST /lrc/channel", postChannel)
-	mux.HandleFunc("POST /lrc/message", postMessage)
+	mux.HandleFunc("POST /lrc/channel", h.postChannel)
+	mux.HandleFunc("POST /lrc/message", h.postMessage)
 	// beep handlers
 	mux.HandleFunc("POST /xcvr/profile", h.postProfile)
 	mux.HandleFunc("POST /xcvr/beep", h.beep)

@@ -7,7 +7,10 @@ import (
 
 func main() {
 	if err := cbg.WriteMapEncodersToFile("internal/lex/lexicons_cbor.go", "lex",
-		lex.ProfileRecord{}); err != nil {
+		lex.ProfileRecord{},
+		lex.ChannelRecord{},
+		lex.MessageRecord{},
+		lex.SignetRecord{}); err != nil {
 		panic(err)
 	}
 }

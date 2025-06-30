@@ -1,8 +1,9 @@
 package handler
+
 import (
+	"fmt"
 	"net/http"
 	"xcvr-backend/internal/model"
-	"fmt"
 )
 
 func (h *Handler) acceptWebsocket(w http.ResponseWriter, r *http.Request) {
@@ -19,10 +20,10 @@ func (h *Handler) acceptWebsocket(w http.ResponseWriter, r *http.Request) {
 	f(w, r)
 }
 
-func postChannel(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) postChannel(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func postMessage(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
 
 }
