@@ -34,11 +34,18 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service) *Handler {
 		panic(err)
 	}
 	xrpc := oauth.NewXRPCClient(db, logger, pdshost, did)
-	xrpc.CreateXCVRSignet(lex.SignetRecord{
+	err = xrpc.CreateSession(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	err = xrpc.CreateXCVRSignet(lex.SignetRecord{
 		ChannelURI: "beep.boop",
 		LRCID:      11,
 		Author:     "sneep.snirp",
 	}, context.Background())
+	if err != nil {
+		panic(err)
+	}
 	h := &Handler{db, sessionStore, mux, logger, oauthserv, xrpc}
 	// lrc handlers
 	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.acceptWebsocket)

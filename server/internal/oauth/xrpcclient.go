@@ -37,7 +37,7 @@ func NewXRPCClient(s *db.Store, l *log.Logger, host string, did string) *Client 
 					l.Deprintln(err.Error())
 				}
 			},
-		}, xcvrcli: client.NewAPIClient(host), did: &did,
+		}, xcvrcli: client.NewAPIClient(host), did: &did, logger: l,
 	}
 }
 
