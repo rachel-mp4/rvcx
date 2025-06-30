@@ -150,7 +150,7 @@ func (c *Client) CreateSession(ctx context.Context) error {
 		Password:   secret,
 	}
 	var out atproto.ServerCreateSession_Output
-	err := c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.server.createSession", nil, input, out)
+	err := c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.server.createSession", nil, input, &out)
 	if err != nil {
 		return errors.New("I couldn't create a session: " + err.Error())
 	}
@@ -164,7 +164,7 @@ func (c *Client) RefreshSession(ctx context.Context) error {
 	c.logger.Deprintln("refreshing session")
 	c.xcvrcli.Headers.Set("Authorization", fmt.Sprintf("Bearer %s", *c.refreshjwt))
 	var out atproto.ServerRefreshSession_Output
-	err := c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.server.refreshSession", nil, nil, out)
+	err := c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.server.refreshSession", nil, nil, &out)
 	if err != nil {
 		c.logger.Println("FAILED TO REFRESH RESSION")
 		return errors.New("failed to refresh session! " + err.Error())
@@ -186,7 +186,7 @@ func (c *Client) CreateXCVRSignet(signet lex.SignetRecord, ctx context.Context) 
 		Record:     &util.LexiconTypeDecoder{Val: &signet},
 	}
 	var out atproto.RepoCreateRecord_Output
-	err := c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, out)
+	err := c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, &out)
 	if err != nil {
 		err1 := err.Error()
 		err = c.RefreshSession(ctx)
@@ -195,7 +195,7 @@ func (c *Client) CreateXCVRSignet(signet lex.SignetRecord, ctx context.Context) 
 		}
 		c.xcvrcli.Headers.Set("Authorization", fmt.Sprintf("Bearer %s", *c.accessjwt))
 		out = atproto.RepoCreateRecord_Output{}
-		err = c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, out)
+		err = c.xcvrcli.LexDo(ctx, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, &out)
 		if err != nil {
 			return errors.New("not good, failed to create signet after failing then refreshing session! first " + err1 + " then " + err.Error())
 		}
