@@ -24,6 +24,7 @@ type Consumer struct {
 
 type handler struct {
 	db *db.Store
+	l *log.Logger
 }
 
 func NewConsumer(jsAddr string, l *log.Logger, db *db.Store) *Consumer {
@@ -41,7 +42,7 @@ func NewConsumer(jsAddr string, l *log.Logger, db *db.Store) *Consumer {
 	return &Consumer{
 		cfg:     cfg,
 		logger:  l,
-		handler: &handler{db: db},
+		handler: &handler{db: db, l: l},
 	}
 }
 
@@ -75,6 +76,7 @@ func (h *handler) HandleEvent(ctx context.Context, event *models.Event) error {
 }
 
 func (h *handler) handleProfile(ctx context.Context, event *models.Event) error {
+	h.l.Deprintln("handling profile")
 	var pr lex.ProfileRecord
 	err := json.Unmarshal(event.Commit.Record, &pr)
 	if err != nil {

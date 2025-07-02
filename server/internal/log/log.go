@@ -19,7 +19,7 @@ func New(w io.Writer, verbose bool) Logger {
 	if verbose {
 		l.debugLogger = log.New(w, "[debug]", log.Ldate|log.Ltime)
 	}
-	slog.New(slog.NewTextHandler(w, nil))
+	l.Slog = slog.New(slog.NewTextHandler(w, nil))
 	return l
 }
 
