@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 )
 
 type Logger struct {
 	debugLogger *log.Logger
-	prodLogger *log.Logger
+	prodLogger  *log.Logger
+	Slog        *slog.Logger
 }
 
 func New(w io.Writer, verbose bool) Logger {
@@ -17,6 +19,7 @@ func New(w io.Writer, verbose bool) Logger {
 	if verbose {
 		l.debugLogger = log.New(w, "[debug]", log.Ldate|log.Ltime)
 	}
+	slog.New(slog.NewTextHandler(w, nil))
 	return l
 }
 
@@ -39,3 +42,4 @@ func (l *Logger) Println(s string) {
 func (l *Logger) Printf(format string, args ...any) {
 	l.Println(fmt.Sprintf(format, args...))
 }
+

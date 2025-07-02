@@ -89,7 +89,7 @@ func (s *Store) GetOauthRequest(state string, ctx context.Context) (*types.OAuth
 	return &req, nil
 }
 
-func (s *Store) GetOauthSesson(did string, ctx context.Context) (*types.Session, error) {
+func (s *Store) GetOauthSession(id uint, ctx context.Context) (*types.Session, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT
 			r.authserver_iss,
@@ -103,9 +103,9 @@ func (s *Store) GetOauthSesson(did string, ctx context.Context) (*types.Session,
 			r.refresh_token,
 			r.expiration
 		FROM oauthsessions r
-		WHERE r.did = $1
+		WHERE r.id = $1
 		LIMIT 1
-		`, did)
+		`, id)
 	if err != nil {
 		return nil, errors.New("error querying oauthsessions:" + err.Error())
 	}
@@ -142,12 +142,12 @@ func (s *Store) DeleteOauthRequest(state string, ctx context.Context) error {
 	return nil
 }
 
-func (s *Store) SetDpopPdsNonce(did, dpopnonce string) error {
+func (s *Store) SetDpopPdsNonce(id uint, dpopnonce string) error {
 	_, err := s.pool.Exec(context.Background(), `
-			UPDATE oauthsessions SET dpop_pds_nonce = $1 WHERE did = $2
-		`, dpopnonce, did)
+			UPDATE oauthsessions SET dpop_pds_nonce = $1 WHERE id = $2
+		`, dpopnonce, id)
 	if err != nil {
-		return errors.New(fmt.Sprintf("error updating dpop nonce for did %s: %s", did, err.Error()))
+		return errors.New(fmt.Sprintf("error updating dpop nonce for id %d: %s", id, err.Error()))
 	}
 	return nil
 }

@@ -9,8 +9,38 @@ import (
 	"github.com/bluesky-social/indigo/atproto/syntax"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 )
+
+var (
+	my_handle *string
+	my_did    *string
+)
+
+func GetMyHandle() string {
+	if my_handle != nil {
+		return *my_handle
+	}
+	handle := os.Getenv("MY_IDENTITY")
+	my_handle = &handle
+	return *my_handle
+}
+
+func GetMyDid(ctx context.Context) (string, error) {
+	if my_did != nil {
+		return *my_did, nil
+	}
+	if my_handle == nil {
+		GetMyHandle()
+	}
+	did, err := GetDidFromHandle(ctx, *my_handle)
+	if err != nil {
+		return "", err
+	}
+	my_did = &did
+	return did, nil
+}
 
 func GetHandleFromDid(ctx context.Context, did string) (string, error) {
 	sdid, err := syntax.ParseDID(did)

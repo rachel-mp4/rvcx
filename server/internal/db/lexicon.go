@@ -110,3 +110,20 @@ func (s *Store) GetProfileView(did string, ctx context.Context) (*types.ProfileV
 	}
 	return &p, nil
 }
+
+func (s *Store) StoreChannel(channel types.Channel, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO channels (
+		  uri,
+			cid,
+			did,
+			host,
+			title,
+			topic,
+			created_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7
+		) ON CONFLICT (uri) DO NOTHING
+		`, channel.URI, channel.CID, channel.DID, channel.Host, channel.Title, channel.Topic, channel.CreatedAt)
+	return err
+}

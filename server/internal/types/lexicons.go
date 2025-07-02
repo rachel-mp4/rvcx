@@ -48,6 +48,12 @@ type Channel struct {
 	IndexedAt time.Time
 }
 
+type PostChannelRequest struct {
+	Title string  `json:"title"`
+	Topic *string `json:"topic,omitempty"`
+	Host  string  `json:"host"`
+}
+
 type ResolveChannelRequest struct {
 	DID    *string `json:"did,omitempty"`
 	Handle *string `json:"handle,omitempty"`

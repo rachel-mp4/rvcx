@@ -71,7 +71,7 @@ CREATE TABLE oauthrequests (
 	pkce_verifier TEXT,
 	dpop_auth_server_nonce TEXT,
 	dpop_private_jwk TEXT,
-	UNIQUE(did, state)
+	UNIQUE(state)
 );
 
 CREATE TABLE oauthsessions (
@@ -87,5 +87,5 @@ CREATE TABLE oauthsessions (
 	access_token TEXT,
 	refresh_token TEXT,
 	expiration TIMESTAMPTZ,
-	UNIQUE(did, state)
+	UNIQUE(state)
 );

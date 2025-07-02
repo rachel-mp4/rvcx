@@ -3,9 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"github.com/rivo/uniseg"
 	"net/http"
-	"unicode/utf16"
+	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/db"
 	"xcvr-backend/internal/lex"
 	"xcvr-backend/internal/types"
@@ -27,39 +26,23 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 	var pu db.ProfileUpdate
 	pu.DID = did
 	if p.DisplayName != nil {
-		if uniseg.GraphemeClusterCount(*p.DisplayName) > 64 {
-			h.badRequest(w, errors.New("too many graphemes"))
-			return
-		}
-		runes := []rune(*p.DisplayName)
-		us := utf16.Encode(runes)
-		if len(us) > 640 {
-			h.badRequest(w, errors.New("too many utf16 code points"))
+		if atputils.ValidateGraphemesAndLength(*p.DisplayName, 64, 640) {
+			h.badRequest(w, errors.New("displayname too long"))
 			return
 		}
 		pu.Name = p.DisplayName
 		pu.UpdateName = true
 	}
 	if p.DefaultNick != nil {
-		runes := []rune(*p.DefaultNick)
-		us := utf16.Encode(runes)
-		if len(us) > 16 {
-			h.badRequest(w, errors.New("too many utf16 code points"))
-			return
+		if atputils.ValidateLength(*p.DefaultNick, 16) {
+			h.badRequest(w, errors.New("nick too long"))
 		}
 		pu.Nick = p.DefaultNick
 		pu.UpdateNick = true
 	}
 	if p.Status != nil {
-		if uniseg.GraphemeClusterCount(*p.DisplayName) > 640 {
-			h.badRequest(w, errors.New("too many graphemes"))
-			return
-		}
-		runes := []rune(*p.DisplayName)
-		us := utf16.Encode(runes)
-		if len(us) > 6400 {
-			h.badRequest(w, errors.New("too many utf16 code points"))
-			return
+		if atputils.ValidateGraphemesAndLength(*p.Status, 640, 6400) {
+			h.badRequest(w, errors.New("status too long"))
 		}
 		pu.Status = p.Status
 		pu.UpdateStatus = true
@@ -76,42 +59,43 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 		pu.Color = p.Color
 		pu.UpdateColor = true
 	}
-	err = h.db.UpdateProfile(pu, r.Context())
-	if err != nil {
-		h.serverError(w, errors.New("error updating profile: "+err.Error()))
+	session, _ := h.sessionStore.Get(r, "oauthsession")
+	_, ok := session.Values["id"].(uint)
+	if !ok {
+		h.badRequest(w, errors.New("cannot update profile, not authenticated"))
 		return
 	}
-
-	//TODO switch order, only update db after we know the xrpc req went through correctly!
-
-	session, _ := h.sessionStore.Get(r, "oauthsession")
-	did, ok := session.Values["did"].(string)
-	if !ok || did == "" {
-		h.badRequest(w, errors.New("cannot beep, not authenticated"))
-	}
-	s, err := h.db.GetOauthSesson(did, r.Context())
 	profilerecord := lex.ProfileRecord{
 		DisplayName: p.DisplayName,
 		DefaultNick: p.DefaultNick,
 		Status:      p.Status,
 		Color:       p.Color,
 	}
-	err = h.xrpc.UpdateXCVRProfile(profilerecord, s, r.Context())
+	client, err := h.getClient(r)
 	if err != nil {
-		h.logger.Deprintf("error updating profilerecord: %s", err.Error())
+		h.serverError(w, err)
+		return
 	}
+	err = client.UpdateXCVRProfile(profilerecord, r.Context())
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+
+	err = h.db.UpdateProfile(pu, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("error updating profile: "+err.Error()))
+		return
+	}
+
 	h.serveProfileView(did, handle, w, r)
 }
 
 func (h *Handler) beep(w http.ResponseWriter, r *http.Request) {
-	session, _ := h.sessionStore.Get(r, "oauthsession")
-	did, ok := session.Values["did"].(string)
-	if !ok || did == "" {
-		h.badRequest(w, errors.New("cannot beep, not authenticated"))
-	}
-	s, err := h.db.GetOauthSesson(did, r.Context())
+	client, err := h.getClient(r)
+
 	if err != nil {
-		h.serverError(w, errors.New("error finding session: "+err.Error()))
+		h.serverError(w, errors.New("error finding client: "+err.Error()))
 	}
-	h.xrpc.MakeBskyPost("beep_", s, r.Context())
+	client.MakeBskyPost("beep_", r.Context())
 }

@@ -19,26 +19,27 @@ type Handler struct {
 	router       *http.ServeMux
 	logger       *log.Logger
 	oauth        *oauth.Service
-	xrpc         *oauth.Client
+	myClient     *oauth.PasswordClient
+	clientmap    *oauth.ClientMap
 }
 
 func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service) *Handler {
 	mux := http.NewServeMux()
 	sessionStore := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-	did, err := atputils.GetDidFromHandle(context.Background(), os.Getenv("MY_IDENTITY"))
+	host, err := atputils.GetPDSFromHandle(context.Background(), atputils.GetMyHandle())
 	if err != nil {
 		panic(err)
 	}
-	pdshost, err := atputils.GetPDSFromDid(context.Background(), did, http.DefaultClient)
+	did, err := atputils.GetMyDid(context.Background())
 	if err != nil {
 		panic(err)
 	}
-	xrpc := oauth.NewXRPCClient(db, logger, pdshost, did)
+	xrpc := oauth.NewPasswordClient(did, host, logger)
 	err = xrpc.CreateSession(context.Background())
 	if err != nil {
 		panic(err)
 	}
-	err = xrpc.CreateXCVRSignet(lex.SignetRecord{
+	_, _, err = xrpc.CreateXCVRSignet(&lex.SignetRecord{
 		ChannelURI: "beep.boop",
 		LRCID:      11,
 		Author:     "sneep.snirp",
@@ -46,7 +47,8 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service) *Handler {
 	if err != nil {
 		panic(err)
 	}
-	h := &Handler{db, sessionStore, mux, logger, oauthserv, xrpc}
+	clientmap := oauth.NewClientMap()
+	h := &Handler{db, sessionStore, mux, logger, oauthserv, xrpc, clientmap}
 	// lrc handlers
 	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.acceptWebsocket)
 	mux.HandleFunc("POST /lrc/channel", h.postChannel)

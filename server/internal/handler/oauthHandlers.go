@@ -11,6 +11,7 @@ import (
 	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/lex"
 	"xcvr-backend/internal/oauth"
+	"xcvr-backend/internal/types"
 
 	"github.com/gorilla/sessions"
 	"github.com/haileyok/atproto-oauth-golang/helpers"
@@ -144,7 +145,8 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 			Status:      &status,
 			Color:       &color,
 		}
-		err = h.xrpc.CreateXCVRProfile(defaultprofilerecord, OauthSession, context.Background())
+		client := h.setupClient(OauthSession)
+		err = client.CreateXCVRProfile(defaultprofilerecord, context.Background())
 		if err != nil {
 			h.logger.Println("#that happened (something went wrong when creating profile) " + err.Error())
 		}
@@ -157,6 +159,7 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	session.Values = map[any]any{}
 	session.Values["did"] = req.Did
+	session.Values["id"] = req.ID
 	err = session.Save(r, w)
 	if err != nil {
 		h.serverError(w, err)
@@ -219,4 +222,35 @@ func (h *Handler) handleFindDidAndHandleError(w http.ResponseWriter, err error) 
 		return
 	}
 	h.logger.Deprintln("handling nil error?")
+}
+
+func (h *Handler) getClient(r *http.Request) (*oauth.OauthXRPCClient, error) {
+	s, _ := h.sessionStore.Get(r, "oauthsession")
+	id, ok := s.Values["id"].(uint)
+	if !ok {
+		return nil, errors.New("not authorized")
+	}
+	client := h.clientmap.Map(id)
+	if client == nil {
+		client, err := h.resetClient(id, r.Context())
+		if err != nil {
+			return nil, err
+		}
+		return client, nil
+	}
+	return client, nil
+}
+
+func (h *Handler) resetClient(id uint, ctx context.Context) (*oauth.OauthXRPCClient, error) {
+	session, err := h.db.GetOauthSession(id, ctx)
+	if err != nil {
+		return nil, errors.New("errpr setting up session: " + err.Error())
+	}
+	return h.setupClient(session), nil
+}
+
+func (h *Handler) setupClient(session *types.Session) *oauth.OauthXRPCClient {
+	client := oauth.NewOauthXRPCClient(h.db, h.logger, session)
+	h.clientmap.Append(session.ID, client, session.Expiration)
+	return client
 }
