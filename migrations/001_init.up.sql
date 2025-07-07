@@ -36,6 +36,7 @@ CREATE TABLE channels (
 
 CREATE TABLE signets (
 	uri TEXT PRIMARY KEY,
+	issuer_did TEXT NOT NULL,
 	did TEXT NOT NULL,
 	channel_uri TEXT NOT NULL,
 	FOREIGN KEY (channel_uri) REFERENCES channels(uri) ON DELETE CASCADE,

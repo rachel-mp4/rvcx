@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 	"xcvr-backend/internal/atplistener"
+	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/db"
 	"xcvr-backend/internal/handler"
 	"xcvr-backend/internal/log"
@@ -30,7 +31,20 @@ func main() {
 		logger.Println("failed to init db")
 		panic(err)
 	}
-	model.Init(store)
+	host, err := atputils.GetPDSFromHandle(context.Background(), atputils.GetMyHandle())
+	if err != nil {
+		panic(err)
+	}
+	did := atputils.GetMyDid()
+	if did == "" {
+		panic(errors.New("WOOPS I MESSED UP THE DID"))
+	}
+	xrpc := oauth.NewPasswordClient(did, host, logger)
+	err = xrpc.CreateSession(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	model := model.Init(store, logger, xrpc)
 	httpclient := &http.Client{
 		Timeout: 5 * time.Second,
 		Transport: &http.Transport{
@@ -42,8 +56,8 @@ func main() {
 		logger.Println(err.Error())
 		panic(err)
 	}
-	h := handler.New(store, &logger, oauthclient)
-	go consumeLoop(context.Background(), store, &logger)
+	h := handler.New(store, logger, oauthclient, xrpc, model)
+	go consumeLoop(context.Background(), store, logger)
 	http.ListenAndServe(":8080", h.WithCORSAll())
 
 }

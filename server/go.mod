@@ -11,7 +11,8 @@ require (
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
 	github.com/lestrrat-go/jwx/v2 v2.0.12
-	github.com/rachel-mp4/lrcd v0.0.0-20250603192958-089ba44e79a5
+	github.com/rachel-mp4/lrcd v0.0.0-20250706133346-685719fb9bfc
+	github.com/rachel-mp4/lrcproto v0.0.0-20250527205756-58da8216f98c
 	github.com/rivo/uniseg v0.4.7
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028
@@ -71,7 +72,6 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.54.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/rachel-mp4/lrcproto v0.0.0-20250527205756-58da8216f98c // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b // indirect

@@ -1,15 +1,13 @@
 package handler
 
 import (
-	"context"
 	"github.com/gorilla/sessions"
 	"net/http"
 
 	"os"
-	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/db"
-	"xcvr-backend/internal/lex"
 	"xcvr-backend/internal/log"
+	"xcvr-backend/internal/model"
 	"xcvr-backend/internal/oauth"
 )
 
@@ -21,36 +19,17 @@ type Handler struct {
 	oauth        *oauth.Service
 	myClient     *oauth.PasswordClient
 	clientmap    *oauth.ClientMap
+	model        *model.Model
 }
 
-func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service) *Handler {
+func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, xrpc *oauth.PasswordClient, model *model.Model) *Handler {
 	mux := http.NewServeMux()
 	sessionStore := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-	host, err := atputils.GetPDSFromHandle(context.Background(), atputils.GetMyHandle())
-	if err != nil {
-		panic(err)
-	}
-	did, err := atputils.GetMyDid(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	xrpc := oauth.NewPasswordClient(did, host, logger)
-	err = xrpc.CreateSession(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	_, _, err = xrpc.CreateXCVRSignet(&lex.SignetRecord{
-		ChannelURI: "beep.boop",
-		LRCID:      11,
-		Author:     "sneep.snirp",
-	}, context.Background())
-	if err != nil {
-		panic(err)
-	}
 	clientmap := oauth.NewClientMap()
-	h := &Handler{db, sessionStore, mux, logger, oauthserv, xrpc, clientmap}
+	h := &Handler{db, sessionStore, mux, logger, oauthserv, xrpc, clientmap, model}
 	// lrc handlers
 	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.acceptWebsocket)
+	mux.HandleFunc("DELETE /lrc/{user}/{rkey}/ws", h.deleteChannel)
 	mux.HandleFunc("POST /lrc/channel", h.postChannel)
 	mux.HandleFunc("POST /lrc/message", h.postMessage)
 	// beep handlers

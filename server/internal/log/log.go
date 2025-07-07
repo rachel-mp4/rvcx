@@ -13,14 +13,14 @@ type Logger struct {
 	Slog        *slog.Logger
 }
 
-func New(w io.Writer, verbose bool) Logger {
+func New(w io.Writer, verbose bool) *Logger {
 	l := Logger{}
 	l.prodLogger = log.New(w, "[log]", log.Ldate|log.Ltime)
 	if verbose {
 		l.debugLogger = log.New(w, "[debug]", log.Ldate|log.Ltime)
 	}
 	l.Slog = slog.New(slog.NewTextHandler(w, nil))
-	return l
+	return &l
 }
 
 func (l *Logger) Deprintln(s string) {
@@ -42,4 +42,3 @@ func (l *Logger) Println(s string) {
 func (l *Logger) Printf(format string, args ...any) {
 	l.Println(fmt.Sprintf(format, args...))
 }
-

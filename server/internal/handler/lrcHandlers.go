@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/bluesky-social/indigo/atproto/syntax"
 	"net/http"
+	"os"
 	"time"
 	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/lex"
-	"xcvr-backend/internal/model"
 	"xcvr-backend/internal/types"
 )
 
@@ -17,7 +17,7 @@ func (h *Handler) acceptWebsocket(w http.ResponseWriter, r *http.Request) {
 	rkey := r.PathValue("rkey")
 	user := r.PathValue("user")
 	uri := fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", user, rkey)
-	f, err := model.GetWSHandlerFrom(uri)
+	f, err := h.model.GetWSHandlerFrom(uri)
 	if err != nil {
 		http.NotFound(w, r)
 		h.logger.Deprintf("couldn't find user %s's server %s", user, rkey)
@@ -109,15 +109,10 @@ func (h *Handler) postMyChannel(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
-	mydid, err := atputils.GetMyDid(r.Context())
-	if err != nil {
-		h.serverError(w, err)
-		return
-	}
 	channel := types.Channel{
 		URI:       uri,
 		CID:       cid,
-		DID:       mydid,
+		DID:       atputils.GetMyDid(),
 		Host:      lcr.Host,
 		Title:     lcr.Title,
 		Topic:     lcr.Topic,
@@ -133,6 +128,112 @@ func (h *Handler) postMyChannel(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) parseMessageRequest(r *http.Request) (*lex.MessageRecord, *time.Time, error) {
+	var mr types.PostMessageRequest
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&mr)
+	if err != nil {
+		return nil, nil, errors.New("couldn't decode: " + err.Error())
+	}
+	if mr.SignetURI == nil {
+		if mr.MessageID == nil || mr.ChannelURI == nil {
+			return nil, nil, errors.New("must provide a way to determine signet")
+		}
+		signetUri, err := h.db.QuerySignet(*mr.ChannelURI, *mr.MessageID, r.Context())
+		if err != nil {
+			return nil, nil, errors.New("i couldn't find the signet :c : " + err.Error())
+		}
+		mr.SignetURI = &signetUri
+	}
+	var lmr lex.MessageRecord
+	lmr.SignetURI = *mr.SignetURI
+	lmr.Body = mr.Body
+	if mr.Nick != nil {
+		nick := *mr.Nick
+		if atputils.ValidateLength(nick, 16) {
+			return nil, nil, errors.New("that nick is too long")
+		}
+	}
+	lmr.Nick = mr.Nick
 
+	if mr.Color != nil {
+		color := uint64(*mr.Color)
+		if color > 16777215 {
+			return nil, nil, errors.New("that color is too big")
+		}
+	}
+	now := syntax.DatetimeNow()
+	lmr.PostedAt = now.String()
+	nt := now.Time()
+	return &lmr, &nt, nil
+}
+
+func (h *Handler) postMyMessage(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
+	session, _ := h.sessionStore.Get(r, "oauthsession")
+	_, ok := session.Values["id"].(uint)
+	if !ok {
+		h.postMyMessage(w, r)
+		return
+	}
+	client, err := h.getClient(r)
+	if err != nil {
+		h.serverError(w, errors.New("couldn't find client: "+err.Error()))
+		return
+	}
+
+	lmr, now, err := h.parseMessageRequest(r)
+	if err != nil {
+		h.badRequest(w, errors.New("couldn't parse message "+err.Error()))
+		return
+	}
+
+	uri, cid, err := client.CreateXCVRMessage(*lmr, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("couldn't add to user repo: "))
+		return
+	}
+	did := session.Values["did"].(string)
+	var coloruint32ptr *uint32
+	if lmr.Color != nil {
+		color := uint32(*lmr.Color)
+		coloruint32ptr = &color
+	}
+	message := types.Message{
+		URI:       uri,
+		DID:       did,
+		CID:       cid,
+		SignetURI: lmr.SignetURI,
+		Body:      lmr.Body,
+		Nick:      lmr.Nick,
+		Color:     coloruint32ptr,
+		PostedAt:  *now,
+	}
+	err = h.db.StoreMessage(message, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("sooo... the record posted but i couldn't store it: "+err.Error()))
+		return
+	}
+	h.getMessages(w, r)
+}
+
+func (h *Handler) deleteChannel(w http.ResponseWriter, r *http.Request) {
+	did, handle, err := h.findDidAndHandle(r)
+	if err != nil {
+		return
+	}
+	rkey := r.PathValue("rkey")
+	user := r.PathValue("user")
+	if did != user && handle != os.Getenv("ADMIN_HANDLE") {
+		return
+	}
+	uri := fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", user, rkey)
+	err = h.db.DeleteChannel(uri, r.Context())
+	if err != nil {
+		return
+	}
+	h.getChannels(w, r)
 }

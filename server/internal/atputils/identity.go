@@ -27,19 +27,19 @@ func GetMyHandle() string {
 	return *my_handle
 }
 
-func GetMyDid(ctx context.Context) (string, error) {
+func GetMyDid() string {
 	if my_did != nil {
-		return *my_did, nil
+		return *my_did
 	}
 	if my_handle == nil {
 		GetMyHandle()
 	}
-	did, err := GetDidFromHandle(ctx, *my_handle)
+	did, err := GetDidFromHandle(context.Background(), *my_handle)
 	if err != nil {
-		return "", err
+		return ""
 	}
 	my_did = &did
-	return did, nil
+	return did
 }
 
 func GetHandleFromDid(ctx context.Context, did string) (string, error) {

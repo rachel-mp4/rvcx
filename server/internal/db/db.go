@@ -199,3 +199,8 @@ func (s *Store) GetChannelViews(limit int, ctx context.Context) ([]types.Channel
 	}
 	return chans, nil
 }
+
+func (s *Store) DeleteChannel(uri string, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM channels WHERE uri = $1`, uri)
+	return err
+}

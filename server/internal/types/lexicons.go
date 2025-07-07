@@ -81,6 +81,7 @@ type ChannelView struct {
 
 type Signet struct {
 	URI        string
+	IssuerDID  string
 	DID        string
 	ChannelURI string
 	MessageID  uint32
@@ -94,11 +95,20 @@ type Message struct {
 	DID       string
 	SignetURI string
 	Body      string
-	Nick      string
-	Color     uint32
+	Nick      *string
+	Color     *uint32
 	CID       string
 	PostedAt  time.Time
 	IndexedAt time.Time
+}
+
+type PostMessageRequest struct {
+	SignetURI  *string `json:"signetURI,omitempty"`
+	ChannelURI *string `json:"channelURI,omitempty"`
+	MessageID  *uint32 `json:"messageID,omitempty"`
+	Body       string  `json:"body"`
+	Nick       *string `json:"nick,omitempty"`
+	Color      *uint32 `json:"color,omitempty"`
 }
 
 type MessageView struct {

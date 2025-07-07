@@ -127,3 +127,51 @@ func (s *Store) StoreChannel(channel types.Channel, ctx context.Context) error {
 		`, channel.URI, channel.CID, channel.DID, channel.Host, channel.Title, channel.Topic, channel.CreatedAt)
 	return err
 }
+
+func (s *Store) StoreMessage(message types.Message, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO messages (
+		  uri,
+			cid,
+			did,
+			signet_uri,
+			body,
+			nick,
+			color,
+			posted_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8
+		) ON CONFLICT (uri) DO NOTHING
+		`, message.URI, message.CID, message.DID, message.SignetURI, message.Body, message.Nick, message.Color, message.PostedAt)
+	return err
+}
+
+func (s *Store) QuerySignet(channelUri string, id uint32, ctx context.Context) (string, error) {
+	row := s.pool.QueryRow(ctx, `SELECT s.uri FROM signets s WHERE s.channel_uri = $1 AND s.message_id = $2`, channelUri, id)
+	var signetUri string
+	err := row.Scan(&signetUri)
+	if err != nil {
+		return "", errors.New("error scanning: " + err.Error())
+	}
+	return signetUri, nil
+}
+
+func (s *Store) StoreSignet(signet types.Signet, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO signets (
+			uri,
+			issuer_did,
+			did,
+			channel_uri,
+			message_id,
+			cid,
+			started_at
+		) VALUES (
+		$1, $2, $3, $4, $5, $6, %7
+		) ON CONFLICT (uri) DO NOTHING
+		`, signet.URI, signet.IssuerDID, signet.DID, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
+	if err != nil {
+		err = errors.New("SOMETHING BAD HAPPENED: " + err.Error())
+	}
+	return err
+}
