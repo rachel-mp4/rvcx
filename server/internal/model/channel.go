@@ -175,7 +175,7 @@ func (m *Model) handleInitEvents(ctx context.Context, uri string, initChan <-cha
 				CID:        cid,
 				StartedAt:  nowTime,
 			}
-			err = m.store.StoreSignet(sr, context.Background())
+			err = m.store.StoreSignet(&sr, context.Background())
 			if err != nil {
 				m.logger.Println("failed to store signet!" + err.Error())
 			}

@@ -10,6 +10,7 @@ import (
 	"github.com/bluesky-social/jetstream/pkg/client/schedulers/sequential"
 	"github.com/bluesky-social/jetstream/pkg/models"
 	"time"
+	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/db"
 	"xcvr-backend/internal/lex"
 	"xcvr-backend/internal/log"
@@ -24,7 +25,7 @@ type Consumer struct {
 
 type handler struct {
 	db *db.Store
-	l *log.Logger
+	l  *log.Logger
 }
 
 func NewConsumer(jsAddr string, l *log.Logger, db *db.Store) *Consumer {
@@ -71,12 +72,26 @@ func (h *handler) HandleEvent(ctx context.Context, event *models.Event) error {
 		return h.handleProfile(ctx, event)
 	case "org.xcvr.feed.channel":
 		return h.handleChannel(ctx, event)
+	case "org.xcvr.lrc.message":
+		return h.handleMessage(ctx, event)
+	case "org.xcvr.lrc.signet":
+		return h.handleSignet(ctx, event)
 	}
 	return nil
 }
 
 func (h *handler) handleProfile(ctx context.Context, event *models.Event) error {
 	h.l.Deprintln("handling profile")
+	switch event.Commit.Operation {
+	case "create", "update":
+		return h.handleProfileCreateUpdate(ctx, event)
+	case "delete":
+		return h.handleProfileDelete(ctx, event)
+	}
+	return errors.New("unsupported commit operation")
+}
+
+func (h *handler) handleProfileCreateUpdate(ctx context.Context, event *models.Event) error {
 	var pr lex.ProfileRecord
 	err := json.Unmarshal(event.Commit.Record, &pr)
 	if err != nil {
@@ -96,18 +111,51 @@ func (h *handler) handleProfile(ctx context.Context, event *models.Event) error 
 	return h.db.UpdateProfile(to, ctx)
 }
 
+func (h *handler) handleProfileDelete(ctx context.Context, event *models.Event) error {
+	return h.db.DeleteProfile(event.Did, event.Commit.CID, ctx)
+}
+
 func (h *handler) handleChannel(ctx context.Context, event *models.Event) error {
+	h.l.Deprintln("handling channel")
+	switch event.Commit.Operation {
+	case "create":
+		return h.handleChannelCreate(ctx, event)
+	case "update":
+		return h.handleChannelUpdate(ctx, event)
+	case "delete":
+		return h.handleChannelDelete(ctx, event)
+	}
+	return nil
+}
+
+func (h *handler) handleChannelCreate(ctx context.Context, event *models.Event) error {
+	channel, err := parseChannelRecord(event)
+	if err != nil {
+		return errors.New("i couldn't create the channel: " + err.Error())
+	}
+	return h.db.StoreChannel(channel, ctx)
+}
+
+func (h *handler) handleChannelUpdate(ctx context.Context, event *models.Event) error {
+	channel, err := parseChannelRecord(event)
+	if err != nil {
+		return errors.New("i couldn't create the channel: " + err.Error())
+	}
+	return h.db.UpdateChannel(channel, ctx)
+}
+
+func parseChannelRecord(event *models.Event) (*types.Channel, error) {
 	var cr lex.ChannelRecord
 	err := json.Unmarshal(event.Commit.Record, &cr)
 	if err != nil {
-		return errors.New("error unmarshl: " + err.Error())
+		return nil, errors.New("error unmarshl: " + err.Error())
 	}
 	then, err := syntax.ParseDatetimeTime(cr.CreatedAt)
 	if err != nil {
 		then = time.Now()
 	}
 	channel := types.Channel{
-		URI:       fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", event.Did, event.Commit.RKey),
+		URI:       URI(event),
 		CID:       event.Commit.CID,
 		DID:       event.Did,
 		Host:      cr.Host,
@@ -115,5 +163,133 @@ func (h *handler) handleChannel(ctx context.Context, event *models.Event) error 
 		Topic:     cr.Topic,
 		CreatedAt: then,
 	}
-	return h.db.StoreChannel(channel, ctx)
+	return &channel, nil
+}
+
+func (h *handler) handleChannelDelete(ctx context.Context, event *models.Event) error {
+	return h.db.DeleteChannel(URI(event), ctx)
+}
+
+func (h *handler) handleMessage(ctx context.Context, event *models.Event) error {
+	h.l.Deprintln("handling message")
+	switch event.Commit.Operation {
+	case "create":
+		return h.handleMessageCreate(ctx, event)
+	case "update":
+		return h.handleMessageUpdate(ctx, event)
+	case "delete":
+		return h.handleMessageDelete(ctx, event)
+	}
+	return errors.New("unimplemented Operation")
+}
+
+func (h *handler) handleMessageCreate(ctx context.Context, event *models.Event) error {
+	message, err := parseMessageRecord(event)
+	if err != nil {
+		return errors.New("error parsing: " + err.Error())
+	}
+	return h.db.StoreMessage(message, ctx)
+}
+
+func (h *handler) handleMessageUpdate(ctx context.Context, event *models.Event) error {
+	message, err := parseMessageRecord(event)
+	if err != nil {
+		return errors.New("error parsing: " + err.Error())
+	}
+	return h.db.UpdateMessage(message, ctx)
+}
+
+func (h *handler) handleMessageDelete(ctx context.Context, event *models.Event) error {
+	return h.db.DeleteMessage(URI(event), ctx)
+}
+
+func parseMessageRecord(event *models.Event) (*types.Message, error) {
+	var mr lex.MessageRecord
+	err := json.Unmarshal(event.Commit.Record, &mr)
+	if err != nil {
+		return nil, errors.New("error unmarshl: " + err.Error())
+	}
+	then, err := syntax.ParseDatetimeTime(mr.PostedAt)
+	if err != nil {
+		then = time.Now()
+	}
+	var color *uint32
+	if mr.Color != nil {
+		c := uint32(*mr.Color)
+		color = &c
+	}
+	message := types.Message{
+		URI:       URI(event),
+		CID:       event.Commit.CID,
+		DID:       event.Did,
+		SignetURI: mr.SignetURI,
+		Body:      mr.Body,
+		Nick:      mr.Nick,
+		Color:     color,
+		PostedAt:  then,
+	}
+	return &message, nil
+}
+
+func (h *handler) handleSignet(ctx context.Context, event *models.Event) error {
+	h.l.Deprintln("handling signet")
+	switch event.Commit.Operation {
+	case "create":
+		return h.handleSignetCreate(ctx, event)
+	case "update":
+		return h.handleSignetUpdate(ctx, event)
+	case "delete":
+		return h.handleSignetDelete(ctx, event)
+	}
+	return errors.New("unimplemented Operation")
+}
+
+func (h *handler) handleSignetCreate(ctx context.Context, event *models.Event) error {
+	signet, err := parseSignetRecord(event)
+	if err != nil {
+		return errors.New("failed to parse: " + err.Error())
+	}
+	return h.db.StoreSignet(signet, ctx)
+}
+
+func (h *handler) handleSignetUpdate(ctx context.Context, event *models.Event) error {
+	signet, err := parseSignetRecord(event)
+	if err != nil {
+		return errors.New("failed to parse: " + err.Error())
+	}
+	return h.db.UpdateSignet(signet, ctx)
+}
+func (h *handler) handleSignetDelete(ctx context.Context, event *models.Event) error {
+	return h.db.DeleteSignet(URI(event), ctx)
+}
+
+func parseSignetRecord(event *models.Event) (*types.Signet, error) {
+	var sr lex.SignetRecord
+	err := json.Unmarshal(event.Commit.Record, &sr)
+	if err != nil {
+		return nil, errors.New("error unmarshl: " + err.Error())
+	}
+	var then time.Time
+	if sr.StartedAt != nil {
+		then, err = syntax.ParseDatetimeTime(*sr.StartedAt)
+		if err != nil {
+			then = time.Now()
+		}
+	} else {
+		then = time.Now()
+	}
+	signet := types.Signet{
+		URI:        fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", event.Did, event.Commit.RKey),
+		CID:        event.Commit.CID,
+		IssuerDID:  event.Did,
+		DID:        sr.Author,
+		ChannelURI: sr.ChannelURI,
+		MessageID:  uint32(sr.LRCID),
+		StartedAt:  then,
+	}
+	return &signet, nil
+}
+
+func URI(event *models.Event) string {
+	return atputils.URI(event.Did, event.Commit.Collection, event.Commit.RKey)
 }

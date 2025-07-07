@@ -60,7 +60,7 @@ func (h *Handler) postChannel(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: *now,
 		IndexedAt: time.Now(),
 	}
-	err = h.db.StoreChannel(channel, r.Context())
+	err = h.db.StoreChannel(&channel, r.Context())
 	if err != nil {
 		h.serverError(w, errors.New("well... the record posted but i couldn't store it: "+err.Error()))
 		return
@@ -119,7 +119,7 @@ func (h *Handler) postMyChannel(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: *now,
 		IndexedAt: time.Now(),
 	}
-	err = h.db.StoreChannel(channel, r.Context())
+	err = h.db.StoreChannel(&channel, r.Context())
 	if err != nil {
 		h.serverError(w, errors.New("sooo... the record posted but i couldn't store it: "+err.Error()))
 		return
@@ -212,7 +212,7 @@ func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
 		Color:     coloruint32ptr,
 		PostedAt:  *now,
 	}
-	err = h.db.StoreMessage(message, r.Context())
+	err = h.db.StoreMessage(&message, r.Context())
 	if err != nil {
 		h.serverError(w, errors.New("sooo... the record posted but i couldn't store it: "+err.Error()))
 		return
