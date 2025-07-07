@@ -18,10 +18,10 @@ VALUES
 ('at://did:example:alice/org.xcvr.feed.channel/general', 'chanCid1', 'did:example:alice', 'xcvr.org', 'General Chat', 'All-purpose chatter', now() - interval '2 days'),
 ('at://did:example:bob/org.xcvr.feed.channel/help', 'chanCid2', 'did:example:bob', 'xcvr.org', 'Help Channel', 'Support and help', now() - interval '1 day');
 
-INSERT INTO signets (uri, did, channel_uri, message_id, cid)
+INSERT INTO signets (uri, issuer_did, did, channel_uri, message_id, cid)
 VALUES
-('at://did:example:xcvr/org.xcvr.lrc.signet/signet1', 'did:example:alice', 'at://did:example:alice/org.xcvr.feed.channel/general', 1, 'signetCid1'),
-('at://did:example:xcvr/org.xcvr.lrc.signet/signet2', 'did:example:bob', 'at://did:example:bob/org.xcvr.feed.channel/help', 2, 'signetCid2');
+('at://did:example:xcvr/org.xcvr.lrc.signet/signet1', 'did:example:xcvr', 'did:example:alice', 'at://did:example:alice/org.xcvr.feed.channel/general', 1, 'signetCid1'),
+('at://did:example:xcvr/org.xcvr.lrc.signet/signet2', 'did:example:xcvr', 'did:example:bob', 'at://did:example:bob/org.xcvr.feed.channel/help', 2, 'signetCid2');
 
 INSERT INTO messages (uri, did, signet_uri, body, nick, color, cid)
 VALUES

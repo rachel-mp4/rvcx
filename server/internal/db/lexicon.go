@@ -167,7 +167,7 @@ func (s *Store) StoreSignet(signet types.Signet, ctx context.Context) error {
 			cid,
 			started_at
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, %7
+		$1, $2, $3, $4, $5, $6, $7
 		) ON CONFLICT (uri) DO NOTHING
 		`, signet.URI, signet.IssuerDID, signet.DID, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
 	if err != nil {
