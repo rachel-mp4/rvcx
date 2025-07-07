@@ -223,16 +223,19 @@ func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) deleteChannel(w http.ResponseWriter, r *http.Request) {
 	did, handle, err := h.findDidAndHandle(r)
 	if err != nil {
+		h.logger.Deprintln("tried to anonymously delete")
 		return
 	}
 	rkey := r.PathValue("rkey")
 	user := r.PathValue("user")
 	if did != user && handle != os.Getenv("ADMIN_HANDLE") {
+		h.logger.Deprintln("tried to delete not logged in")
 		return
 	}
 	uri := fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", user, rkey)
 	err = h.db.DeleteChannel(uri, r.Context())
 	if err != nil {
+		h.logger.Deprintln("failed to delete")
 		return
 	}
 	h.getChannels(w, r)
