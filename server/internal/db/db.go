@@ -135,8 +135,9 @@ func (s *Store) GetChannelURI(handle string, title string, ctx context.Context) 
 }
 
 type URIHost struct {
-	URI  string
-	Host string
+	URI    string
+	Host   string
+	LastID uint32
 }
 
 func (s *Store) GetChannelURIs(ctx context.Context) ([]URIHost, error) {
@@ -157,6 +158,16 @@ func (s *Store) GetChannelURIs(ctx context.Context) ([]URIHost, error) {
 		if err != nil {
 			return nil, err
 		}
+		var maxMessageID uint32
+		err = s.pool.QueryRow(ctx, `
+			SELECT COALESCE(MAX(message_id), 0) 
+			FROM signets 
+			WHERE channel_uri = $1
+			`, urihost.URI).Scan(&maxMessageID)
+		if err != nil {
+			return nil, err
+		}
+		urihost.LastID = maxMessageID
 		urihosts = append(urihosts, urihost)
 	}
 	return urihosts, nil

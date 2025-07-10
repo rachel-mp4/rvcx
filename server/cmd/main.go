@@ -57,7 +57,7 @@ func main() {
 		panic(err)
 	}
 	h := handler.New(store, logger, oauthclient, xrpc, model)
-	go consumeLoop(context.Background(), store, logger)
+	go consumeLoop(context.Background(), store, logger, xrpc)
 	http.ListenAndServe(":8080", h.WithCORSAll())
 
 }
@@ -66,12 +66,12 @@ const (
 	defaultServerAddr = "wss://jetstream.atproto.tools/subscribe"
 )
 
-func consumeLoop(ctx context.Context, db *db.Store, l *log.Logger) {
+func consumeLoop(ctx context.Context, db *db.Store, l *log.Logger, cli *oauth.PasswordClient) {
 	jsServerAddr := os.Getenv("JS_SERVER_ADDR")
 	if jsServerAddr == "" {
 		jsServerAddr = defaultServerAddr
 	}
-	consumer := atplistener.NewConsumer(jsServerAddr, l, db)
+	consumer := atplistener.NewConsumer(jsServerAddr, l, db, cli)
 	for {
 		err := consumer.Consume(ctx)
 		if err != nil {

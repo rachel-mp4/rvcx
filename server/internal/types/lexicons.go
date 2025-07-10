@@ -80,14 +80,23 @@ type ChannelView struct {
 }
 
 type Signet struct {
-	URI        string
-	IssuerDID  string
-	DID        string
-	ChannelURI string
-	MessageID  uint32
-	CID        string
-	StartedAt  time.Time
-	IndexedAt  time.Time
+	URI          string
+	IssuerDID    string
+	AuthorHandle string
+	ChannelURI   string
+	MessageID    uint32
+	CID          string
+	StartedAt    time.Time
+	IndexedAt    time.Time
+}
+
+type SignetView struct {
+	URI          string    `json:"uri"`
+	IssuerHandle string    `json:"issuerHandle"`
+	ChannelURI   string    `json:"channelURI"`
+	LrcId        uint32    `json:"lrcID"`
+	AuthorHandle string    `json:"authorHandle"`
+	StartedAt    time.Time `json:"startedAt"`
 }
 
 type Message struct {
@@ -115,8 +124,8 @@ type MessageView struct {
 	URI       string      `json:"uri"`
 	Author    ProfileView `json:"author"`
 	Body      string      `json:"body"`
-	Nick      string      `json:"nick,omitempty"`
-	Color     int         `json:"color"`
-	StartedAt time.Time   `json:"startedAt"`
+	Nick      *string     `json:"nick,omitempty"`
+	Color     *uint32     `json:"color,omitempty"`
+	SignetURI string      `json:"signetURI"`
 	PostedAt  time.Time   `json:"postedAt"`
 }

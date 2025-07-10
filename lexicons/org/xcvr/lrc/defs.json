@@ -4,7 +4,7 @@
 	"defs": {
 		"messageView": {
 			"type": "object",
-			"required": ["uri", "author", "body", "startedAt", "postedAt"],
+			"required": ["uri", "author", "body", "signetURI", "postedAt"],
 			"properties": {
 				"uri": { 
 					"type": "string", 
@@ -15,7 +15,7 @@
 					"ref": "org.xcvr.actor.defs#profileView" 
 				},
 				"body": {
-					"type": "string",
+					"type": "string"
 				},
 				"nick": {
 					"type": "string",
@@ -26,11 +26,42 @@
 					"minimum": 0,
 					"maximum": 16777215
 				},
-				"startedAt": {
+				"signetURI": {
 					"type": "string",
-					"format": "datetime"
+					"format": "at-uri"
 				},
 				"postedAt": {
+					"type": "string",
+					"format": "datetime"
+				}
+			}
+		},
+		"signetView": {
+			"type": "object",
+			"required": ["uri", "issuer", "channelURI", "lrcID", "author", "startedAt"],
+			"properties": {
+				"uri": {
+					"type": "string",
+					"format": "at-uri"
+				},
+				"issuer": {
+					"type": "string",
+					"format": "handle"
+				},
+				"channelURI": {
+					"type": "string",
+					"format": "at-uri"
+				},
+				"lrcID": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 4294967295
+				},
+				"author": {
+					"type": "string",
+					"format": "handle"
+				},
+				"startedAt": {
 					"type": "string",
 					"format": "datetime"
 				}

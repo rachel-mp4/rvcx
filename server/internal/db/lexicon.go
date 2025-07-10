@@ -209,7 +209,7 @@ func (s *Store) StoreSignet(signet *types.Signet, ctx context.Context) error {
 		INSERT INTO signets (
 			uri,
 			issuer_did,
-			did,
+			author_handle,
 			channel_uri,
 			message_id,
 			cid,
@@ -217,7 +217,7 @@ func (s *Store) StoreSignet(signet *types.Signet, ctx context.Context) error {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7
 		) ON CONFLICT (uri) DO NOTHING
-		`, signet.URI, signet.IssuerDID, signet.DID, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
+		`, signet.URI, signet.IssuerDID, signet.AuthorHandle, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
 	if err != nil {
 		err = errors.New("SOMETHING BAD HAPPENED: " + err.Error())
 	}
@@ -229,7 +229,7 @@ func (s *Store) UpdateSignet(signet *types.Signet, ctx context.Context) error {
 		INSERT INTO signets (
 			uri,
 			issuer_did,
-			did,
+			AuthorHandle,
 			channel_uri,
 			message_id,
 			cid,
@@ -237,7 +237,7 @@ func (s *Store) UpdateSignet(signet *types.Signet, ctx context.Context) error {
 		) VALUES (
 		$1, $2, $3, $4, $5, $6, $7
 		)
-		`, signet.URI, signet.IssuerDID, signet.DID, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
+		`, signet.URI, signet.IssuerDID, signet.AuthorHandle, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
 	if err != nil {
 		err = errors.New("SOMETHING BAD HAPPENED: " + err.Error())
 	}

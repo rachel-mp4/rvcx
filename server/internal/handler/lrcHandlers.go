@@ -240,3 +240,17 @@ func (h *Handler) deleteChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	h.getChannels(w, r)
 }
+
+func (h *Handler) subscribeLexStream(w http.ResponseWriter, r *http.Request) {
+	rkey := r.URL.Query().Get("rkey")
+	user := r.URL.Query().Get("user")
+	uri := fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", user, rkey)
+	f, err := h.model.GetLexStreamFrom(uri)
+	if err != nil {
+		http.NotFound(w, r)
+		h.logger.Deprintf("couldn't find user %s's server %s", user, rkey)
+		h.logger.Println(err.Error())
+		return
+	}
+	f(w, r)
+}

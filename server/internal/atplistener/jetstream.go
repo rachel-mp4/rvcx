@@ -14,6 +14,7 @@ import (
 	"xcvr-backend/internal/db"
 	"xcvr-backend/internal/lex"
 	"xcvr-backend/internal/log"
+	"xcvr-backend/internal/oauth"
 	"xcvr-backend/internal/types"
 )
 
@@ -24,11 +25,12 @@ type Consumer struct {
 }
 
 type handler struct {
-	db *db.Store
-	l  *log.Logger
+	db  *db.Store
+	l   *log.Logger
+	cli *oauth.PasswordClient
 }
 
-func NewConsumer(jsAddr string, l *log.Logger, db *db.Store) *Consumer {
+func NewConsumer(jsAddr string, l *log.Logger, db *db.Store, cli *oauth.PasswordClient) *Consumer {
 	cfg := client.DefaultClientConfig()
 	if jsAddr != "" {
 		cfg.WebsocketURL = jsAddr
@@ -43,7 +45,7 @@ func NewConsumer(jsAddr string, l *log.Logger, db *db.Store) *Consumer {
 	return &Consumer{
 		cfg:     cfg,
 		logger:  l,
-		handler: &handler{db: db, l: l},
+		handler: &handler{db: db, l: l, cli: cli},
 	}
 }
 
@@ -196,6 +198,29 @@ func (h *handler) handleMessageUpdate(ctx context.Context, event *models.Event) 
 	if err != nil {
 		return errors.New("error parsing: " + err.Error())
 	}
+	host, _ := atputils.DidFromUri(message.SignetURI)
+	rkey, err := atputils.RkeyFromUri(message.SignetURI)
+	if err != nil {
+		return errors.New("i think the record is borked ngl")
+	}
+	if host == atputils.GetMyDid() {
+		dne, err := h.cli.DeleteXCVRSignet(rkey, ctx)
+		if err != nil {
+			if dne {
+				err = h.db.DeleteSignet(message.SignetURI, ctx)
+				if err != nil {
+					return errors.New("a lot of stuff happened yikers!" + err.Error())
+				}
+				return nil
+			}
+			return errors.New("failed to delete signet after infetterance: " + err.Error())
+		}
+		err = h.db.DeleteSignet(message.SignetURI, ctx)
+		if err != nil {
+			return errors.New("i deleted the signet, however i couldn't delete it from my db: " + err.Error())
+		}
+		return nil
+	}
 	return h.db.UpdateMessage(message, ctx)
 }
 
@@ -279,13 +304,13 @@ func parseSignetRecord(event *models.Event) (*types.Signet, error) {
 		then = time.Now()
 	}
 	signet := types.Signet{
-		URI:        fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", event.Did, event.Commit.RKey),
-		CID:        event.Commit.CID,
-		IssuerDID:  event.Did,
-		DID:        sr.Author,
-		ChannelURI: sr.ChannelURI,
-		MessageID:  uint32(sr.LRCID),
-		StartedAt:  then,
+		URI:          fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", event.Did, event.Commit.RKey),
+		CID:          event.Commit.CID,
+		IssuerDID:    event.Did,
+		AuthorHandle: sr.AuthorHandle,
+		ChannelURI:   sr.ChannelURI,
+		MessageID:    uint32(sr.LRCID),
+		StartedAt:    then,
 	}
 	return &signet, nil
 }

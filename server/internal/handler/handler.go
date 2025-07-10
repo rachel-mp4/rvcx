@@ -40,6 +40,7 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, xrpc *oauth
 	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getMessages", h.getMessages)
 	mux.HandleFunc("GET /xrpc/org.xcvr.actor.resolveChannel", h.resolveChannel)
 	mux.HandleFunc("GET /xrpc/org.xcvr.actor.getProfileView", h.getProfileView)
+	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getLexStream", h.subscribeLexStream)
 	// backend metadata handlers
 	mux.HandleFunc(clientMetadataPath(), h.serveClientMetadata)
 	mux.HandleFunc(clientTOSPath(), h.serveTOS)

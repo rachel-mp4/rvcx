@@ -981,14 +981,14 @@ func (t *SignetRecord) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	if len(t.Author) > 8192 {
+	if len(t.AuthorHandle) > 8192 {
 		return xerrors.Errorf("Value in field t.Author was too long")
 	}
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Author))); err != nil {
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.AuthorHandle))); err != nil {
 		return err
 	}
-	if _, err := cw.WriteString(string(t.Author)); err != nil {
+	if _, err := cw.WriteString(string(t.AuthorHandle)); err != nil {
 		return err
 	}
 
@@ -1126,7 +1126,7 @@ func (t *SignetRecord) UnmarshalCBOR(r io.Reader) (err error) {
 
 		switch string(nameBuf[:nameLen]) {
 		// t.Author (string) (string)
-		case "nick":
+		case "authorHandle":
 
 			{
 				sval, err := cbg.ReadStringWithMax(cr, 8192)
@@ -1134,7 +1134,7 @@ func (t *SignetRecord) UnmarshalCBOR(r io.Reader) (err error) {
 					return err
 				}
 
-				t.Author = string(sval)
+				t.AuthorHandle = string(sval)
 			}
 			// t.LexiconTypeID (string) (string)
 		case "$type":

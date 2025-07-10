@@ -110,3 +110,46 @@ func (c *PasswordClient) createMyRecord(input atproto.RepoCreateRecord_Input, ct
 	uri = out.Uri
 	return
 }
+
+func (c *PasswordClient) DeleteXCVRSignet(rkey string, ctx context.Context) (bool, error) {
+	getOut, err := atproto.RepoGetRecord(ctx, c.xrpc, "", "org.xcvr.lrc.signet", *c.did, rkey)
+	if err != nil {
+		return true, errors.New("nothing to delete :3")
+	}
+	input := atproto.RepoDeleteRecord_Input{
+		Repo:       *c.did,
+		Collection: "org.xcvr.lrc.signet",
+		Rkey:       rkey,
+		SwapRecord: getOut.Cid,
+	}
+	err = c.deleteMyRecord(input, ctx)
+	if err != nil {
+		return false, errors.New("failed to delete")
+	}
+	return true, nil
+}
+
+func (c *PasswordClient) deleteMyRecord(input atproto.RepoDeleteRecord_Input, ctx context.Context) (err error) {
+	if c.accessjwt == nil {
+		err = errors.New("must create a session first")
+		return
+	}
+	c.xrpc.Headers.Set("Authorization", fmt.Sprintf("Bearer %s", *c.accessjwt))
+	var out atproto.RepoDeleteRecord_Output
+	err = c.xrpc.LexDo(ctx, "POST", "application/json", "com.atproto.repo.deleteRecord", nil, input, &out)
+	if err != nil {
+		err1 := err.Error()
+		err = c.RefreshSession(ctx)
+		if err != nil {
+			err = errors.New(fmt.Sprintf("failed to refresh session while deleting %s! first %s then %s", input.Collection, err1, err.Error()))
+			return
+		}
+		c.xrpc.Headers.Set("Authorization", fmt.Sprintf("Bearer %s", *c.accessjwt))
+		err = c.xrpc.LexDo(ctx, "POST", "application/json", "com.atproto.repo.deleteRecord", nil, input, &out)
+		if err != nil {
+			err = errors.New(fmt.Sprintf("not good, failed to delete %s after failing then refreshing session! first %s then %s", input.Collection, err1, err.Error()))
+			return
+		}
+	}
+	return
+}
