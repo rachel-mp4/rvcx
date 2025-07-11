@@ -78,7 +78,7 @@ func (s *Store) StoreDidHandle(did string, handle string, ctx context.Context) e
 	_, err := s.pool.Exec(ctx, `INSERT INTO did_handles (
 			handle,
 			did
-		) VALUES ($1, $2)`, handle, did)
+		) VALUES ($1, $2) ON CONFLICT (handle) DO NOTHING`, handle, did)
 	if err != nil {
 		return errors.New("error storing did/handle: " + err.Error())
 	}

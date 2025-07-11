@@ -217,6 +217,11 @@ func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, errors.New("sooo... the record posted but i couldn't store it: "+err.Error()))
 		return
 	}
+	curi, err := h.db.GetMsgChannelURI(lmr.SignetURI, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("aaaaaaaaaaaa "+err.Error()))
+	}
+	h.model.BroadcastMessage(curi, message)
 	h.getMessages(w, r)
 }
 

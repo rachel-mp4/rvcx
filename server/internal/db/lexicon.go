@@ -204,6 +204,16 @@ func (s *Store) QuerySignet(channelUri string, id uint32, ctx context.Context) (
 	return signetUri, nil
 }
 
+func (s *Store) GetMsgChannelURI(signetURI string, ctx context.Context) (string, error) {
+	row := s.pool.QueryRow(ctx, `SELECT s.channel_uri FROM signets s WHERE s.uri = $1`, signetURI)
+	var channelURI string
+	err := row.Scan(&channelURI)
+	if err != nil {
+		return "", errors.New("error scanning: " + err.Error())
+	}
+	return channelURI, nil
+}
+
 func (s *Store) StoreSignet(signet *types.Signet, ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO signets (
