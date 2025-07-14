@@ -100,12 +100,12 @@ func (s *Store) GetMessages(channelURI string, limit int, cursor int, ctx contex
 			m.nick, 
 			m.color, 
 			s.uri,
-			issuer_dh.handle
+			issuer_dh.handle,
 			s.channel_uri,
 			s.message_id,
 			s.author_handle,
 			s.started_at,
-			m.posted_at,
+			m.posted_at
 		FROM messages m 
 		JOIN signets s ON m.signet_uri = s.uri
 		JOIN did_handles dh ON m.did = dh.did
