@@ -85,24 +85,67 @@ func (s *Store) StoreDidHandle(did string, handle string, ctx context.Context) e
 	return nil
 }
 
-func (s *Store) GetMessages(channelURI string, limit int, ctx context.Context) ([]types.Message, error) {
+func (s *Store) GetMessages(channelURI string, limit int, cursor int, ctx context.Context) ([]types.SignedMessageView, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT 
-			m.uri, m.did, m.signet_uri, m.body, m.nick, m.color, m.posted_at
+			m.uri, 
+			m.did,
+			dh.handle,
+			p.display_name,
+			p.status,
+			p.color,
+			p.avatar_cid,
+			p.default_nick,
+			m.body, 
+			m.nick, 
+			m.color, 
+			s.uri,
+			issuer_dh.handle
+			s.channel_uri,
+			s.message_id,
+			s.author_handle,
+			s.started_at,
+			m.posted_at,
 		FROM messages m 
 		JOIN signets s ON m.signet_uri = s.uri
-		WHERE s.channel_uri = $1
+		JOIN did_handles dh ON m.did = dh.did
+		LEFT JOIN profiles p ON m.did = p.did
+		JOIN did_handles issuer_dh ON s.issuer_did = issuer_dh.did
+		WHERE s.channel_uri = $1 AND s.message_id < $2
 		ORDER BY s.message_id DESC
-		LIMIT $2
-		`, channelURI, limit)
+		LIMIT $3
+		`, channelURI, cursor, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var msgs = make([]types.Message, 0, limit)
+	var msgs = make([]types.SignedMessageView, 0, limit)
 	for rows.Next() {
-		var msg types.Message
-		err := rows.Scan(&msg.URI, &msg.DID, &msg.SignetURI, &msg.Body, &msg.Nick, &msg.PostedAt)
+		var msg types.SignedMessageView
+		err := rows.Scan(
+			&msg.URI,
+
+			&msg.Author.DID,
+			&msg.Author.Handle,
+			&msg.Author.DisplayName,
+			&msg.Author.Status,
+			&msg.Author.Color,
+			&msg.Author.Avatar,
+			&msg.Author.DefaultNick,
+
+			&msg.Body,
+			&msg.Nick,
+			&msg.Color,
+
+			&msg.Signet.URI,
+			&msg.Signet.IssuerHandle,
+			&msg.Signet.ChannelURI,
+			&msg.Signet.LrcId,
+			&msg.Signet.AuthorHandle,
+			&msg.Signet.StartedAt,
+
+			&msg.PostedAt,
+		)
 		if err != nil {
 			return nil, err
 		}

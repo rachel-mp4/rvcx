@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"xcvr-backend/internal/types"
@@ -30,7 +31,31 @@ func (h *Handler) getChannels(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getMessages(w http.ResponseWriter, r *http.Request) {
-
+	limitstr := r.URL.Query().Get("limit")
+	limit := 50
+	if limitstr != "" {
+		l, err := strconv.Atoi(limitstr)
+		if err == nil {
+			limit = max(min(l, 100), 1)
+		}
+	}
+	cursorstr := r.URL.Query().Get("cursor")
+	cursor := math.MaxInt
+	if cursorstr != "" {
+		c, err := strconv.Atoi(cursorstr)
+		if err == nil {
+			cursor = c
+		}
+	}
+	channelURI := r.URL.Query().Get("channelURI")
+	messages, err := h.db.GetMessages(channelURI, limit, cursor, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("something went south: "+err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	encoder.Encode(messages)
 }
 
 func (h *Handler) resolveChannel(w http.ResponseWriter, r *http.Request) {

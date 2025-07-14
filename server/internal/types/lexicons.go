@@ -129,3 +129,18 @@ type MessageView struct {
 	SignetURI string      `json:"signetURI"`
 	PostedAt  time.Time   `json:"postedAt"`
 }
+
+type SignedMessageView struct {
+	URI      string      `json:"uri"`
+	Author   ProfileView `json:"author"`
+	Body     string      `json:"body"`
+	Nick     *string     `json:"nick,omitempty"`
+	Color    *uint32     `json:"color,omitempty"`
+	Signet   SignetView  `json:"signet"`
+	PostedAt time.Time   `json:"postedAt"`
+}
+
+type GetMessagesOut struct {
+	Messages []SignedMessageView `json:"messages"`
+	Cursor   *string             `json:"cursor,omitempty"`
+}

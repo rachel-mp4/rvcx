@@ -65,6 +65,40 @@
 					"format": "datetime"
 				}
 			}
+		},
+		"signedMessageView": {
+			"type": "object",
+			"required": ["uri", "author", "body", "signet", "postedAt"],
+			"properties": {
+				"uri": { 
+					"type": "string", 
+					"format": "at-uri" 
+				},
+				"author": {
+					"type": "ref", 
+					"ref": "org.xcvr.actor.defs#profileView" 
+				},
+				"body": {
+					"type": "string"
+				},
+				"nick": {
+					"type": "string",
+					"maxLength": 16
+				}, 
+				"color": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 16777215
+				},
+				"signet": {
+					"type": "ref",
+					"ref": "org.xcvr.actor.defs#profileView"
+				},
+				"postedAt": {
+					"type": "string",
+					"format": "datetime"
+				}
+
 		}
 	}
 }

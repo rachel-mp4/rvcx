@@ -5,9 +5,14 @@
     "main": {
       "type": "query",
       "description": "Retrieve messages.",
+      "required": ["channelURI"]
       "parameters": {
         "type": "params",
         "properties": {
+          "channelURI": {
+            "type": "string",
+            "format": "at-uri"
+          }
           "limit": {
             "type": "integer",
             "minimum": 1,
@@ -29,7 +34,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "org.xcvr.lrc.defs#messageView"
+                "ref": "org.xcvr.lrc.defs#signedMessageView"
               }
             },
             "cursor": {
