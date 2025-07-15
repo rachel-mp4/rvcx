@@ -128,7 +128,7 @@ func (s *Store) GetMessages(channelURI string, limit int, cursor *int, ctx conte
 func (s *Store) evalGetMessages(query string, ctx context.Context, limit int, params ...any) ([]types.SignedMessageView, error) {
 	args := []any{limit}
 	args = append(args, params...)
-	rows, err := s.pool.Query(ctx, query, args)
+	rows, err := s.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
