@@ -6,6 +6,7 @@ require (
 	github.com/bluesky-social/indigo v0.0.0-20250616202859-d4516ea1d6cf
 	github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e
 	github.com/gorilla/sessions v1.4.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/haileyok/atproto-oauth-golang v0.0.2
 	github.com/ipfs/go-cid v0.4.1
 	github.com/jackc/pgx/v5 v5.7.4
@@ -31,7 +32,6 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.5 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect

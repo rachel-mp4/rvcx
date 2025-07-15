@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gorilla/websocket"
 	"net/http"
+	"time"
 	"xcvr-backend/internal/types"
 )
 
@@ -47,8 +48,14 @@ func (lsm *lexStreamModel) WSHandler(uri string, m *Model) http.HandlerFunc {
 }
 
 func (c *client) wsWriter(ctx context.Context) {
+	ticker := time.NewTicker(15 * time.Second)
 	for {
 		select {
+		case <-ticker.C:
+			err := c.conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(5*time.Second))
+			if err != nil {
+				return
+			}
 		case <-ctx.Done():
 			return
 		case e, ok := <-c.bus:
