@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 	"strconv"
 	"xcvr-backend/internal/types"
@@ -40,11 +39,11 @@ func (h *Handler) getMessages(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	cursorstr := r.URL.Query().Get("cursor")
-	cursor := math.MaxInt
+	var cursor *int
 	if cursorstr != "" {
 		c, err := strconv.Atoi(cursorstr)
 		if err == nil {
-			cursor = c
+			cursor = &c
 		}
 	}
 	channelURI := r.URL.Query().Get("channelURI")

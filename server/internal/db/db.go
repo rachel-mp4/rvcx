@@ -85,8 +85,8 @@ func (s *Store) StoreDidHandle(did string, handle string, ctx context.Context) e
 	return nil
 }
 
-func (s *Store) GetMessages(channelURI string, limit int, cursor int, ctx context.Context) ([]types.SignedMessageView, error) {
-	rows, err := s.pool.Query(ctx, `
+func (s *Store) GetMessages(channelURI string, limit int, cursor *int, ctx context.Context) ([]types.SignedMessageView, error) {
+	queryFmt := `
 		SELECT 
 			m.uri, 
 			m.did,
@@ -111,15 +111,29 @@ func (s *Store) GetMessages(channelURI string, limit int, cursor int, ctx contex
 		JOIN did_handles dh ON m.did = dh.did
 		LEFT JOIN profiles p ON m.did = p.did
 		JOIN did_handles issuer_dh ON s.issuer_did = issuer_dh.did
-		WHERE s.channel_uri = $1 AND s.message_id < $2
+		WHERE s.channel_uri = $2 %s
 		ORDER BY s.message_id DESC
-		LIMIT $3
-		`, channelURI, cursor, limit)
+		LIMIT $1
+		`
+	var query string
+	if cursor != nil {
+		query = fmt.Sprintf(queryFmt, "AND s.message_id < $3")
+		return s.evalGetMessages(query, ctx, limit, channelURI, *cursor)
+	} else {
+		query = fmt.Sprintf(queryFmt, "")
+		return s.evalGetMessages(query, ctx, limit, channelURI)
+	}
+}
+
+func (s *Store) evalGetMessages(query string, ctx context.Context, limit int, params ...any) ([]types.SignedMessageView, error) {
+	args := []any{limit}
+	args = append(args, params...)
+	rows, err := s.pool.Query(ctx, query, args)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var msgs = make([]types.SignedMessageView, 0, limit)
+	var msgs = make([]types.SignedMessageView, 0)
 	for rows.Next() {
 		var msg types.SignedMessageView
 		err := rows.Scan(
