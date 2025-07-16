@@ -56,13 +56,16 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, xrpc *oauth
 func (h *Handler) badRequest(w http.ResponseWriter, err error) {
 	h.logger.Deprintln(err.Error())
 	w.Header().Set("Content-Type", "application/json")
-	http.Error(w, `{"error":"Invalid JSON","message":"Could not parse request body"}`, http.StatusBadRequest)
+	http.Error(w, `{
+		"error":"Invalid JSON", 
+		"message":"Could not parse request body"
+	}`, http.StatusBadRequest)
 }
 
 func (h *Handler) serverError(w http.ResponseWriter, err error) {
 	h.logger.Println(err.Error())
 	w.Header().Set("Content-Type", "application/json")
-	http.Error(w, `{"error":"Internal server error","message":"Something went wrong"}`, http.StatusInternalServerError)
+	http.Error(w, `{"error":"Internal server error", "message":"Something went wrong"}`, http.StatusInternalServerError)
 }
 
 func (h *Handler) notFound(w http.ResponseWriter, err error) {

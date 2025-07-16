@@ -12,7 +12,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
 	github.com/lestrrat-go/jwx/v2 v2.0.12
-	github.com/rachel-mp4/lrcd v0.0.0-20250706133346-685719fb9bfc
+	github.com/rachel-mp4/lrcd v0.0.0-20250715235505-9d12a20f9fc6
 	github.com/rachel-mp4/lrcproto v0.0.0-20250527205756-58da8216f98c
 	github.com/rivo/uniseg v0.4.7
 	github.com/whyrusleeping/cbor-gen v0.3.1
