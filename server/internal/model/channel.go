@@ -237,6 +237,7 @@ func (m *Model) handleInitEvents(ctx context.Context, uri string, initChan <-cha
 			if err != nil {
 				m.logger.Println("failed to store signet!" + err.Error())
 			}
+			m.logger.Println("broadcasting signet")
 			m.BroadcastSignet(uri, sr)
 		}
 	}

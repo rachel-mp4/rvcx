@@ -113,10 +113,12 @@ func (lsm *lexStreamModel) broadcast(a any) {
 func (m *Model) BroadcastSignet(uri string, s types.Signet) {
 	lsm := m.uriMap[uri]
 	if lsm == nil {
+		m.logger.Println("AAAAAAAAAAA")
 		return
 	}
 	ihandle, err := m.store.ResolveDid(s.IssuerDID, context.Background())
 	if err != nil {
+		m.logger.Println("AAAAAAAAAAAAAAAAAAAAA")
 		return
 	}
 	sv := types.SignetView{
