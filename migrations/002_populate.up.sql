@@ -11,7 +11,8 @@ VALUES
 INSERT INTO did_handles (handle, did)
 VALUES
 ('alice.com', 'did:example:alice'),
-('bob.net', 'did:example:bob');
+('bob.net', 'did:example:bob'),
+('xcvr.org', 'did:plc:mqt7hthieqzpa3mwqwggbqei');
 
 INSERT INTO channels (uri, cid, did, host, title, topic, created_at)
 VALUES
