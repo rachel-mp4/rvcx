@@ -22,6 +22,7 @@ type PostProfileRequest struct {
 }
 
 type ProfileView struct {
+	Type        string  `json:"$type,const=org.xcvr.actor.defs#profileView"`
 	DID         string  `json:"did"`
 	Handle      string  `json:"handle"`
 	DisplayName *string `json:"displayName,omitempty"`
@@ -71,6 +72,7 @@ type GetChannelRequest struct {
 }
 
 type ChannelView struct {
+	Type           string      `json:"$type,const=org.xcvr.feed.defs#channelView"`
 	URI            string      `json:"uri"`
 	Host           string      `json:"host"`
 	Creator        ProfileView `json:"creator"`
@@ -92,6 +94,7 @@ type Signet struct {
 }
 
 type SignetView struct {
+	Type         string    `json:"$type,const=org.xcvr.lrc.defs#signetView"`
 	URI          string    `json:"uri"`
 	IssuerHandle string    `json:"issuerHandle"`
 	ChannelURI   string    `json:"channelURI"`
@@ -122,6 +125,7 @@ type PostMessageRequest struct {
 }
 
 type MessageView struct {
+	Type      string      `json:"$type,const=org.xcvr.lrc.defs#messageView"`
 	URI       string      `json:"uri"`
 	Author    ProfileView `json:"author"`
 	Body      string      `json:"body"`
@@ -132,6 +136,7 @@ type MessageView struct {
 }
 
 type SignedMessageView struct {
+	Type     string      `json:"$type,const=org.xcvr.lrc.defs#signedMessageView"`
 	URI      string      `json:"uri"`
 	Author   ProfileView `json:"author"`
 	Body     string      `json:"body"`
