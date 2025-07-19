@@ -74,7 +74,8 @@ func (h *Handler) resolveChannel(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	url := fmt.Sprintf("/lrc/%s/%s/ws", did, rkey)
-	rchanres := types.ResolveChannelResponse{URL: url}
+	uri := fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", did, rkey)
+	rchanres := types.ResolveChannelResponse{URL: url, URI: &uri}
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(rchanres)

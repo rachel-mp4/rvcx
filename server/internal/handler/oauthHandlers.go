@@ -184,11 +184,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 		h.handleFindDidAndHandleError(w, err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"did":    did,
-		"handle": handle,
-	})
+	h.serveProfileView(did, handle, w, r)
 }
 
 func (h *Handler) findDidAndHandle(r *http.Request) (string, string, error) {

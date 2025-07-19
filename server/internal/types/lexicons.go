@@ -61,7 +61,8 @@ type ResolveChannelRequest struct {
 }
 
 type ResolveChannelResponse struct {
-	URL string `json:"url"`
+	URL string  `json:"url"`
+	URI *string `json:"uri,omitempty"`
 }
 
 type GetChannelRequest struct {
