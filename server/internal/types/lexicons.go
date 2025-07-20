@@ -122,6 +122,7 @@ type PostMessageRequest struct {
 	Body       string  `json:"body"`
 	Nick       *string `json:"nick,omitempty"`
 	Color      *uint32 `json:"color,omitempty"`
+	Nonce      []byte  `json:"nonce,omitempty"`
 }
 
 type MessageView struct {

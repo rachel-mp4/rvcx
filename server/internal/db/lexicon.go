@@ -194,14 +194,32 @@ func (s *Store) UpdateMessage(message *types.Message, ctx context.Context) error
 	return err
 }
 
-func (s *Store) QuerySignet(channelUri string, id uint32, ctx context.Context) (string, error) {
-	row := s.pool.QueryRow(ctx, `SELECT s.uri FROM signets s WHERE s.channel_uri = $1 AND s.message_id = $2`, channelUri, id)
-	var signetUri string
-	err := row.Scan(&signetUri)
+func (s *Store) QuerySignet(channelUri string, id uint32, ctx context.Context) (signetUri string, signetHandle string, err error) {
+	row := s.pool.QueryRow(ctx, `SELECT (s.uri, s.author_handle) FROM signets s WHERE s.channel_uri = $1 AND s.message_id = $2`, channelUri, id)
+	err = row.Scan(&signetUri, &signetHandle)
 	if err != nil {
-		return "", errors.New("error scanning: " + err.Error())
+		err = errors.New("error scanning: " + err.Error())
 	}
-	return signetUri, nil
+	return
+}
+
+func (s *Store) QuerySignetHandle(uri string, ctx context.Context) (string, error) {
+	row := s.pool.QueryRow(ctx, `SELECT (s.author_handle) FROM signets s WHERE s.uri = $1`, uri)
+	var handle string
+	err := row.Scan(&handle)
+	if err != nil {
+		return "", errors.New("BOBOBOBOBOBOL " + err.Error())
+	}
+	return handle, nil
+}
+
+func (s *Store) QuerySignetChannelIdNum(uri string, ctx context.Context) (channelUri string, messageID uint32, err error) {
+	row := s.pool.QueryRow(ctx, `SELECT (s.channel_uri, message_id) FROM signets s WHERE s.uri = $1`, uri)
+	err = row.Scan(&channelUri, &messageID)
+	if err != nil {
+		err = errors.New("BOBOBOBOBOBOL " + err.Error())
+	}
+	return
 }
 
 func (s *Store) GetMsgChannelURI(signetURI string, ctx context.Context) (string, error) {

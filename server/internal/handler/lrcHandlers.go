@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bluesky-social/indigo/atproto/syntax"
+	"github.com/rachel-mp4/lrcd"
 	"net/http"
 	"os"
+	"slices"
 	"time"
 	"xcvr-backend/internal/atputils"
 	"xcvr-backend/internal/lex"
@@ -128,30 +130,42 @@ func (h *Handler) postMyChannel(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) parseMessageRequest(r *http.Request) (*lex.MessageRecord, *time.Time, error) {
+func (h *Handler) parseMessageRequest(r *http.Request) (lmr *lex.MessageRecord, now *time.Time, handle *string, nonce []byte, err error) {
 	var mr types.PostMessageRequest
+	lmr = &lex.MessageRecord{}
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&mr)
+	err = decoder.Decode(&mr)
 	if err != nil {
-		return nil, nil, errors.New("couldn't decode: " + err.Error())
+		err = errors.New("couldn't decode: " + err.Error())
+		return
 	}
 	if mr.SignetURI == nil {
 		if mr.MessageID == nil || mr.ChannelURI == nil {
-			return nil, nil, errors.New("must provide a way to determine signet")
+			err = errors.New("must provide a way to determine signet")
+			return
 		}
-		signetUri, err := h.db.QuerySignet(*mr.ChannelURI, *mr.MessageID, r.Context())
-		if err != nil {
-			return nil, nil, errors.New("i couldn't find the signet :c : " + err.Error())
+		signetUri, signetHandle, yorks := h.db.QuerySignet(*mr.ChannelURI, *mr.MessageID, r.Context())
+		if yorks != nil {
+			err = errors.New("i couldn't find the signet :c : " + yorks.Error())
+			return
 		}
 		mr.SignetURI = &signetUri
+		handle = &signetHandle
+	} else {
+		signetHandle, yorks := h.db.QuerySignetHandle(*mr.SignetURI, r.Context())
+		if yorks != nil {
+			err = errors.New("yorks skooby 💀" + yorks.Error())
+			return
+		}
+		handle = &signetHandle
 	}
-	var lmr lex.MessageRecord
 	lmr.SignetURI = *mr.SignetURI
 	lmr.Body = mr.Body
 	if mr.Nick != nil {
 		nick := *mr.Nick
 		if atputils.ValidateLength(nick, 16) {
-			return nil, nil, errors.New("that nick is too long")
+			err = errors.New("that nick is too long")
+			return
 		}
 	}
 	lmr.Nick = mr.Nick
@@ -159,20 +173,34 @@ func (h *Handler) parseMessageRequest(r *http.Request) (*lex.MessageRecord, *tim
 	if mr.Color != nil {
 		color := uint64(*mr.Color)
 		if color > 16777215 {
-			return nil, nil, errors.New("that color is too big")
+			err = errors.New("that color is too big")
+			return
 		}
 	}
-	now := syntax.DatetimeNow()
-	lmr.PostedAt = now.String()
-	nt := now.Time()
-	return &lmr, &nt, nil
+	nonce = mr.Nonce
+	nowsyn := syntax.DatetimeNow()
+	lmr.PostedAt = nowsyn.String()
+	nt := nowsyn.Time()
+	now = &nt
+	return
 }
 
 func (h *Handler) postMyMessage(w http.ResponseWriter, r *http.Request) {
-	lmr, now, err := h.parseMessageRequest(r)
+	lmr, now, handle, nonce, err := h.parseMessageRequest(r)
 	if err != nil {
 		h.badRequest(w, errors.New("no good! "+err.Error()))
 		return
+	}
+	if handle == nil || *handle != atputils.GetMyHandle() {
+		h.badRequest(w, errors.New("i only post my messages"))
+	}
+	curi, mid, err := h.db.QuerySignetChannelIdNum(lmr.SignetURI, r.Context())
+	if err != nil {
+		h.serverError(w, err)
+	}
+	correctNonce := lrcd.GenerateNonce(mid, curi, os.Getenv("LRCD_SECRET"))
+	if !slices.Equal(nonce, correctNonce) {
+		h.badRequest(w, errors.New("i think user tried to post someone else's post"))
 	}
 	uri, cid, err := h.myClient.CreateXCVRMessage(lmr, r.Context())
 	if err != nil {
@@ -225,7 +253,7 @@ func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lmr, now, err := h.parseMessageRequest(r)
+	lmr, now, _, _, err := h.parseMessageRequest(r)
 	if err != nil {
 		h.badRequest(w, errors.New("couldn't parse message "+err.Error()))
 		return

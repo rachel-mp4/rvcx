@@ -137,6 +137,7 @@ func (m *Model) getServer(uri string) (*lrcd.Server, error) {
 			lrcd.WithLogging(os.Stdout, true),
 			lrcd.WithInitialID(lastID),
 			lrcd.WithInitChannel(initChan),
+			lrcd.WithServerURIAndSecret(uri, os.Getenv("LRCD_SECRET")),
 		)
 		if err != nil {
 			return nil, errors.New("Error creating server")
