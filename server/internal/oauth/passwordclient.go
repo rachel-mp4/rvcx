@@ -62,6 +62,15 @@ func (c *PasswordClient) RefreshSession(ctx context.Context) error {
 	return nil
 }
 
+func (c *PasswordClient) CreateXCVRMessage(message *lex.MessageRecord, ctx context.Context) (cid string, uri string, err error) {
+	input := atproto.RepoCreateRecord_Input{
+		Collection: "org.xcvr.lrc.message",
+		Repo:       *c.did,
+		Record:     &util.LexiconTypeDecoder{Val: message},
+	}
+	return c.createMyRecord(input, ctx)
+}
+
 func (c *PasswordClient) CreateXCVRSignet(signet *lex.SignetRecord, ctx context.Context) (cid string, uri string, err error) {
 	input := atproto.RepoCreateRecord_Input{
 		Collection: "org.xcvr.lrc.signet",

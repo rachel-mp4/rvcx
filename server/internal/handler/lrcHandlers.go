@@ -169,7 +169,47 @@ func (h *Handler) parseMessageRequest(r *http.Request) (*lex.MessageRecord, *tim
 }
 
 func (h *Handler) postMyMessage(w http.ResponseWriter, r *http.Request) {
+	lmr, now, err := h.parseMessageRequest(r)
+	if err != nil {
+		h.badRequest(w, errors.New("no good! "+err.Error()))
+		return
+	}
+	uri, cid, err := h.myClient.CreateXCVRMessage(lmr, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("that didn't go as planneD: "+err.Error()))
+		return
+	}
+	did := atputils.GetMyDid()
+	h.postPostMessagePostHandler(uri, cid, did, now, lmr, w, r)
+}
 
+func (h *Handler) postPostMessagePostHandler(uri, cid, did string, now *time.Time, lmr *lex.MessageRecord, w http.ResponseWriter, r *http.Request) {
+	var coloruint32ptr *uint32
+	if lmr.Color != nil {
+		color := uint32(*lmr.Color)
+		coloruint32ptr = &color
+	}
+	message := types.Message{
+		URI:       uri,
+		DID:       did,
+		CID:       cid,
+		SignetURI: lmr.SignetURI,
+		Body:      lmr.Body,
+		Nick:      lmr.Nick,
+		Color:     coloruint32ptr,
+		PostedAt:  *now,
+	}
+	err := h.db.StoreMessage(&message, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("sooo... the record posted but i couldn't store it: "+err.Error()))
+		return
+	}
+	curi, err := h.db.GetMsgChannelURI(lmr.SignetURI, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("aaaaaaaaaaaa "+err.Error()))
+	}
+	h.model.BroadcastMessage(curi, message)
+	h.getMessages(w, r)
 }
 
 func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
@@ -197,32 +237,7 @@ func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	did := session.Values["did"].(string)
-	var coloruint32ptr *uint32
-	if lmr.Color != nil {
-		color := uint32(*lmr.Color)
-		coloruint32ptr = &color
-	}
-	message := types.Message{
-		URI:       uri,
-		DID:       did,
-		CID:       cid,
-		SignetURI: lmr.SignetURI,
-		Body:      lmr.Body,
-		Nick:      lmr.Nick,
-		Color:     coloruint32ptr,
-		PostedAt:  *now,
-	}
-	err = h.db.StoreMessage(&message, r.Context())
-	if err != nil {
-		h.serverError(w, errors.New("sooo... the record posted but i couldn't store it: "+err.Error()))
-		return
-	}
-	curi, err := h.db.GetMsgChannelURI(lmr.SignetURI, r.Context())
-	if err != nil {
-		h.serverError(w, errors.New("aaaaaaaaaaaa "+err.Error()))
-	}
-	h.model.BroadcastMessage(curi, message)
-	h.getMessages(w, r)
+	h.postPostMessagePostHandler(uri, cid, did, now, lmr, w, r)
 }
 
 func (h *Handler) deleteChannel(w http.ResponseWriter, r *http.Request) {
