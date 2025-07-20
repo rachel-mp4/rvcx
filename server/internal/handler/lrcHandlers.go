@@ -193,14 +193,17 @@ func (h *Handler) postMyMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	if handle == nil || *handle != atputils.GetMyHandle() {
 		h.badRequest(w, errors.New("i only post my messages"))
+		return
 	}
 	curi, mid, err := h.db.QuerySignetChannelIdNum(lmr.SignetURI, r.Context())
 	if err != nil {
 		h.serverError(w, err)
+		return
 	}
 	correctNonce := lrcd.GenerateNonce(mid, curi, os.Getenv("LRCD_SECRET"))
 	if !slices.Equal(nonce, correctNonce) {
 		h.badRequest(w, errors.New("i think user tried to post someone else's post"))
+		return
 	}
 	uri, cid, err := h.myClient.CreateXCVRMessage(lmr, r.Context())
 	if err != nil {
