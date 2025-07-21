@@ -1,7 +1,8 @@
 INSERT INTO profiles (did, display_name, default_nick, status, avatar_cid, avatar_mime, color)
 VALUES
 ('did:example:alice', 'Alice Example', 'alice', 'Chilling', 'bafybeib6...', 'image/png', 16711680),
-('did:example:bob', 'Bob Example', 'bobby', 'Working hard', 'bafybeib7...', 'image/jpeg', 65280);
+('did:example:bob', 'Bob Example', 'bobby', 'Working hard', 'bafybeib7...', 'image/jpeg', 65280),
+('did:plc:mqt7hthieqzpa3mwqwggbqei', 'xcvr', 'wanderer', 'hi', '', '', 3702605);
 
 INSERT INTO profile_records(uri, profile_did, cid)
 VALUES

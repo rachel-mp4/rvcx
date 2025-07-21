@@ -136,10 +136,12 @@ func (m *Model) BroadcastMessage(uri string, msg types.Message) {
 	m.logger.Deprintln("broadcasting!")
 	lsm := m.uriMap[uri]
 	if lsm == nil {
+		m.logger.Deprintln("failed to map uri to lsm!")
 		return
 	}
 	pv, err := m.store.GetProfileView(msg.DID, context.Background())
 	if err != nil {
+		m.logger.Deprintln("failed to get profile view: " + err.Error())
 		return
 	}
 	mv := types.MessageView{
