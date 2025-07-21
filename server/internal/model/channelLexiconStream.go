@@ -133,6 +133,7 @@ func (m *Model) BroadcastSignet(uri string, s types.Signet) {
 }
 
 func (m *Model) BroadcastMessage(uri string, msg types.Message) {
+	m.logger.Deprintln("broadcasting!")
 	lsm := m.uriMap[uri]
 	if lsm == nil {
 		return
