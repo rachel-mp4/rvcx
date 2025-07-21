@@ -97,21 +97,25 @@ func (s *Store) DeleteProfile(did string, cid string, ctx context.Context) error
 
 func (s *Store) GetProfileView(did string, ctx context.Context) (*types.ProfileView, error) {
 	row := s.pool.QueryRow(ctx, `SELECT 
+		dh.handle,
 		p.display_name,
-		p.default_nick,
 		p.status,
+		p.color,
 		p.avatar_cid,
-		p.color
+		p.default_nick
 		FROM profiles p
+		JOIN did_handles dh ON p.did = dh.did
 		WHERE p.did = $1
 		`, did)
 	var p types.ProfileView
 	p.DID = did
-	err := row.Scan(&p.DisplayName,
-		&p.DefaultNick,
+	err := row.Scan(
+		&p.Handle,
+		&p.DisplayName,
 		&p.Status,
+		&p.Color,
 		&p.Avatar,
-		&p.Color)
+		&p.DefaultNick)
 	if err != nil {
 		return nil, errors.New("error scanning profile: " + err.Error())
 	}
