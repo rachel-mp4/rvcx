@@ -1,6 +1,9 @@
 package types
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Profile struct {
 	DID         string
@@ -30,6 +33,17 @@ type ProfileView struct {
 	Color       *uint64 `json:"color,omitempty"`
 	Avatar      *string `json:"avatar,omitempty"`
 	DefaultNick *string `json:"defaultNick,omitempty"`
+}
+
+func (p ProfileView) MarshalJSON() ([]byte, error) {
+	type Alias ProfileView
+	return json.Marshal(&struct {
+		Type string `json:"$type"`
+		*Alias
+	}{
+		Type:  "org.xcvr.actor.defs#profileView",
+		Alias: (*Alias)(&p),
+	})
 }
 
 type DIDHandle struct {
@@ -82,6 +96,17 @@ type ChannelView struct {
 	CreatedAt      time.Time   `json:"createdAt"`
 }
 
+func (c ChannelView) MarshalJSON() ([]byte, error) {
+	type Alias ChannelView
+	return json.Marshal(&struct {
+		Type string `json:"$type"`
+		*Alias
+	}{
+		Type:  "org.xcvr.feed.defs#channelView",
+		Alias: (*Alias)(&c),
+	})
+}
+
 type Signet struct {
 	URI          string
 	IssuerDID    string
@@ -101,6 +126,17 @@ type SignetView struct {
 	LrcId        uint32    `json:"lrcID"`
 	AuthorHandle string    `json:"authorHandle"`
 	StartedAt    time.Time `json:"startedAt"`
+}
+
+func (s SignetView) MarshalJSON() ([]byte, error) {
+	type Alias SignetView
+	return json.Marshal(&struct {
+		Type string `json:"$type"`
+		*Alias
+	}{
+		Type:  "org.xcvr.lrc.defs#signetView",
+		Alias: (*Alias)(&s),
+	})
 }
 
 type Message struct {
@@ -136,6 +172,17 @@ type MessageView struct {
 	PostedAt  time.Time   `json:"postedAt"`
 }
 
+func (m MessageView) MarshalJSON() ([]byte, error) {
+	type Alias MessageView
+	return json.Marshal(&struct {
+		Type string `json:"$type"`
+		*Alias
+	}{
+		Type:  "org.xcvr.lrc.defs#messageView",
+		Alias: (*Alias)(&m),
+	})
+}
+
 type SignedMessageView struct {
 	Type     string      `json:"$type,const=org.xcvr.lrc.defs#signedMessageView"`
 	URI      string      `json:"uri"`
@@ -145,6 +192,17 @@ type SignedMessageView struct {
 	Color    *uint32     `json:"color,omitempty"`
 	Signet   SignetView  `json:"signet"`
 	PostedAt time.Time   `json:"postedAt"`
+}
+
+func (m SignedMessageView) MarshalJSON() ([]byte, error) {
+	type Alias SignedMessageView
+	return json.Marshal(&struct {
+		Type string `json:"$type"`
+		*Alias
+	}{
+		Type:  "org.xcvr.lrc.defs#signedMessageView",
+		Alias: (*Alias)(&m),
+	})
 }
 
 type GetMessagesOut struct {
