@@ -132,9 +132,10 @@ func (h *Handler) postPostChannelPostHandler(channel *types.Channel, w http.Resp
 	handle, err := h.db.ResolveDid(channel.DID, r.Context())
 	if err != nil {
 		h.serverError(w, errors.New("couldn't find handle"))
+		return
 	}
 	rkey, _ := atputils.RkeyFromUri(channel.URI)
-	http.Redirect(w, r, fmt.Sprintf("/c/%s/%s", handle, rkey), http.StatusCreated)
+	http.Redirect(w, r, fmt.Sprintf("/c/%s/%s", handle, rkey), http.StatusSeeOther)
 }
 
 func (h *Handler) parseMessageRequest(r *http.Request) (lmr *lex.MessageRecord, now *time.Time, handle *string, nonce []byte, err error) {
