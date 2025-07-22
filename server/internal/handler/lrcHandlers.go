@@ -41,7 +41,6 @@ func (h *Handler) postChannel(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, errors.New("couldn't find client: "+err.Error()))
 		return
 	}
-
 	lcr, now, err := h.parseChannelRequest(r)
 	if err != nil {
 		h.badRequest(w, err)
@@ -62,12 +61,7 @@ func (h *Handler) postChannel(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: *now,
 		IndexedAt: time.Now(),
 	}
-	err = h.db.StoreChannel(&channel, r.Context())
-	if err != nil {
-		h.serverError(w, errors.New("well... the record posted but i couldn't store it: "+err.Error()))
-		return
-	}
-	h.getChannels(w, r)
+	h.postPostChannelPostHandler(&channel, w, r)
 }
 
 func (h *Handler) parseChannelRequest(r *http.Request) (*lex.ChannelRecord, *time.Time, error) {
@@ -121,13 +115,26 @@ func (h *Handler) postMyChannel(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: *now,
 		IndexedAt: time.Now(),
 	}
-	err = h.db.StoreChannel(&channel, r.Context())
+	h.postPostChannelPostHandler(&channel, w, r)
+}
+
+func (h *Handler) postPostChannelPostHandler(channel *types.Channel, w http.ResponseWriter, r *http.Request) {
+	err := h.db.StoreChannel(channel, r.Context())
 	if err != nil {
-		h.serverError(w, errors.New("sooo... the record posted but i couldn't store it: "+err.Error()))
+		h.serverError(w, errors.New("well... the record posted but i couldn't store it: "+err.Error()))
 		return
 	}
-	h.getChannels(w, r)
-
+	err = h.model.AddChannel(channel)
+	if err != nil {
+		h.serverError(w, errors.New("very strange situation: "+err.Error()))
+		return
+	}
+	handle, err := h.db.ResolveDid(channel.DID, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("couldn't find handle"))
+	}
+	rkey, _ := atputils.RkeyFromUri(channel.URI)
+	http.Redirect(w, r, fmt.Sprintf("/c/%s/%s", handle, rkey), http.StatusCreated)
 }
 
 func (h *Handler) parseMessageRequest(r *http.Request) (lmr *lex.MessageRecord, now *time.Time, handle *string, nonce []byte, err error) {

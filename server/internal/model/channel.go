@@ -29,6 +29,7 @@ type Model struct {
 
 type channelModel struct {
 	uri         string
+	welcome     string
 	serverModel *serverModel
 	streamModel *lexStreamModel
 }
@@ -99,7 +100,8 @@ func Init(store *db.Store, logger *log.Logger, cli *oauth.PasswordClient) *Model
 	for _, uri := range uris {
 		valid := (uri.Host == myid)
 		beep := channelModel{
-			uri: uri.URI,
+			welcome: uri.Topic,
+			uri:     uri.URI,
 		}
 		if valid {
 			beep.serverModel = &serverModel{lastID: uri.LastID}
@@ -113,6 +115,29 @@ func Init(store *db.Store, logger *log.Logger, cli *oauth.PasswordClient) *Model
 		cli,
 		sync.Mutex{},
 	}
+}
+
+func (m *Model) AddChannel(c *types.Channel) error {
+	_, ok := m.uriMap[c.URI]
+	if ok {
+		return errors.New("tried to add existing server!")
+	}
+	valid := (c.Host == os.Getenv("MY_IDENTITY"))
+	var welcome string
+	if c.Topic == nil {
+		welcome = "and now you're connected"
+	} else {
+		welcome = *c.Topic
+	}
+	beep := channelModel{
+		welcome: welcome,
+		uri:     c.URI,
+	}
+	if valid {
+		beep.serverModel = &serverModel{lastID: 1}
+	}
+	m.uriMap[c.URI] = &beep
+	return nil
 }
 
 func (m *Model) getServer(uri string) (*lrcd.Server, error) {
@@ -134,6 +159,7 @@ func (m *Model) getServer(uri string) (*lrcd.Server, error) {
 		initChan := make(chan lrcpb.Event_Init, 100)
 
 		server, err := lrcd.NewServer(
+			lrcd.WithWelcome(cm.welcome),
 			lrcd.WithLogging(os.Stdout, true),
 			lrcd.WithInitialID(lastID),
 			lrcd.WithInitChannel(initChan),

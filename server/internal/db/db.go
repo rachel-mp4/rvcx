@@ -194,6 +194,7 @@ func (s *Store) GetChannelURI(handle string, title string, ctx context.Context) 
 type URIHost struct {
 	URI    string
 	Host   string
+	Topic  string
 	LastID uint32
 }
 
@@ -201,7 +202,8 @@ func (s *Store) GetChannelURIs(ctx context.Context) ([]URIHost, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT
 			channels.uri,
-			channels.host
+			channels.host,
+			channels.topic,
 		FROM channels
 		`)
 	if err != nil {
@@ -211,7 +213,7 @@ func (s *Store) GetChannelURIs(ctx context.Context) ([]URIHost, error) {
 	var urihosts = make([]URIHost, 0, 100)
 	for rows.Next() {
 		var urihost URIHost
-		err := rows.Scan(&urihost.URI, &urihost.Host)
+		err := rows.Scan(&urihost.URI, &urihost.Host, &urihost.Topic)
 		if err != nil {
 			return nil, err
 		}
