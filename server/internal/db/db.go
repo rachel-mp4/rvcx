@@ -203,7 +203,7 @@ func (s *Store) GetChannelURIs(ctx context.Context) ([]URIHost, error) {
 		SELECT
 			channels.uri,
 			channels.host,
-			channels.topic,
+			channels.topic
 		FROM channels
 		`)
 	if err != nil {
