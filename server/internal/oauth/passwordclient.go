@@ -82,7 +82,7 @@ func (c *PasswordClient) CreateXCVRSignet(signet *lex.SignetRecord, ctx context.
 
 func (c *PasswordClient) CreateXCVRChannel(channel *lex.ChannelRecord, ctx context.Context) (cid string, uri string, err error) {
 	input := atproto.RepoCreateRecord_Input{
-		Collection: "org.xcvr.lrc.channel",
+		Collection: "org.xcvr.feed.channel",
 		Repo:       *c.did,
 		Record:     &util.LexiconTypeDecoder{Val: channel},
 	}
