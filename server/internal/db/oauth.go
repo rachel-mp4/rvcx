@@ -61,8 +61,9 @@ func (s *Store) StoreOAuthSession(session *types.Session, ctx context.Context) e
 }
 
 func (s *Store) GetOauthRequest(state string, ctx context.Context) (*types.OAuthRequest, error) {
-	rows, err := s.pool.Query(ctx, `
+	row := s.pool.QueryRow(ctx, `
 		SELECT
+			r.id,
 			r.authserver_iss,
 			r.did,
 			r.pds_url,
@@ -73,16 +74,8 @@ func (s *Store) GetOauthRequest(state string, ctx context.Context) (*types.OAuth
 		WHERE r.state = $1
 		LIMIT 1
 		`, state)
-	if err != nil {
-		return nil, errors.New("error querying for oauth request:" + err.Error())
-	}
-	defer rows.Close()
 	var req types.OAuthRequest
-	ok := rows.Next()
-	if !ok {
-		return nil, errors.New("no rows")
-	}
-	err = rows.Scan(&req.AuthserverIss, &req.Did, &req.PdsUrl, &req.PkceVerifier, &req.DpopAuthServerNonce, &req.DpopPrivKey)
+	err := row.Scan(&req.ID, &req.AuthserverIss, &req.Did, &req.PdsUrl, &req.PkceVerifier, &req.DpopAuthServerNonce, &req.DpopPrivKey)
 	if err != nil {
 		return nil, errors.New("error scanning rows while getting oauth request:" + err.Error())
 	}
