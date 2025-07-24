@@ -31,7 +31,7 @@ func (h *Handler) acceptWebsocket(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) postChannel(w http.ResponseWriter, r *http.Request) {
 	session, _ := h.sessionStore.Get(r, "oauthsession")
-	_, ok := session.Values["id"].(uint)
+	_, ok := session.Values["id"].(int)
 	if !ok {
 		h.postMyChannel(w, r)
 		return
@@ -253,7 +253,7 @@ func (h *Handler) postPostMessagePostHandler(uri, cid, did string, now *time.Tim
 
 func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
 	session, _ := h.sessionStore.Get(r, "oauthsession")
-	_, ok := session.Values["id"].(uint)
+	_, ok := session.Values["id"].(int)
 	if !ok {
 		h.postMyMessage(w, r)
 		return

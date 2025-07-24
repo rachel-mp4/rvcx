@@ -12,7 +12,7 @@ type OauthFlowResult struct {
 }
 
 type OAuthRequest struct {
-	ID                  uint
+	ID                  int
 	AuthserverIss       string
 	State               string
 	Did                 string

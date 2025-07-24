@@ -60,7 +60,7 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 		pu.UpdateColor = true
 	}
 	session, _ := h.sessionStore.Get(r, "oauthsession")
-	_, ok := session.Values["id"].(uint)
+	_, ok := session.Values["id"].(int)
 	if !ok {
 		h.badRequest(w, errors.New("cannot update profile, not authenticated"))
 		return

@@ -6,25 +6,25 @@ import (
 )
 
 type ClientMap struct {
-	clients map[uint]*OauthXRPCClient
-	expiry  map[uint]time.Time
+	clients map[int]*OauthXRPCClient
+	expiry  map[int]time.Time
 	mu      sync.Mutex
 }
 
 func NewClientMap() *ClientMap {
 	return &ClientMap{
-		clients: make(map[uint]*OauthXRPCClient, 10),
-		expiry:  make(map[uint]time.Time, 10),
+		clients: make(map[int]*OauthXRPCClient, 10),
+		expiry:  make(map[int]time.Time, 10),
 	}
 }
 
-func (c *ClientMap) Map(id uint) *OauthXRPCClient {
+func (c *ClientMap) Map(id int) *OauthXRPCClient {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.clients[id]
 }
 
-func (c *ClientMap) Append(id uint, client *OauthXRPCClient, expiration time.Time) {
+func (c *ClientMap) Append(id int, client *OauthXRPCClient, expiration time.Time) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.clients[id] = client

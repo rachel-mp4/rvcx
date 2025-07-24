@@ -222,7 +222,7 @@ func (h *Handler) handleFindDidAndHandleError(w http.ResponseWriter, err error) 
 
 func (h *Handler) getClient(r *http.Request) (*oauth.OauthXRPCClient, error) {
 	s, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := s.Values["id"].(uint)
+	id, ok := s.Values["id"].(int)
 	if !ok {
 		return nil, errors.New("not authorized")
 	}
@@ -237,7 +237,7 @@ func (h *Handler) getClient(r *http.Request) (*oauth.OauthXRPCClient, error) {
 	return client, nil
 }
 
-func (h *Handler) resetClient(id uint, ctx context.Context) (*oauth.OauthXRPCClient, error) {
+func (h *Handler) resetClient(id int, ctx context.Context) (*oauth.OauthXRPCClient, error) {
 	session, err := h.db.GetOauthSession(id, ctx)
 	if err != nil {
 		return nil, errors.New("errpr setting up session: " + err.Error())

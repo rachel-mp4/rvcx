@@ -89,8 +89,8 @@ func (s *Store) GetOauthRequest(state string, ctx context.Context) (*types.OAuth
 	return &req, nil
 }
 
-func (s *Store) GetOauthSession(id uint, ctx context.Context) (*types.Session, error) {
-	rows, err := s.pool.Query(ctx, `
+func (s *Store) GetOauthSession(id int, ctx context.Context) (*types.Session, error) {
+	row := s.pool.QueryRow(ctx, `
 		SELECT
 			r.authserver_iss,
 			r.did,
@@ -104,18 +104,9 @@ func (s *Store) GetOauthSession(id uint, ctx context.Context) (*types.Session, e
 			r.expiration
 		FROM oauthsessions r
 		WHERE r.id = $1
-		LIMIT 1
 		`, id)
-	if err != nil {
-		return nil, errors.New("error querying oauthsessions:" + err.Error())
-	}
-	defer rows.Close()
 	var session types.Session
-	ok := rows.Next()
-	if !ok {
-		return nil, errors.New("no rows")
-	}
-	err = rows.Scan(
+	err := row.Scan(
 		&session.AuthserverIss,
 		&session.Did,
 		&session.PdsUrl,
@@ -142,7 +133,7 @@ func (s *Store) DeleteOauthRequest(state string, ctx context.Context) error {
 	return nil
 }
 
-func (s *Store) SetDpopPdsNonce(id uint, dpopnonce string) error {
+func (s *Store) SetDpopPdsNonce(id int, dpopnonce string) error {
 	_, err := s.pool.Exec(context.Background(), `
 			UPDATE oauthsessions SET dpop_pds_nonce = $1 WHERE id = $2
 		`, dpopnonce, id)
