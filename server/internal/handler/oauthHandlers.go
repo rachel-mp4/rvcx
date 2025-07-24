@@ -240,7 +240,7 @@ func (h *Handler) getClient(r *http.Request) (*oauth.OauthXRPCClient, error) {
 func (h *Handler) resetClient(id int, ctx context.Context) (*oauth.OauthXRPCClient, error) {
 	session, err := h.db.GetOauthSession(id, ctx)
 	if err != nil {
-		return nil, errors.New("errpr setting up session: " + err.Error())
+		return nil, errors.New(fmt.Sprintf("errpr setting up session %d: %s", id, err.Error()))
 	}
 	return h.setupClient(session), nil
 }
