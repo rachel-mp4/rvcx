@@ -52,9 +52,11 @@ func (h *Handler) getMessages(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, errors.New("something went south: "+err.Error()))
 		return
 	}
+	var gmo types.GetMessagesOut
+	gmo.Messages = messages
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
-	encoder.Encode(messages)
+	encoder.Encode(gmo)
 }
 
 func (h *Handler) resolveChannel(w http.ResponseWriter, r *http.Request) {
