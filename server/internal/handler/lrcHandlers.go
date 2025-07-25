@@ -184,7 +184,9 @@ func (h *Handler) parseMessageRequest(r *http.Request) (lmr *lex.MessageRecord, 
 			err = errors.New("that color is too big")
 			return
 		}
+		lmr.Color = &color
 	}
+
 	nonce = mr.Nonce
 	nowsyn := syntax.DatetimeNow()
 	lmr.PostedAt = nowsyn.String()
