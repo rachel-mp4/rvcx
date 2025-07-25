@@ -87,3 +87,10 @@ func (h *Handler) WithCORSAll() http.Handler {
 		h.router.ServeHTTP(w, r)
 	})
 }
+
+func (h *Handler) Serve() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h.logger.Deprintf("incoming request: %s %s", r.Method, r.URL.Path)
+		h.router.ServeHTTP(w, r)
+	})
+}

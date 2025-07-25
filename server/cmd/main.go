@@ -58,7 +58,7 @@ func main() {
 	}
 	h := handler.New(store, logger, oauthclient, xrpc, model)
 	go consumeLoop(context.Background(), store, logger, xrpc)
-	http.ListenAndServe(":8080", h.WithCORSAll())
+	http.ListenAndServe(":8080", h.Serve())
 
 }
 
