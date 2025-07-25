@@ -54,6 +54,13 @@ func (h *Handler) getMessages(w http.ResponseWriter, r *http.Request) {
 	}
 	var gmo types.GetMessagesOut
 	gmo.Messages = messages
+	if len(messages) != 0 {
+		smv := messages[len(messages)]
+		if int(smv.Signet.LrcId) > 2 {
+			cursor := strconv.Itoa(int(smv.Signet.LrcId))
+			gmo.Cursor = &cursor
+		}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(gmo)
