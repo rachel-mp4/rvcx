@@ -9,13 +9,13 @@ import (
 	"github.com/bluesky-social/jetstream/pkg/client"
 	"github.com/bluesky-social/jetstream/pkg/client/schedulers/sequential"
 	"github.com/bluesky-social/jetstream/pkg/models"
+	"rvcx/internal/atputils"
+	"rvcx/internal/db"
+	"rvcx/internal/lex"
+	"rvcx/internal/log"
+	"rvcx/internal/oauth"
+	"rvcx/internal/types"
 	"time"
-	"xcvr-backend/internal/atputils"
-	"xcvr-backend/internal/db"
-	"xcvr-backend/internal/lex"
-	"xcvr-backend/internal/log"
-	"xcvr-backend/internal/oauth"
-	"xcvr-backend/internal/types"
 )
 
 type Consumer struct {
@@ -67,6 +67,10 @@ func (c *Consumer) Consume(ctx context.Context) error {
 func (h *handler) HandleEvent(ctx context.Context, event *models.Event) error {
 	if event.Commit == nil {
 		return nil
+	}
+	err := h.ensureIKnowYou(event.Did, ctx)
+	if err != nil {
+		return err
 	}
 
 	switch event.Commit.Collection {
@@ -317,4 +321,19 @@ func parseSignetRecord(event *models.Event) (*types.Signet, error) {
 
 func URI(event *models.Event) string {
 	return atputils.URI(event.Did, event.Commit.Collection, event.Commit.RKey)
+}
+
+func (h *handler) ensureIKnowYou(did string, ctx context.Context) error {
+	_, err := h.db.ResolveDid(did, ctx)
+	if err != nil {
+		handle, err := atputils.TryLookupDid(ctx, did)
+		if err != nil {
+			return errors.New("failed to lookup previously unknown user: " + err.Error())
+		}
+		err = h.db.StoreDidHandle(did, handle, ctx)
+		if err != nil {
+			return errors.New("failed to store did_handle for a previously unknown user")
+		}
+	}
+	return nil
 }

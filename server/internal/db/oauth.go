@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"xcvr-backend/internal/types"
+	"rvcx/internal/types"
 )
 
 func (s *Store) StoreOAuthRequest(req *types.OAuthRequest, ctx context.Context) error {

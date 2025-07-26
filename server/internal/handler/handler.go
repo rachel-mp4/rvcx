@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"os"
-	"xcvr-backend/internal/db"
-	"xcvr-backend/internal/log"
-	"xcvr-backend/internal/model"
-	"xcvr-backend/internal/oauth"
+	"rvcx/internal/db"
+	"rvcx/internal/log"
+	"rvcx/internal/model"
+	"rvcx/internal/oauth"
 )
 
 type Handler struct {
@@ -28,28 +28,28 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, xrpc *oauth
 	clientmap := oauth.NewClientMap()
 	h := &Handler{db, sessionStore, mux, logger, oauthserv, xrpc, clientmap, model}
 	// lrc handlers
-	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.acceptWebsocket)
+	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.WithCORS(h.acceptWebsocket))
 	mux.HandleFunc("DELETE /lrc/{user}/{rkey}/ws", h.deleteChannel)
 	mux.HandleFunc("POST /lrc/channel", h.postChannel)
 	mux.HandleFunc("POST /lrc/message", h.postMessage)
-	// beep handlers
+	// xcvr handlers
 	mux.HandleFunc("POST /xcvr/profile", h.postProfile)
 	mux.HandleFunc("POST /xcvr/beep", h.beep)
 	// lexicon handlers
-	mux.HandleFunc("GET /xrpc/org.xcvr.feed.getChannels", h.getChannels)
-	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getMessages", h.getMessages)
-	mux.HandleFunc("GET /xrpc/org.xcvr.actor.resolveChannel", h.resolveChannel)
-	mux.HandleFunc("GET /xrpc/org.xcvr.actor.getProfileView", h.getProfileView)
-	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.subscribeLexStream", h.subscribeLexStream)
+	mux.HandleFunc("GET /xrpc/org.xcvr.feed.getChannels", h.WithCORS(h.getChannels))
+	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getMessages", h.WithCORS(h.getMessages))
+	mux.HandleFunc("GET /xrpc/org.xcvr.actor.resolveChannel", h.WithCORS(h.resolveChannel))
+	mux.HandleFunc("GET /xrpc/org.xcvr.actor.getProfileView", h.WithCORS(h.getProfileView))
+	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.subscribeLexStream", h.WithCORS(h.subscribeLexStream))
 	// backend metadata handlers
-	mux.HandleFunc(clientMetadataPath(), h.serveClientMetadata)
-	mux.HandleFunc(clientTOSPath(), h.serveTOS)
-	mux.HandleFunc(clientPolicyPath(), h.servePolicy)
+	mux.HandleFunc(clientMetadataPath(), h.WithCORS(h.serveClientMetadata))
+	mux.HandleFunc(clientTOSPath(), h.WithCORS(h.serveTOS))
+	mux.HandleFunc(clientPolicyPath(), h.WithCORS(h.servePolicy))
 	// oauth handlers
-	mux.HandleFunc(oauthJWKSPath(), h.serveJWKS)
+	mux.HandleFunc(oauthJWKSPath(), h.WithCORS(h.serveJWKS))
 	mux.HandleFunc("POST /oauth/login", h.oauthLogin)
 	mux.HandleFunc("GET /oauth/whoami", h.getSession)
-	mux.HandleFunc(oauthCallbackPath(), h.oauthCallback)
+	mux.HandleFunc(oauthCallbackPath(), h.WithCORS(h.oauthCallback))
 	return h
 }
 
@@ -86,6 +86,20 @@ func (h *Handler) WithCORSAll() http.Handler {
 		}
 		h.router.ServeHTTP(w, r)
 	})
+}
+
+func (h *Handler) WithCORS(f func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorizaton, X-Requested-With, Sec-WebSocket-Protocol, Sec-WebSocket-Extensions, Sec-WebSocket-Key, Sec-WebSocket-Version")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		if r.Method == "Options" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		f(w, r)
+	}
 }
 
 func (h *Handler) Serve() http.Handler {

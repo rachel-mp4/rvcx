@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"xcvr-backend/internal/types"
+	"rvcx/internal/types"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"rvcx/internal/atputils"
+	"rvcx/internal/types"
 	"strconv"
-	"xcvr-backend/internal/types"
 )
 
 func (h *Handler) getChannels(w http.ResponseWriter, r *http.Request) {
@@ -78,8 +80,12 @@ func (h *Handler) resolveChannel(w http.ResponseWriter, r *http.Request) {
 		var err error
 		did, err = h.db.ResolveHandle(handle, r.Context())
 		if err != nil {
-			h.serverError(w, err)
-			return
+			did, err = atputils.TryLookupHandle(r.Context(), handle)
+			if err != nil {
+				h.serverError(w, errors.New("i think the handle might not exist?"+err.Error()))
+				return
+			}
+			go h.db.StoreDidHandle(did, handle, context.Background())
 		}
 	}
 	url := fmt.Sprintf("/lrc/%s/%s/ws", did, rkey)
@@ -101,8 +107,12 @@ func (h *Handler) getProfileView(w http.ResponseWriter, r *http.Request) {
 		var err error
 		did, err = h.db.ResolveHandle(handle, r.Context())
 		if err != nil {
-			h.serverError(w, err)
-			return
+			did, err = atputils.TryLookupHandle(r.Context(), handle)
+			if err != nil {
+				h.serverError(w, errors.New("i think the handle might not exist?"+err.Error()))
+				return
+			}
+			go h.db.StoreDidHandle(did, handle, context.Background())
 		}
 	}
 	h.serveProfileView(did, handle, w, r)

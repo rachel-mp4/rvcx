@@ -2,10 +2,12 @@ package model
 
 import (
 	"context"
-	"github.com/gorilla/websocket"
 	"net/http"
+	"rvcx/internal/atputils"
+	"rvcx/internal/types"
 	"time"
-	"xcvr-backend/internal/types"
+
+	"github.com/gorilla/websocket"
 )
 
 type client struct {
@@ -118,8 +120,12 @@ func (m *Model) BroadcastSignet(uri string, s types.Signet) {
 	}
 	ihandle, err := m.store.ResolveDid(s.IssuerDID, context.Background())
 	if err != nil {
-		m.logger.Println("AAAAAAAAAAAAAAAAAAAAA")
-		return
+		ihandle, err = atputils.TryLookupDid(context.Background(), s.IssuerDID)
+		if err != nil {
+			m.logger.Println("AAAAAAAAAAAAAAAAAAAAA")
+			return
+		}
+		go m.store.StoreDidHandle(s.IssuerDID, ihandle, context.Background())
 	}
 	sv := types.SignetView{
 		URI:          s.URI,

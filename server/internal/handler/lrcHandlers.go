@@ -1,18 +1,20 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/bluesky-social/indigo/atproto/syntax"
-	"github.com/rachel-mp4/lrcd"
 	"net/http"
 	"os"
+	"rvcx/internal/atputils"
+	"rvcx/internal/lex"
+	"rvcx/internal/types"
 	"slices"
 	"time"
-	"xcvr-backend/internal/atputils"
-	"xcvr-backend/internal/lex"
-	"xcvr-backend/internal/types"
+
+	"github.com/bluesky-social/indigo/atproto/syntax"
+	"github.com/rachel-mp4/lrcd"
 )
 
 func (h *Handler) acceptWebsocket(w http.ResponseWriter, r *http.Request) {
@@ -131,8 +133,12 @@ func (h *Handler) postPostChannelPostHandler(channel *types.Channel, w http.Resp
 	}
 	handle, err := h.db.ResolveDid(channel.DID, r.Context())
 	if err != nil {
-		h.serverError(w, errors.New("couldn't find handle"))
-		return
+		handle, err = atputils.TryLookupDid(r.Context(), channel.DID)
+		if err != nil {
+			h.serverError(w, errors.New("couldn't find handle"))
+			return
+		}
+		go h.db.StoreDidHandle(channel.DID, handle, context.Background())
 	}
 	rkey, _ := atputils.RkeyFromUri(channel.URI)
 	http.Redirect(w, r, fmt.Sprintf("/c/%s/%s", handle, rkey), http.StatusSeeOther)

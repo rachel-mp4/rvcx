@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"xcvr-backend/internal/atputils"
-	"xcvr-backend/internal/lex"
-	"xcvr-backend/internal/oauth"
-	"xcvr-backend/internal/types"
+	"rvcx/internal/atputils"
+	"rvcx/internal/lex"
+	"rvcx/internal/oauth"
+	"rvcx/internal/types"
 
 	"github.com/gorilla/sessions"
 	"github.com/haileyok/atproto-oauth-golang/helpers"
@@ -72,11 +72,6 @@ func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
 		h.logger.Deprintln("storing....")
 		if err != nil {
 			h.logger.Deprintln("failed to store did handle: " + err.Error())
-		}
-		err = h.db.InitializeProfile(res.DID, handle, context.Background())
-		h.logger.Deprintln("initializing....")
-		if err != nil {
-			h.logger.Deprintln("failed to initialize profile: " + err.Error())
 		}
 	}()
 	http.Redirect(w, r, u.String(), http.StatusFound)
@@ -146,9 +141,16 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 			Color:       &color,
 		}
 		client := h.setupClient(OauthSession)
-		err = client.CreateXCVRProfile(defaultprofilerecord, context.Background())
+		pr, err := client.CreateXCVRProfile(defaultprofilerecord, context.Background())
 		if err != nil {
-			h.logger.Println("#that happened (something went wrong when creating profile) " + err.Error())
+			h.logger.Println("i couldn't create their profile, which is bad_" + err.Error())
+			return
+		}
+		h.logger.Deprintln("initializing....")
+		err = h.db.InitializeProfile(req.Did, pr.DisplayName, pr.DefaultNick, pr.Status, pr.Color, context.Background())
+		if err != nil {
+			h.logger.Deprintln("failed to initialize profile: " + err.Error())
+			return
 		}
 	}()
 

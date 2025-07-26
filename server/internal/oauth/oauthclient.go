@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/bluesky-social/indigo/api/atproto"
 	"github.com/bluesky-social/indigo/api/bsky"
@@ -11,10 +12,10 @@ import (
 	"github.com/haileyok/atproto-oauth-golang"
 	"github.com/haileyok/atproto-oauth-golang/helpers"
 
-	"xcvr-backend/internal/db"
-	"xcvr-backend/internal/lex"
-	"xcvr-backend/internal/log"
-	"xcvr-backend/internal/types"
+	"rvcx/internal/db"
+	"rvcx/internal/lex"
+	"rvcx/internal/log"
+	"rvcx/internal/types"
 )
 
 type OauthXRPCClient struct {
@@ -78,17 +79,29 @@ func (c *OauthXRPCClient) MakeBskyPost(text string, ctx context.Context) error {
 	return nil
 }
 
-func (c *OauthXRPCClient) CreateXCVRProfile(profile lex.ProfileRecord, ctx context.Context) error {
+func (c *OauthXRPCClient) CreateXCVRProfile(profile lex.ProfileRecord, ctx context.Context) (p *lex.ProfileRecord, err error) {
 	authargs, err := c.getOauthSessionAuthArgs()
 	if err != nil {
-		return errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
+		err = errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
+		return
 	}
 	getOut, err := getProfileRecord(authargs.PdsUrl, authargs.Did, ctx)
 	if err != nil {
-		return errors.New("failed to getProfileRecord while creating XCVR profile: " + err.Error())
+		err = errors.New("failed to getProfileRecord while creating XCVR profile: " + err.Error())
+		return
 	}
 	if getOut.Cid != nil {
-		return errors.New("there already is a profileRecord, I don't want to overwrite it")
+		var jsonBytes []byte
+		jsonBytes, err = json.Marshal(getOut.Value)
+		if err != nil {
+			return
+		}
+		var pro lex.ProfileRecord
+		err = json.Unmarshal(jsonBytes, &pro)
+		if err != nil {
+			return
+		}
+		return &pro, nil
 	}
 	rkey := "self"
 	input := atproto.RepoCreateRecord_Input{
@@ -100,9 +113,10 @@ func (c *OauthXRPCClient) CreateXCVRProfile(profile lex.ProfileRecord, ctx conte
 	var out atproto.RepoCreateRecord_Output
 	err = c.xrpc.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, &out)
 	if err != nil {
-		return errors.New("oops! failed to create a profile: " + err.Error())
+		err = errors.New("oops! failed to create a profile: " + err.Error())
+		return
 	}
-	return nil
+	return &profile, nil
 }
 
 func (c *OauthXRPCClient) CreateXCVRChannel(channel *lex.ChannelRecord, ctx context.Context) (uri string, cid string, err error) {
@@ -149,14 +163,16 @@ func (c *OauthXRPCClient) CreateXCVRMessage(message lex.MessageRecord, ctx conte
 	return
 }
 
-func (c *OauthXRPCClient) UpdateXCVRProfile(profile lex.ProfileRecord, ctx context.Context) error {
+func (c *OauthXRPCClient) UpdateXCVRProfile(profile lex.ProfileRecord, ctx context.Context) (p *lex.ProfileRecord, err error) {
 	authargs, err := c.getOauthSessionAuthArgs()
 	if err != nil {
-		return errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
+		err = errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
+		return
 	}
 	getOut, err := getProfileRecord(authargs.PdsUrl, authargs.Did, ctx)
 	if err != nil {
-		return errors.New("messed that up! " + err.Error())
+		err = errors.New("messed that up! " + err.Error())
+		return
 	}
 	if getOut.Cid == nil {
 		return c.CreateXCVRProfile(profile, ctx)
@@ -172,9 +188,10 @@ func (c *OauthXRPCClient) UpdateXCVRProfile(profile lex.ProfileRecord, ctx conte
 	var out atproto.RepoPutRecord_Output
 	err = c.xrpc.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.putRecord", nil, input, &out)
 	if err != nil {
-		return errors.New("oops! failed to update a profile: " + err.Error())
+		err = errors.New("oops! failed to update a profile: " + err.Error())
+		return
 	}
-	return nil
+	return &profile, nil
 }
 
 func getProfileRecord(pdsUrl string, did string, ctx context.Context) (*atproto.RepoGetRecord_Output, error) {

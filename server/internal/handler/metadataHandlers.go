@@ -1,10 +1,11 @@
 package handler
+
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"encoding/json"
 	"os"
-	"xcvr-backend/internal/oauth"
+	"rvcx/internal/oauth"
 )
 
 func (h *Handler) serveClientMetadata(w http.ResponseWriter, r *http.Request) {

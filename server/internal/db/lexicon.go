@@ -4,11 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"rvcx/internal/types"
 	"strings"
-	"xcvr-backend/internal/types"
 )
 
-func (s *Store) InitializeProfile(did string, handle string, ctx context.Context) error {
+func (s *Store) InitializeProfile(did string,
+	displayname *string,
+	defaultnick *string,
+	status *string,
+	color *uint64,
+	ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO profiles (
 			did,
@@ -19,7 +24,7 @@ func (s *Store) InitializeProfile(did string, handle string, ctx context.Context
 		) VALUES (
 		$1, $2, $3, $4, $5
 		) ON CONFLICT (did) DO NOTHING
-		`, did, handle, "wanderer", "just setting up my xcvr", 3702605)
+		`, did, displayname, status, "just setting up my xcvr", 3702605)
 	if err != nil {
 		return errors.New("i'm not sure what happened: " + err.Error())
 	}

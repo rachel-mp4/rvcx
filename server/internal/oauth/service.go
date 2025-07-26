@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"rvcx/internal/atputils"
+	"rvcx/internal/types"
 	"time"
-	"xcvr-backend/internal/atputils"
-	"xcvr-backend/internal/types"
 
 	atoauth "github.com/haileyok/atproto-oauth-golang"
 	"github.com/haileyok/atproto-oauth-golang/helpers"

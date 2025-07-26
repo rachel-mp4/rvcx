@@ -1,4 +1,4 @@
-module xcvr-backend
+module rvcx
 
 go 1.24.2
 

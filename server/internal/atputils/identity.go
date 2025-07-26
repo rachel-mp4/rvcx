@@ -42,6 +42,34 @@ func GetMyDid() string {
 	return did
 }
 
+func TryLookupHandle(ctx context.Context, handle string) (did string, err error) {
+	hdl, err := syntax.ParseHandle(handle)
+	if err != nil {
+		err = errors.New("handle failed to parse: " + err.Error())
+		return
+	}
+	id, err := identity.DefaultDirectory().LookupHandle(ctx, hdl)
+	if err != nil {
+		err = errors.New("handle failed to loopup: " + err.Error())
+		return
+	}
+	did = id.DID.String()
+	return
+}
+
+func TryLookupDid(ctx context.Context, did string) (handle string, err error) {
+	d, err := syntax.ParseDID(did)
+	if err != nil {
+		err = errors.New("did failed to parse: " + err.Error())
+	}
+	id, err := identity.DefaultDirectory().LookupDID(ctx, d)
+	if err != nil {
+		err = errors.New("did failed to lookup: " + err.Error())
+	}
+	handle = id.Handle.String()
+	return
+}
+
 func GetHandleFromDid(ctx context.Context, did string) (string, error) {
 	sdid, err := syntax.ParseDID(did)
 	if err != nil {

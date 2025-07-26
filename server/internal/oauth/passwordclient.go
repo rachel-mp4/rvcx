@@ -8,8 +8,8 @@ import (
 	"github.com/bluesky-social/indigo/atproto/client"
 	"github.com/bluesky-social/indigo/lex/util"
 	"os"
-	"xcvr-backend/internal/lex"
-	"xcvr-backend/internal/log"
+	"rvcx/internal/lex"
+	"rvcx/internal/log"
 )
 
 type PasswordClient struct {

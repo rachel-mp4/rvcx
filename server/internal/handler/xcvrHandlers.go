@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"xcvr-backend/internal/atputils"
-	"xcvr-backend/internal/db"
-	"xcvr-backend/internal/lex"
-	"xcvr-backend/internal/types"
+	"rvcx/internal/atputils"
+	"rvcx/internal/db"
+	"rvcx/internal/lex"
+	"rvcx/internal/types"
 )
 
 func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +76,7 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
-	err = client.UpdateXCVRProfile(profilerecord, r.Context())
+	_, err = client.UpdateXCVRProfile(profilerecord, r.Context())
 	if err != nil {
 		h.serverError(w, err)
 		return

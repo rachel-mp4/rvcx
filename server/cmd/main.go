@@ -5,14 +5,14 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"rvcx/internal/atplistener"
+	"rvcx/internal/atputils"
+	"rvcx/internal/db"
+	"rvcx/internal/handler"
+	"rvcx/internal/log"
+	"rvcx/internal/model"
+	"rvcx/internal/oauth"
 	"time"
-	"xcvr-backend/internal/atplistener"
-	"xcvr-backend/internal/atputils"
-	"xcvr-backend/internal/db"
-	"xcvr-backend/internal/handler"
-	"xcvr-backend/internal/log"
-	"xcvr-backend/internal/model"
-	"xcvr-backend/internal/oauth"
 
 	"github.com/joho/godotenv"
 )
@@ -22,7 +22,7 @@ func main() {
 
 	gdeerr := godotenv.Load("../.env")
 	if gdeerr != nil {
-		logger.Println("i think you should make a .env file in the xcvr-backend directory !\n\nExample contents:\n-------------------------------------------------------------------\nPOSTGRES_USER=xcvr\nPOSTGRES_PASSWORD=secret\nPOSTGRES_DB=xcvrdb\nPOSTGRES_PORT=15432\n-------------------------------------------------------------------\n\nGood luck !\n\n")
+		logger.Println("i think you should make a .env file in the rvcx directory !\n\nExample contents:\n-------------------------------------------------------------------\nPOSTGRES_USER=xcvr\nPOSTGRES_PASSWORD=secret\nPOSTGRES_DB=xcvrdb\nPOSTGRES_PORT=15432\n-------------------------------------------------------------------\n\nGood luck !\n\n")
 		panic(gdeerr)
 	}
 	store, err := db.Init()

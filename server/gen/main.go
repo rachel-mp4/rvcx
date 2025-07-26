@@ -2,7 +2,7 @@ package main
 
 import (
 	cbg "github.com/whyrusleeping/cbor-gen"
-	"xcvr-backend/internal/lex"
+	"rvcx/internal/lex"
 )
 
 func main() {
