@@ -74,3 +74,5 @@ apropos licensing at this moment in history to fully commit in that direction.
 
 as for contributions, same thing i said in that other readme, i'd love help &
 you should let me know in advance so we don't make each other's lives hell :3
+
+beep_
