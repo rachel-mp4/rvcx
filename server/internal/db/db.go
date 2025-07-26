@@ -111,7 +111,7 @@ func (s *Store) GetMessages(channelURI string, limit int, cursor *int, ctx conte
 		JOIN did_handles dh ON m.did = dh.did
 		LEFT JOIN profiles p ON m.did = p.did
 		JOIN did_handles issuer_dh ON s.issuer_did = issuer_dh.did
-		WHERE s.channel_uri = $2 %s
+		WHERE s.channel_uri = $2 AND dh.handle = s.author_handle %s
 		ORDER BY s.message_id DESC
 		LIMIT $1
 		`
