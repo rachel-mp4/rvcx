@@ -38,10 +38,12 @@ func (lsm *lexStreamModel) WSHandler(uri string, m *Model) http.HandlerFunc {
 		lsm.clientsmu.Unlock()
 
 		client.wsWriter(lsm.ctx)
+		lsm.logger.Deprintln("i am a lex stream wshandler and i am exiting")
 
 		lsm.clientsmu.Lock()
 		delete(lsm.clients, client)
 		if len(lsm.clients) == 0 {
+			lsm.logger.Deprintln("i think that there are no more clients, so i will terminate the stream model ok")
 			lsm.cancel()
 			m.uriMap[uri].streamModel = nil
 		}
@@ -73,16 +75,19 @@ func (lsm *lexStreamModel) broadcaster() {
 	for {
 		select {
 		case <-lsm.ctx.Done():
+			lsm.logger.Deprintln("since lsm context ended, i am cleaning it up")
 			lsm.cleanUp()
 			return
 		case m, ok := <-lsm.messageBus:
 			if !ok {
+				lsm.logger.Deprintln("since lsm message bus gave bad message, i am cleaning it up")
 				lsm.cleanUp()
 				return
 			}
 			lsm.broadcast(m)
 		case s, ok := <-lsm.signetBus:
 			if !ok {
+				lsm.logger.Deprintln("since lsm signetbus gave bad message, i am cleaning it up")
 				lsm.cleanUp()
 				return
 			}
@@ -112,6 +117,7 @@ func (lsm *lexStreamModel) broadcast(a any) {
 	}
 }
 
+// should this be on lsm?
 func (m *Model) BroadcastSignet(uri string, s types.Signet) {
 	lsm := m.uriMap[uri]
 	if lsm == nil {
@@ -134,6 +140,9 @@ func (m *Model) BroadcastSignet(uri string, s types.Signet) {
 		LrcId:        s.MessageID,
 		AuthorHandle: s.AuthorHandle,
 		StartedAt:    s.StartedAt,
+	}
+	if lsm.streamModel == nil {
+		m.logger.Println("curious *watches the world burn*")
 	}
 	lsm.streamModel.signetBus <- sv
 }

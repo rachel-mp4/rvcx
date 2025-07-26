@@ -49,6 +49,7 @@ type lexStreamModel struct {
 	cancel     func()
 	signetBus  chan types.SignetView
 	messageBus chan types.MessageView
+	logger     *log.Logger
 }
 
 func (m *Model) GetWSHandlerFrom(uri string) (http.HandlerFunc, error) {
@@ -75,6 +76,7 @@ func (m *Model) getLexStream(uri string) (*lexStreamModel, error) {
 		return nil, errors.New("Not a valid server")
 	}
 	if cm.streamModel == nil {
+		m.logger.Deprintln("i'm making a server now")
 		ctx, cancel := context.WithCancel(context.Background())
 		lsm := lexStreamModel{
 			clients:    make(map[*client]bool),
@@ -83,6 +85,7 @@ func (m *Model) getLexStream(uri string) (*lexStreamModel, error) {
 			cancel:     cancel,
 			signetBus:  make(chan types.SignetView, 10),
 			messageBus: make(chan types.MessageView, 10),
+			logger:     m.logger,
 		}
 		cm.streamModel = &lsm
 		go lsm.broadcaster()
@@ -154,6 +157,7 @@ func (m *Model) getServer(uri string) (*lrcd.Server, error) {
 	}
 
 	if sm.server == nil {
+		m.logger.Deprintln("i think the server should exist, so i'm making it")
 		var err error
 		lastID := sm.lastID
 		initChan := make(chan lrcpb.Event_Init, 100)
@@ -197,6 +201,7 @@ func (m *Model) handleInitEvents(ctx context.Context, uri string, initChan <-cha
 	for {
 		select {
 		case <-ctx.Done():
+			m.logger.Deprintln("i'm a handleinitevent goroutine and my context is done")
 			return
 		case <-ticker.C:
 			m.mu.Lock()
@@ -209,6 +214,7 @@ func (m *Model) handleInitEvents(ctx context.Context, uri string, initChan <-cha
 
 			c := sm.server.Connected()
 			if c == 0 {
+				m.logger.Deprintln("i think the server is empty! gonna break some things")
 				lastID, err := sm.server.Stop()
 				if err != nil {
 					m.mu.Unlock()
