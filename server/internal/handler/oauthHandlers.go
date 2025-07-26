@@ -252,3 +252,20 @@ func (h *Handler) setupClient(session *types.Session) *oauth.OauthXRPCClient {
 	h.clientmap.Append(session.ID, client, session.Expiration)
 	return client
 }
+
+func (h *Handler) oauthLogout(w http.ResponseWriter, r *http.Request) {
+	s, _ := h.sessionStore.Get(r, "oauthsession")
+	id, ok := s.Values["id"].(int)
+	if ok {
+		h.db.DeleteOauthSession(id, r.Context())
+		h.clientmap.Delete(id)
+	}
+	s.Values = make(map[interface{}]interface{})
+	s.Options.MaxAge = -1
+	err := s.Save(r, w)
+	if err != nil {
+		h.serverError(w, errors.New("issue logging out: "+err.Error()))
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}

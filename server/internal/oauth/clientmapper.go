@@ -54,3 +54,10 @@ func (c *ClientMap) Cleanup() {
 		}
 	}
 }
+
+func (c *ClientMap) Delete(id int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.clients, id)
+	delete(c.expiry, id)
+}

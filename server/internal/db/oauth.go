@@ -126,6 +126,16 @@ func (s *Store) DeleteOauthRequest(state string, ctx context.Context) error {
 	return nil
 }
 
+func (s *Store) DeleteOauthSession(id int, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `
+		DELETE FROM oauthsessions s WHERE s.id = $1
+		`, id)
+	if err != nil {
+		return errors.New("error deleting oauth request:" + err.Error())
+	}
+	return nil
+}
+
 func (s *Store) SetDpopPdsNonce(id int, dpopnonce string) error {
 	_, err := s.pool.Exec(context.Background(), `
 			UPDATE oauthsessions SET dpop_pds_nonce = $1 WHERE id = $2
