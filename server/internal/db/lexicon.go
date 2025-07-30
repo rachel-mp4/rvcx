@@ -47,7 +47,7 @@ type ProfileUpdate struct {
 	UpdateColor  bool
 }
 
-func (s *Store) UpdateProfile(to ProfileUpdate, ctx context.Context) error {
+func (s *Store) UpdateProfile(to *ProfileUpdate, ctx context.Context) error {
 	setParts := []string{}
 	args := []any{to.DID}
 	idx := 2

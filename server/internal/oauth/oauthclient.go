@@ -79,7 +79,7 @@ func (c *OauthXRPCClient) MakeBskyPost(text string, ctx context.Context) error {
 	return nil
 }
 
-func (c *OauthXRPCClient) CreateXCVRProfile(profile lex.ProfileRecord, ctx context.Context) (p *lex.ProfileRecord, err error) {
+func (c *OauthXRPCClient) CreateXCVRProfile(profile *lex.ProfileRecord, ctx context.Context) (p *lex.ProfileRecord, err error) {
 	authargs, err := c.getOauthSessionAuthArgs()
 	if err != nil {
 		err = errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
@@ -108,7 +108,7 @@ func (c *OauthXRPCClient) CreateXCVRProfile(profile lex.ProfileRecord, ctx conte
 		Collection: "org.xcvr.actor.profile",
 		Repo:       authargs.Did,
 		Rkey:       &rkey,
-		Record:     &util.LexiconTypeDecoder{Val: &profile},
+		Record:     &util.LexiconTypeDecoder{Val: profile},
 	}
 	var out atproto.RepoCreateRecord_Output
 	err = c.xrpc.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, &out)
@@ -116,7 +116,7 @@ func (c *OauthXRPCClient) CreateXCVRProfile(profile lex.ProfileRecord, ctx conte
 		err = errors.New("oops! failed to create a profile: " + err.Error())
 		return
 	}
-	return &profile, nil
+	return profile, nil
 }
 
 func (c *OauthXRPCClient) CreateXCVRChannel(channel *lex.ChannelRecord, ctx context.Context) (uri string, cid string, err error) {
@@ -141,7 +141,7 @@ func (c *OauthXRPCClient) CreateXCVRChannel(channel *lex.ChannelRecord, ctx cont
 	return
 }
 
-func (c *OauthXRPCClient) CreateXCVRMessage(message lex.MessageRecord, ctx context.Context) (uri string, cid string, err error) {
+func (c *OauthXRPCClient) CreateXCVRMessage(message *lex.MessageRecord, ctx context.Context) (uri string, cid string, err error) {
 	authargs, err := c.getOauthSessionAuthArgs()
 	if err != nil {
 		err = errors.New("uh oh... I couldn't make a XCVRMessage: " + err.Error())
@@ -150,7 +150,7 @@ func (c *OauthXRPCClient) CreateXCVRMessage(message lex.MessageRecord, ctx conte
 	input := atproto.RepoCreateRecord_Input{
 		Collection: "org.xcvr.lrc.message",
 		Repo:       authargs.Did,
-		Record:     &util.LexiconTypeDecoder{Val: &message},
+		Record:     &util.LexiconTypeDecoder{Val: message},
 	}
 	var out atproto.RepoCreateRecord_Output
 	err = c.xrpc.Do(ctx, authargs, "POST", "application/json", "com.atproto.repo.createRecord", nil, input, &out)
@@ -163,7 +163,7 @@ func (c *OauthXRPCClient) CreateXCVRMessage(message lex.MessageRecord, ctx conte
 	return
 }
 
-func (c *OauthXRPCClient) UpdateXCVRProfile(profile lex.ProfileRecord, ctx context.Context) (p *lex.ProfileRecord, err error) {
+func (c *OauthXRPCClient) UpdateXCVRProfile(profile *lex.ProfileRecord, ctx context.Context) (p *lex.ProfileRecord, err error) {
 	authargs, err := c.getOauthSessionAuthArgs()
 	if err != nil {
 		err = errors.New("failed to get oauthsessionauthargs while making post: " + err.Error())
@@ -182,7 +182,7 @@ func (c *OauthXRPCClient) UpdateXCVRProfile(profile lex.ProfileRecord, ctx conte
 		Collection: "org.xcvr.actor.profile",
 		Repo:       authargs.Did,
 		Rkey:       rkey,
-		Record:     &util.LexiconTypeDecoder{Val: &profile},
+		Record:     &util.LexiconTypeDecoder{Val: profile},
 		SwapRecord: getOut.Cid,
 	}
 	var out atproto.RepoPutRecord_Output
@@ -191,7 +191,7 @@ func (c *OauthXRPCClient) UpdateXCVRProfile(profile lex.ProfileRecord, ctx conte
 		err = errors.New("oops! failed to update a profile: " + err.Error())
 		return
 	}
-	return &profile, nil
+	return profile, nil
 }
 
 func getProfileRecord(pdsUrl string, did string, ctx context.Context) (*atproto.RepoGetRecord_Output, error) {

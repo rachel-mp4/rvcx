@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"rvcx/internal/atputils"
 	"rvcx/internal/types"
@@ -15,7 +16,7 @@ type client struct {
 	bus  chan any
 }
 
-func (lsm *lexStreamModel) WSHandler(uri string, m *Model) http.HandlerFunc {
+func (cm *channelModel) WSHandler(uri string, m *Model) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		upgrader := &websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -33,21 +34,16 @@ func (lsm *lexStreamModel) WSHandler(uri string, m *Model) http.HandlerFunc {
 			conn,
 			bus,
 		}
-		lsm.clientsmu.Lock()
-		lsm.clients[client] = true
-		lsm.clientsmu.Unlock()
+		cm.clientsmu.Lock()
+		cm.clients[client] = true
+		cm.clientsmu.Unlock()
 
-		client.wsWriter(lsm.ctx)
-		lsm.logger.Deprintln("i am a lex stream wshandler and i am exiting")
+		client.wsWriter(cm.ctx)
+		cm.logger.Deprintln("i am a lex stream wshandler and i am exiting")
 
-		lsm.clientsmu.Lock()
-		delete(lsm.clients, client)
-		if len(lsm.clients) == 0 {
-			lsm.logger.Deprintln("i think that there are no more clients, so i will terminate the stream model ok")
-			lsm.cancel()
-			m.uriMap[uri].streamModel = nil
-		}
-		lsm.clientsmu.Unlock()
+		cm.clientsmu.Lock()
+		delete(cm.clients, client)
+		cm.clientsmu.Unlock()
 	}
 }
 
@@ -71,65 +67,37 @@ func (c *client) wsWriter(ctx context.Context) {
 	}
 }
 
-func (lsm *lexStreamModel) broadcaster() {
-	for {
-		select {
-		case <-lsm.ctx.Done():
-			lsm.logger.Deprintln("since lsm context ended, i am cleaning it up")
-			lsm.cleanUp()
-			return
-		case m, ok := <-lsm.messageBus:
-			if !ok {
-				lsm.logger.Deprintln("since lsm message bus gave bad message, i am cleaning it up")
-				lsm.cleanUp()
-				return
-			}
-			lsm.broadcast(m)
-		case s, ok := <-lsm.signetBus:
-			if !ok {
-				lsm.logger.Deprintln("since lsm signetbus gave bad message, i am cleaning it up")
-				lsm.cleanUp()
-				return
-			}
-			lsm.broadcast(s)
-		}
-	}
-}
+// func (cm *channelModel) cleanUp() {
+// 	cm.clientsmu.Lock()
+// 	defer cm.clientsmu.Unlock()
+// 	for cli := range cm.clients {
+// 		close(cli.bus)
+// 	}
+// }
 
-func (lsm *lexStreamModel) cleanUp() {
-	lsm.clientsmu.Lock()
-	defer lsm.clientsmu.Unlock()
-	for cli := range lsm.clients {
-		close(cli.bus)
-	}
-}
-
-func (lsm *lexStreamModel) broadcast(a any) {
-	lsm.clientsmu.Lock()
-	defer lsm.clientsmu.Unlock()
-	for cli := range lsm.clients {
+func (cm *channelModel) broadcast(a any) {
+	cm.clientsmu.Lock()
+	defer cm.clientsmu.Unlock()
+	for cli := range cm.clients {
 		select {
 		case cli.bus <- a:
 		default:
-			delete(lsm.clients, cli)
+			delete(cm.clients, cli)
 			close(cli.bus)
 		}
 	}
 }
 
-// should this be on lsm?
-func (m *Model) BroadcastSignet(uri string, s types.Signet) {
-	lsm := m.uriMap[uri]
-	if lsm == nil {
-		m.logger.Println("AAAAAAAAAAA")
-		return
+func (m *Model) BroadcastSignet(uri string, s *types.Signet) error {
+	cm := m.uriMap[uri]
+	if cm == nil {
+		return errors.New("AAAAAAAAAAA")
 	}
 	ihandle, err := m.store.ResolveDid(s.IssuerDID, context.Background())
 	if err != nil {
 		ihandle, err = atputils.TryLookupDid(context.Background(), s.IssuerDID)
 		if err != nil {
-			m.logger.Println("AAAAAAAAAAAAAAAAAAAAA")
-			return
+			return errors.New("AAAAAAAAAAAAAAAAAAAAA")
 		}
 		go m.store.StoreDidHandle(s.IssuerDID, ihandle, context.Background())
 	}
@@ -141,23 +109,18 @@ func (m *Model) BroadcastSignet(uri string, s types.Signet) {
 		AuthorHandle: s.AuthorHandle,
 		StartedAt:    s.StartedAt,
 	}
-	if lsm.streamModel == nil {
-		m.logger.Println("curious *watches the world burn*")
-	}
-	lsm.streamModel.signetBus <- sv
+	cm.broadcast(sv)
+	return nil
 }
 
-func (m *Model) BroadcastMessage(uri string, msg types.Message) {
-	m.logger.Deprintln("broadcasting!")
-	lsm := m.uriMap[uri]
-	if lsm == nil {
-		m.logger.Deprintln("failed to map uri to lsm!")
-		return
+func (m *Model) BroadcastMessage(uri string, msg *types.Message) error {
+	cm := m.uriMap[uri]
+	if cm == nil {
+		return errors.New("failed to map uri to lsm!")
 	}
 	pv, err := m.store.GetProfileView(msg.DID, context.Background())
 	if err != nil {
-		m.logger.Deprintln("failed to get profile view: " + err.Error())
-		return
+		return errors.New("failed to get profile view: " + err.Error())
 	}
 	mv := types.MessageView{
 		URI:       msg.URI,
@@ -168,5 +131,6 @@ func (m *Model) BroadcastMessage(uri string, msg types.Message) {
 		SignetURI: msg.SignetURI,
 		PostedAt:  msg.PostedAt,
 	}
-	lsm.streamModel.messageBus <- mv
+	cm.broadcast(mv)
+	return nil
 }

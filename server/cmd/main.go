@@ -12,6 +12,7 @@ import (
 	"rvcx/internal/log"
 	"rvcx/internal/model"
 	"rvcx/internal/oauth"
+	"rvcx/internal/recordmanager"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -56,7 +57,8 @@ func main() {
 		logger.Println(err.Error())
 		panic(err)
 	}
-	h := handler.New(store, logger, oauthclient, xrpc, model)
+	recordmanager := recordmanager.New(logger, store, xrpc, model)
+	h := handler.New(store, logger, oauthclient, model, recordmanager)
 	go consumeLoop(context.Background(), store, logger, xrpc)
 	http.ListenAndServe(":8080", h.Serve())
 

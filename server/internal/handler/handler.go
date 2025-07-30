@@ -9,6 +9,7 @@ import (
 	"rvcx/internal/log"
 	"rvcx/internal/model"
 	"rvcx/internal/oauth"
+	"rvcx/internal/recordmanager"
 )
 
 type Handler struct {
@@ -17,16 +18,14 @@ type Handler struct {
 	router       *http.ServeMux
 	logger       *log.Logger
 	oauth        *oauth.Service
-	myClient     *oauth.PasswordClient
-	clientmap    *oauth.ClientMap
 	model        *model.Model
+	rm           *recordmanager.RecordManager
 }
 
-func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, xrpc *oauth.PasswordClient, model *model.Model) *Handler {
+func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, model *model.Model, recordmanager *recordmanager.RecordManager) *Handler {
 	mux := http.NewServeMux()
 	sessionStore := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-	clientmap := oauth.NewClientMap()
-	h := &Handler{db, sessionStore, mux, logger, oauthserv, xrpc, clientmap, model}
+	h := &Handler{db, sessionStore, mux, logger, oauthserv, model, recordmanager}
 	// lrc handlers
 	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.WithCORS(h.acceptWebsocket))
 	mux.HandleFunc("DELETE /lrc/{user}/{rkey}/ws", h.deleteChannel)

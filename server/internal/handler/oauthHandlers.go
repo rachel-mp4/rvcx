@@ -9,9 +9,7 @@ import (
 	"net/url"
 	"os"
 	"rvcx/internal/atputils"
-	"rvcx/internal/lex"
 	"rvcx/internal/oauth"
-	"rvcx/internal/types"
 
 	"github.com/gorilla/sessions"
 	"github.com/haileyok/atproto-oauth-golang/helpers"
@@ -124,35 +122,11 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
-	go func() {
-		nick := "wanderer"
-		status := "just setting up my xcvr"
-		color := uint64(3602605)
-		handle, err := h.db.ResolveDid(req.Did, context.Background())
-		if err != nil {
-			h.logger.Println("i couldn't find the handle, so i couldn't create default profile record. gootbye")
-			return
-		}
-
-		defaultprofilerecord := lex.ProfileRecord{
-			DisplayName: &handle,
-			DefaultNick: &nick,
-			Status:      &status,
-			Color:       &color,
-		}
-		client := h.setupClient(OauthSession)
-		pr, err := client.CreateXCVRProfile(defaultprofilerecord, context.Background())
-		if err != nil {
-			h.logger.Println("i couldn't create their profile, which is bad_" + err.Error())
-			return
-		}
-		h.logger.Deprintln("initializing....")
-		err = h.db.InitializeProfile(req.Did, pr.DisplayName, pr.DefaultNick, pr.Status, pr.Color, context.Background())
-		if err != nil {
-			h.logger.Deprintln("failed to initialize profile: " + err.Error())
-			return
-		}
-	}()
+	err = h.rm.CreateInitialProfile(req.Did, req.ID, r.Context())
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
 
 	session.Options = &sessions.Options{
 		Path:     "/",
@@ -222,43 +196,15 @@ func (h *Handler) handleFindDidAndHandleError(w http.ResponseWriter, err error) 
 	h.logger.Deprintln("handling nil error?")
 }
 
-func (h *Handler) getClient(r *http.Request) (*oauth.OauthXRPCClient, error) {
-	s, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := s.Values["id"].(int)
-	if !ok {
-		return nil, errors.New("not authorized")
-	}
-	client := h.clientmap.Map(id)
-	if client == nil {
-		client, err := h.resetClient(id, r.Context())
-		if err != nil {
-			return nil, err
-		}
-		return client, nil
-	}
-	return client, nil
-}
-
-func (h *Handler) resetClient(id int, ctx context.Context) (*oauth.OauthXRPCClient, error) {
-	session, err := h.db.GetOauthSession(id, ctx)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("errpr setting up session %d: %s", id, err.Error()))
-	}
-	return h.setupClient(session), nil
-}
-
-func (h *Handler) setupClient(session *types.Session) *oauth.OauthXRPCClient {
-	client := oauth.NewOauthXRPCClient(h.db, h.logger, session)
-	h.clientmap.Append(session.ID, client, session.Expiration)
-	return client
-}
-
 func (h *Handler) oauthLogout(w http.ResponseWriter, r *http.Request) {
 	s, _ := h.sessionStore.Get(r, "oauthsession")
 	id, ok := s.Values["id"].(int)
 	if ok {
-		h.db.DeleteOauthSession(id, r.Context())
-		h.clientmap.Delete(id)
+		err := h.rm.DeleteSession(id, r.Context())
+		if err != nil {
+			h.serverError(w, errors.New("couldn't log out: "+err.Error()))
+			return
+		}
 	}
 	s.Values = make(map[interface{}]interface{})
 	s.Options.MaxAge = -1

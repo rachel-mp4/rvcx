@@ -14,6 +14,7 @@ import (
 	"rvcx/internal/lex"
 	"rvcx/internal/log"
 	"rvcx/internal/oauth"
+	"rvcx/internal/recordmanager"
 	"rvcx/internal/types"
 	"time"
 )
@@ -26,11 +27,12 @@ type Consumer struct {
 
 type handler struct {
 	db  *db.Store
+	rm  *recordmanager.RecordManager
 	l   *log.Logger
 	cli *oauth.PasswordClient
 }
 
-func NewConsumer(jsAddr string, l *log.Logger, db *db.Store, cli *oauth.PasswordClient) *Consumer {
+func NewConsumer(jsAddr string, l *log.Logger, db *db.Store, cli *oauth.PasswordClient, rm *recordmanager.RecordManager) *Consumer {
 	cfg := client.DefaultClientConfig()
 	if jsAddr != "" {
 		cfg.WebsocketURL = jsAddr
@@ -45,7 +47,7 @@ func NewConsumer(jsAddr string, l *log.Logger, db *db.Store, cli *oauth.Password
 	return &Consumer{
 		cfg:     cfg,
 		logger:  l,
-		handler: &handler{db: db, l: l, cli: cli},
+		handler: &handler{db: db, l: l, cli: cli, rm: rm},
 	}
 }
 
@@ -114,7 +116,7 @@ func (h *handler) handleProfileCreateUpdate(ctx context.Context, event *models.E
 	to.Status = pr.Status
 	to.UpdateColor = pr.Color != nil
 	to.Color = pr.Color
-	return h.db.UpdateProfile(to, ctx)
+	return h.db.UpdateProfile(&to, ctx)
 }
 
 func (h *handler) handleProfileDelete(ctx context.Context, event *models.Event) error {
@@ -139,7 +141,7 @@ func (h *handler) handleChannelCreate(ctx context.Context, event *models.Event) 
 	if err != nil {
 		return errors.New("i couldn't create the channel: " + err.Error())
 	}
-	return h.db.StoreChannel(channel, ctx)
+	return h.rm.AcceptChannel(channel, ctx)
 }
 
 func (h *handler) handleChannelUpdate(ctx context.Context, event *models.Event) error {
