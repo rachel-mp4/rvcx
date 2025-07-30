@@ -68,11 +68,13 @@ func Init(store *db.Store, logger *log.Logger, cli *oauth.PasswordClient, rm *re
 	for _, uri := range uris {
 		valid := (uri.Host == myid)
 		beep := channelModel{
-			welcome: uri.Topic,
-			uri:     uri.URI,
-			logger:  logger,
-			lastID:  uri.LastID,
-			valid:   valid,
+			welcome:   uri.Topic,
+			uri:       uri.URI,
+			logger:    logger,
+			lastID:    uri.LastID,
+			valid:     valid,
+			clients:   make(map[*client]bool),
+			clientsmu: sync.Mutex{},
 		}
 		uriToServerModel[uri.URI] = &beep
 	}
