@@ -24,9 +24,13 @@ type RecordManager struct {
 	broadcaster LexBroadcaster
 }
 
-func New(log *log.Logger, db *db.Store, myClient *oauth.PasswordClient, broadcaster LexBroadcaster) *RecordManager {
+func New(log *log.Logger, db *db.Store, myClient *oauth.PasswordClient) *RecordManager {
 	clientmap := oauth.NewClientMap()
-	return &RecordManager{log, db, myClient, clientmap, broadcaster}
+	return &RecordManager{log, db, myClient, clientmap, nil}
+}
+
+func (rm *RecordManager) SetBroadcaster(b LexBroadcaster) {
+	rm.broadcaster = b
 }
 
 func (rm *RecordManager) getClient(id int, ctx context.Context) (*oauth.OauthXRPCClient, error) {

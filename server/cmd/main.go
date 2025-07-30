@@ -45,7 +45,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	model := model.Init(store, logger, xrpc)
 	httpclient := &http.Client{
 		Timeout: 5 * time.Second,
 		Transport: &http.Transport{
@@ -57,9 +56,11 @@ func main() {
 		logger.Println(err.Error())
 		panic(err)
 	}
-	recordmanager := recordmanager.New(logger, store, xrpc, model)
+	recordmanager := recordmanager.New(logger, store, xrpc)
+	model := model.Init(store, logger, xrpc, recordmanager)
+	recordmanager.SetBroadcaster(model)
 	h := handler.New(store, logger, oauthclient, model, recordmanager)
-	go consumeLoop(context.Background(), store, logger, xrpc)
+	go consumeLoop(context.Background(), store, logger, xrpc, recordmanager)
 	http.ListenAndServe(":8080", h.Serve())
 
 }
@@ -68,12 +69,12 @@ const (
 	defaultServerAddr = "wss://jetstream.atproto.tools/subscribe"
 )
 
-func consumeLoop(ctx context.Context, db *db.Store, l *log.Logger, cli *oauth.PasswordClient) {
+func consumeLoop(ctx context.Context, db *db.Store, l *log.Logger, cli *oauth.PasswordClient, rm *recordmanager.RecordManager) {
 	jsServerAddr := os.Getenv("JS_SERVER_ADDR")
 	if jsServerAddr == "" {
 		jsServerAddr = defaultServerAddr
 	}
-	consumer := atplistener.NewConsumer(jsServerAddr, l, db, cli)
+	consumer := atplistener.NewConsumer(jsServerAddr, l, db, cli, rm)
 	for {
 		err := consumer.Consume(ctx)
 		if err != nil {
