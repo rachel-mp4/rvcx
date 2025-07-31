@@ -52,7 +52,7 @@ func (h *Handler) postChannel(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		handle, err = atputils.TryLookupDid(r.Context(), did)
 		if err != nil {
-			h.serverError(w, errors.New("couldn't find handle"))
+			h.serverError(w, errors.New(fmt.Sprintf("couldn't find handle for did %s: %s", did, err.Error())))
 			return
 		}
 		go h.db.StoreDidHandle(did, handle, context.Background())
