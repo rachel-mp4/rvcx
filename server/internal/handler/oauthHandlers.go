@@ -117,6 +117,7 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, err)
 		return
 	}
+	h.logger.Deprintf("id: %d %d", OauthSession.ID, req.ID)
 	err = h.db.StoreOAuthSession(OauthSession, r.Context())
 	if err != nil {
 		h.serverError(w, err)
