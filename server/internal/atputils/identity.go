@@ -61,10 +61,12 @@ func TryLookupDid(ctx context.Context, did string) (handle string, err error) {
 	d, err := syntax.ParseDID(did)
 	if err != nil {
 		err = errors.New("did failed to parse: " + err.Error())
+		return
 	}
 	id, err := identity.DefaultDirectory().LookupDID(ctx, d)
 	if err != nil {
 		err = errors.New("did failed to lookup: " + err.Error())
+		return
 	}
 	handle = id.Handle.String()
 	return
