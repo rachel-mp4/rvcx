@@ -38,7 +38,7 @@ func (cm *channelModel) WSHandler(uri string, m *Model) http.HandlerFunc {
 		cm.clients[client] = true
 		cm.clientsmu.Unlock()
 
-		client.wsWriter(cm.ctx)
+		client.wsWriter()
 		cm.logger.Deprintln("i am a lex stream wshandler and i am exiting")
 
 		cm.clientsmu.Lock()
@@ -47,7 +47,7 @@ func (cm *channelModel) WSHandler(uri string, m *Model) http.HandlerFunc {
 	}
 }
 
-func (c *client) wsWriter(ctx context.Context) {
+func (c *client) wsWriter() {
 	ticker := time.NewTicker(15 * time.Second)
 	for {
 		select {
@@ -56,8 +56,6 @@ func (c *client) wsWriter(ctx context.Context) {
 			if err != nil {
 				return
 			}
-		case <-ctx.Done():
-			return
 		case e, ok := <-c.bus:
 			if !ok {
 				return
