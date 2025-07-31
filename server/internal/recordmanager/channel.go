@@ -118,7 +118,7 @@ func (rm *RecordManager) createChannel(id int, did string) func(*lex.ChannelReco
 
 func (rm *RecordManager) createMyChannel() func(*lex.ChannelRecord, *time.Time, context.Context) (*types.Channel, error) {
 	return func(lcr *lex.ChannelRecord, now *time.Time, ctx context.Context) (*types.Channel, error) {
-		uri, cid, err := rm.myClient.CreateXCVRChannel(lcr, ctx)
+		cid, uri, err := rm.myClient.CreateXCVRChannel(lcr, ctx)
 		if err != nil {
 			return nil, errors.New("something bad probs happened when posting a channel " + err.Error())
 		}
