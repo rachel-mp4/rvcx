@@ -35,14 +35,14 @@ func (h *Handler) postChannel(w http.ResponseWriter, r *http.Request) {
 	id, ok := session.Values["id"].(int)
 	var uri, did string
 	if !ok {
-		uri, did, err = h.rm.PostMyChannel(r.Context(), cr)
+		did, uri, err = h.rm.PostMyChannel(r.Context(), cr)
 	} else {
 		udid, ok := session.Values["did"].(string)
 		if !ok {
 			h.badRequest(w, errors.New("user session has no did?"))
 			return
 		}
-		uri, did, err = h.rm.PostChannel(id, udid, r.Context(), cr)
+		did, uri, err = h.rm.PostChannel(id, udid, r.Context(), cr)
 	}
 	if err != nil {
 		h.serverError(w, err)
