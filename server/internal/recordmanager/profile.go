@@ -24,9 +24,11 @@ func (rm *RecordManager) DeleteProfile(did string, cid string, ctx context.Conte
 
 func convertToPu(p lex.ProfileRecord, did string) *db.ProfileUpdate {
 	var avatar *string
+	var mime *string
 	if p.Avatar != nil {
 		ava := p.Avatar.Ref.String()
 		avatar = &ava
+		mime = &p.Avatar.MimeType
 	}
 	return &db.ProfileUpdate{
 		DID:          did,
@@ -40,7 +42,7 @@ func convertToPu(p lex.ProfileRecord, did string) *db.ProfileUpdate {
 		UpdateColor:  true,
 		Avatar:       avatar,
 		UpdateAvatar: true,
-		Mime:         &p.Avatar.MimeType,
+		Mime:         mime,
 		UpdateMime:   true,
 	}
 }
