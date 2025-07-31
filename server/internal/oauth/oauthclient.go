@@ -86,22 +86,20 @@ func (c *OauthXRPCClient) CreateXCVRProfile(profile *lex.ProfileRecord, ctx cont
 		return
 	}
 	getOut, err := getProfileRecord(authargs.PdsUrl, authargs.Did, ctx)
-	if err != nil {
-		err = errors.New("failed to getProfileRecord while creating XCVR profile: " + err.Error())
-		return
-	}
-	if getOut.Cid != nil {
-		var jsonBytes []byte
-		jsonBytes, err = json.Marshal(getOut.Value)
-		if err != nil {
-			return
+	if err == nil {
+		if getOut.Cid != nil {
+			var jsonBytes []byte
+			jsonBytes, err = json.Marshal(getOut.Value)
+			if err != nil {
+				return
+			}
+			var pro lex.ProfileRecord
+			err = json.Unmarshal(jsonBytes, &pro)
+			if err != nil {
+				return
+			}
+			return &pro, nil
 		}
-		var pro lex.ProfileRecord
-		err = json.Unmarshal(jsonBytes, &pro)
-		if err != nil {
-			return
-		}
-		return &pro, nil
 	}
 	rkey := "self"
 	input := atproto.RepoCreateRecord_Input{
