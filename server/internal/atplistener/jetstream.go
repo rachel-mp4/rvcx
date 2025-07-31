@@ -103,13 +103,22 @@ func (h *handler) handleProfileCreateUpdate(ctx context.Context, event *models.E
 	var pr lex.ProfileRecord
 	err := json.Unmarshal(event.Commit.Record, &pr)
 	if err != nil {
-		return errors.New("error unmarshaling: " + err.Error())
+		h.l.Println("error unmarshaling: " + err.Error())
+		return nil
 	}
-	return h.rm.AcceptProfile(pr, event.Did, ctx)
+	err = h.rm.AcceptProfile(pr, event.Did, ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func (h *handler) handleProfileDelete(ctx context.Context, event *models.Event) error {
-	return h.rm.DeleteProfile(event.Did, event.Commit.CID, ctx)
+	err := h.rm.DeleteProfile(event.Did, event.Commit.CID, ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func (h *handler) handleChannel(ctx context.Context, event *models.Event) error {
@@ -128,17 +137,27 @@ func (h *handler) handleChannel(ctx context.Context, event *models.Event) error 
 func (h *handler) handleChannelCreate(ctx context.Context, event *models.Event) error {
 	channel, err := parseChannelRecord(event)
 	if err != nil {
-		return errors.New("i couldn't create the channel: " + err.Error())
+		h.l.Println("i couldn't create the channel: " + err.Error())
+		return nil
 	}
-	return h.rm.AcceptChannel(channel, ctx)
+	err = h.rm.AcceptChannel(channel, ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func (h *handler) handleChannelUpdate(ctx context.Context, event *models.Event) error {
 	channel, err := parseChannelRecord(event)
 	if err != nil {
-		return errors.New("i couldn't create the channel: " + err.Error())
+		h.l.Println("i couldn't create the channel: " + err.Error())
+		return nil
 	}
-	return h.rm.AcceptChannelUpdate(channel, ctx)
+	err = h.rm.AcceptChannelUpdate(channel, ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func parseChannelRecord(event *models.Event) (*types.Channel, error) {
@@ -164,7 +183,11 @@ func parseChannelRecord(event *models.Event) (*types.Channel, error) {
 }
 
 func (h *handler) handleChannelDelete(ctx context.Context, event *models.Event) error {
-	return h.rm.AcceptChannelDelete(URI(event), ctx)
+	err := h.rm.AcceptChannelDelete(URI(event), ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func (h *handler) handleMessage(ctx context.Context, event *models.Event) error {
@@ -183,21 +206,34 @@ func (h *handler) handleMessage(ctx context.Context, event *models.Event) error 
 func (h *handler) handleMessageCreate(ctx context.Context, event *models.Event) error {
 	message, err := parseMessageRecord(event)
 	if err != nil {
-		return errors.New("error parsing: " + err.Error())
+		h.l.Println("error parsing: " + err.Error())
 	}
-	return h.rm.AcceptMessage(message, ctx)
+	err = h.rm.AcceptMessage(message, ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func (h *handler) handleMessageUpdate(ctx context.Context, event *models.Event) error {
 	message, err := parseMessageRecord(event)
 	if err != nil {
-		return errors.New("error parsing: " + err.Error())
+		return nil
+		h.l.Println("error parsing: " + err.Error())
 	}
-	return h.rm.AcceptMessageUpdate(message, event.Did, ctx)
+	err = h.rm.AcceptMessageUpdate(message, event.Did, ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func (h *handler) handleMessageDelete(ctx context.Context, event *models.Event) error {
-	return h.rm.AcceptMessageDelete(URI(event), ctx)
+	err := h.rm.AcceptMessageDelete(URI(event), ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func parseMessageRecord(event *models.Event) (*types.Message, error) {
@@ -244,20 +280,34 @@ func (h *handler) handleSignet(ctx context.Context, event *models.Event) error {
 func (h *handler) handleSignetCreate(ctx context.Context, event *models.Event) error {
 	signet, err := parseSignetRecord(event)
 	if err != nil {
-		return errors.New("failed to parse: " + err.Error())
+		h.l.Println("failed to parse: " + err.Error())
+		return nil
 	}
-	return h.rm.AcceptSignet(signet, ctx)
+	err = h.rm.AcceptSignet(signet, ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func (h *handler) handleSignetUpdate(ctx context.Context, event *models.Event) error {
 	signet, err := parseSignetRecord(event)
 	if err != nil {
-		return errors.New("failed to parse: " + err.Error())
+		h.l.Println("failed to parse: " + err.Error())
+		return nil
 	}
-	return h.rm.AcceptSignetUpdate(signet, ctx)
+	err = h.rm.AcceptSignetUpdate(signet, ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 func (h *handler) handleSignetDelete(ctx context.Context, event *models.Event) error {
-	return h.rm.AcceptSignetDelete(URI(event), ctx)
+	err := h.rm.AcceptSignetDelete(URI(event), ctx)
+	if err != nil {
+		h.l.Println(err.Error())
+	}
+	return nil
 }
 
 func parseSignetRecord(event *models.Event) (*types.Signet, error) {
