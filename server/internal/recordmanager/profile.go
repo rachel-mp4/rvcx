@@ -52,7 +52,7 @@ func (rm *RecordManager) CreateInitialProfile(did string, id int, ctx context.Co
 
 	p, err := rm.createProfile(&handle, &nick, &status, &color, id, ctx)
 	if err != nil {
-		return errors.New("AAAAA error creating profile")
+		return errors.New("AAAAA error creating profile" + err.Error())
 	}
 	rm.log.Deprintln("initializing profile....")
 	err = rm.db.InitializeProfile(did, p.DisplayName, p.DefaultNick, p.Status, p.Color, ctx)
