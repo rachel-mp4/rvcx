@@ -101,11 +101,13 @@ func (m *Model) AddChannel(c *types.Channel) error {
 		welcome = *c.Topic
 	}
 	beep := channelModel{
-		welcome: welcome,
-		uri:     c.URI,
-		logger:  m.logger,
-		lastID:  1,
-		valid:   valid,
+		welcome:   welcome,
+		uri:       c.URI,
+		logger:    m.logger,
+		lastID:    1,
+		valid:     valid,
+		clients:   make(map[*client]bool),
+		clientsmu: sync.Mutex{},
 	}
 	m.uriMap[c.URI] = &beep
 	return nil
