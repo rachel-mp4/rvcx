@@ -43,7 +43,7 @@ func (s *Store) StoreOAuthSession(session *types.Session, ctx context.Context) e
 		access_token,
 		refresh_token,
 		expiration
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
 		session.ID,
 		session.AuthserverIss,
 		session.State,
