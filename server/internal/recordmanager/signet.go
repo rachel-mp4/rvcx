@@ -31,6 +31,38 @@ func (rm *RecordManager) PostSignet(e lrcpb.Event_Init, uri string, ctx context.
 	return nil
 }
 
+func (rm *RecordManager) DeleteSignet(uri string, ctx context.Context) error {
+	rkey, err := atputils.RkeyFromUri(uri)
+	if err != nil {
+		return errors.New("invalid signet uri: " + err.Error())
+	}
+	_, err = rm.myClient.DeleteXCVRSignet(rkey, ctx)
+	if err != nil {
+		return errors.New("failed to delete signet record from repo: " + err.Error())
+	}
+	err = rm.db.DeleteSignet(uri, ctx)
+	if err != nil {
+		return errors.New("failed to delete signet from database")
+	}
+	return nil
+}
+
+func (rm *RecordManager) AcceptSignet(s *types.Signet, ctx context.Context) error {
+	err := rm.storeSignet(s, ctx)
+	if err != nil {
+		return errors.New("failed to store signet")
+	}
+	return nil
+}
+
+func (rm *RecordManager) AcceptSignetDelete(uri string, ctx context.Context) error {
+	return rm.db.DeleteSignet(uri, ctx)
+}
+
+func (rm *RecordManager) AcceptSignetUpdate(s *types.Signet, ctx context.Context) error {
+	return rm.db.UpdateSignet(s, ctx)
+}
+
 func (rm *RecordManager) validateSignet(e lrcpb.Event_Init, uri string) (*lex.SignetRecord, *time.Time, error) {
 	signet := lex.SignetRecord{}
 	handle := e.Init.ExternalID

@@ -105,22 +105,11 @@ func (h *handler) handleProfileCreateUpdate(ctx context.Context, event *models.E
 	if err != nil {
 		return errors.New("error unmarshaling: " + err.Error())
 	}
-	to := db.ProfileUpdate{
-		DID: event.Did,
-	}
-	to.UpdateName = pr.DisplayName != nil
-	to.Name = pr.DisplayName
-	to.UpdateNick = pr.DefaultNick != nil
-	to.Nick = pr.DefaultNick
-	to.UpdateStatus = pr.Status != nil
-	to.Status = pr.Status
-	to.UpdateColor = pr.Color != nil
-	to.Color = pr.Color
-	return h.db.UpdateProfile(&to, ctx)
+	return h.rm.AcceptProfile(pr, event.Did, ctx)
 }
 
 func (h *handler) handleProfileDelete(ctx context.Context, event *models.Event) error {
-	return h.db.DeleteProfile(event.Did, event.Commit.CID, ctx)
+	return h.rm.DeleteProfile(event.Did, event.Commit.CID, ctx)
 }
 
 func (h *handler) handleChannel(ctx context.Context, event *models.Event) error {
@@ -149,7 +138,7 @@ func (h *handler) handleChannelUpdate(ctx context.Context, event *models.Event) 
 	if err != nil {
 		return errors.New("i couldn't create the channel: " + err.Error())
 	}
-	return h.db.UpdateChannel(channel, ctx)
+	return h.rm.AcceptChannelUpdate(channel, ctx)
 }
 
 func parseChannelRecord(event *models.Event) (*types.Channel, error) {
@@ -175,7 +164,7 @@ func parseChannelRecord(event *models.Event) (*types.Channel, error) {
 }
 
 func (h *handler) handleChannelDelete(ctx context.Context, event *models.Event) error {
-	return h.db.DeleteChannel(URI(event), ctx)
+	return h.rm.AcceptChannelDelete(URI(event), ctx)
 }
 
 func (h *handler) handleMessage(ctx context.Context, event *models.Event) error {
@@ -196,7 +185,7 @@ func (h *handler) handleMessageCreate(ctx context.Context, event *models.Event) 
 	if err != nil {
 		return errors.New("error parsing: " + err.Error())
 	}
-	return h.db.StoreMessage(message, ctx)
+	return h.rm.AcceptMessage(message, ctx)
 }
 
 func (h *handler) handleMessageUpdate(ctx context.Context, event *models.Event) error {
@@ -204,34 +193,11 @@ func (h *handler) handleMessageUpdate(ctx context.Context, event *models.Event) 
 	if err != nil {
 		return errors.New("error parsing: " + err.Error())
 	}
-	host, _ := atputils.DidFromUri(message.SignetURI)
-	rkey, err := atputils.RkeyFromUri(message.SignetURI)
-	if err != nil {
-		return errors.New("i think the record is borked ngl")
-	}
-	if host == atputils.GetMyDid() {
-		dne, err := h.cli.DeleteXCVRSignet(rkey, ctx)
-		if err != nil {
-			if dne {
-				err = h.db.DeleteSignet(message.SignetURI, ctx)
-				if err != nil {
-					return errors.New("a lot of stuff happened yikers!" + err.Error())
-				}
-				return nil
-			}
-			return errors.New("failed to delete signet after infetterance: " + err.Error())
-		}
-		err = h.db.DeleteSignet(message.SignetURI, ctx)
-		if err != nil {
-			return errors.New("i deleted the signet, however i couldn't delete it from my db: " + err.Error())
-		}
-		return nil
-	}
-	return h.db.UpdateMessage(message, ctx)
+	return h.rm.AcceptMessageUpdate(message, event.Did, ctx)
 }
 
 func (h *handler) handleMessageDelete(ctx context.Context, event *models.Event) error {
-	return h.db.DeleteMessage(URI(event), ctx)
+	return h.rm.AcceptMessageDelete(URI(event), ctx)
 }
 
 func parseMessageRecord(event *models.Event) (*types.Message, error) {
@@ -280,7 +246,7 @@ func (h *handler) handleSignetCreate(ctx context.Context, event *models.Event) e
 	if err != nil {
 		return errors.New("failed to parse: " + err.Error())
 	}
-	return h.db.StoreSignet(signet, ctx)
+	return h.rm.AcceptSignet(signet, ctx)
 }
 
 func (h *handler) handleSignetUpdate(ctx context.Context, event *models.Event) error {
@@ -288,10 +254,10 @@ func (h *handler) handleSignetUpdate(ctx context.Context, event *models.Event) e
 	if err != nil {
 		return errors.New("failed to parse: " + err.Error())
 	}
-	return h.db.UpdateSignet(signet, ctx)
+	return h.rm.AcceptSignetUpdate(signet, ctx)
 }
 func (h *handler) handleSignetDelete(ctx context.Context, event *models.Event) error {
-	return h.db.DeleteSignet(URI(event), ctx)
+	return h.rm.AcceptSignetDelete(URI(event), ctx)
 }
 
 func parseSignetRecord(event *models.Event) (*types.Signet, error) {

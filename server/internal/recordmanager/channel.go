@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-// TODO: make sure initchannel works correctly
 func (rm *RecordManager) AcceptChannel(c *types.Channel, ctx context.Context) error {
 	err := rm.storeChannel(c, ctx)
 	if err != nil {
@@ -33,6 +32,14 @@ func (rm *RecordManager) AcceptChannelUpdate(c *types.Channel, ctx context.Conte
 		return errors.New("failed to update channel model: " + err.Error())
 	}
 	return nil
+}
+
+func (rm *RecordManager) AcceptChannelDelete(uri string, ctx context.Context) error {
+	err := rm.db.DeleteChannel(uri, ctx)
+	if err != nil {
+		return errors.New("failed to delete channel: " + err.Error())
+	}
+	return rm.broadcaster.DeleteChannel(uri)
 }
 
 func (rm *RecordManager) PostMyChannel(ctx context.Context, pcr *types.PostChannelRequest) (did string, uri string, err error) {
@@ -81,9 +88,8 @@ func (rm *RecordManager) updateChanneldb(c *types.Channel, ctx context.Context) 
 	return rm.db.UpdateChannel(c, ctx)
 }
 
-// TODO: impl updatechannel
 func (rm *RecordManager) updateChannelmodel(c *types.Channel) error {
-	return rm.broadcaster.AddChannel(c)
+	return rm.broadcaster.UpdateChannel(c)
 }
 
 func (rm *RecordManager) createChannel(id int, did string) func(*lex.ChannelRecord, *time.Time, context.Context) (*types.Channel, error) {

@@ -14,6 +14,8 @@ type LexBroadcaster interface {
 	BroadcastSignet(uri string, s *types.Signet) error
 	BroadcastMessage(uri string, m *types.Message) error
 	AddChannel(c *types.Channel) error
+	UpdateChannel(c *types.Channel) error
+	DeleteChannel(uri string) error
 }
 
 type RecordManager struct {

@@ -13,6 +13,61 @@ import (
 	"time"
 )
 
+func (rm *RecordManager) AcceptMessage(m *types.Message, ctx context.Context) error {
+	err := rm.storeMessage(m, ctx)
+	if err != nil {
+		return errors.New("failed to store message: " + err.Error())
+	}
+	err = rm.forwardMessage(m, ctx)
+	if err != nil {
+		return errors.New("failed to forward message: " + err.Error())
+	}
+	return nil
+}
+
+func (rm *RecordManager) AcceptMessageUpdate(m *types.Message, did string, ctx context.Context) error {
+	err := rm.updateMessage(m, ctx)
+	if err != nil {
+		return errors.New("failed to store message: " + err.Error())
+	}
+	err = rm.checkInterference(m, did, ctx)
+	if err != nil {
+		return errors.New("error while checking interference: " + err.Error())
+	}
+	return nil
+}
+
+func (rm *RecordManager) AcceptMessageDelete(uri string, ctx context.Context) error {
+	err := rm.db.DeleteMessage(uri, ctx)
+	if err != nil {
+		return errors.New("failed to delete message: " + err.Error())
+	}
+	return nil
+}
+
+func (rm *RecordManager) checkInterference(m *types.Message, did string, ctx context.Context) error {
+	handle, err := rm.db.QuerySignetHandle(m.SignetURI, ctx)
+	if err != nil {
+		return errors.New("couldn't find signet")
+	}
+	sdid, err := atputils.DidFromUri(m.SignetURI)
+	if sdid != atputils.GetMyDid() {
+		return nil
+	}
+	mhandle, err := rm.db.ResolveDid(did, ctx)
+	if err != nil {
+		return errors.New("couldn't resolve mhandle")
+	}
+	if handle != mhandle {
+		return nil
+	}
+	err = rm.DeleteSignet(m.SignetURI, ctx)
+	if err != nil {
+		return errors.New("failed to delete signet")
+	}
+	return nil
+}
+
 func (rm *RecordManager) PostMessage(id int, udid string, ctx context.Context, pmr *types.PostMessageRequest) error {
 	lmr, now, _, _, err := rm.validateMessage(pmr, ctx)
 	if err != nil {
@@ -120,6 +175,10 @@ func (rm *RecordManager) createMessage(id int, did string, lmr *lex.MessageRecor
 		PostedAt:  *now,
 	}
 	return message, nil
+}
+
+func (rm *RecordManager) updateMessage(m *types.Message, ctx context.Context) error {
+	return rm.db.UpdateMessage(m, ctx)
 }
 
 func (rm *RecordManager) storeMessage(m *types.Message, ctx context.Context) error {

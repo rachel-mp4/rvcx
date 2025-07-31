@@ -9,6 +9,38 @@ import (
 	"rvcx/internal/types"
 )
 
+func (rm *RecordManager) AcceptProfile(p lex.ProfileRecord, did string, ctx context.Context) error {
+	pu := convertToPu(p, did)
+	err := rm.storeProfile(pu, ctx)
+	if err != nil {
+		return errors.New("failed to store profile: " + err.Error())
+	}
+	return nil
+}
+
+func (rm *RecordManager) DeleteProfile(did string, cid string, ctx context.Context) error {
+	return rm.db.DeleteProfile(did, cid, ctx)
+}
+
+func convertToPu(p lex.ProfileRecord, did string) *db.ProfileUpdate {
+	avatar := p.Avatar.Ref.String()
+	return &db.ProfileUpdate{
+		DID:          did,
+		Name:         p.DisplayName,
+		UpdateName:   true,
+		Nick:         p.DefaultNick,
+		UpdateNick:   true,
+		Status:       p.Status,
+		UpdateStatus: true,
+		Color:        p.Color,
+		UpdateColor:  true,
+		Avatar:       &avatar,
+		UpdateAvatar: true,
+		Mime:         &p.Avatar.MimeType,
+		UpdateMime:   true,
+	}
+}
+
 func (rm *RecordManager) CreateInitialProfile(did string, id int, ctx context.Context) error {
 	nick := "wanderer"
 	status := "just setting up my xcvr"

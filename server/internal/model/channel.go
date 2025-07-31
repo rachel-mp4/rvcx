@@ -111,6 +111,40 @@ func (m *Model) AddChannel(c *types.Channel) error {
 	return nil
 }
 
+func (m *Model) UpdateChannel(c *types.Channel) error {
+	cm, ok := m.uriMap[c.URI]
+	if !ok {
+		return m.AddChannel(c)
+	}
+	valid := (c.Host == os.Getenv("my_IDENTITY"))
+	if valid != cm.valid {
+		if valid {
+			cm.valid = true
+		} else {
+			cm.valid = false
+			cm.cancel()
+		}
+	}
+	var welcome string
+	if c.Topic == nil {
+		welcome = "and now you're connected"
+	} else {
+		welcome = *c.Topic
+	}
+	cm.welcome = welcome
+	return nil
+}
+
+func (m *Model) DeleteChannel(uri string) error {
+	cm, ok := m.uriMap[uri]
+	if !ok {
+		return nil
+	}
+	delete(m.uriMap, uri)
+	cm.cancel()
+	return nil
+}
+
 func (m *Model) getServer(uri string) (*lrcd.Server, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
