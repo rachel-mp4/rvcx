@@ -34,10 +34,7 @@ func GetMyDid() string {
 	if my_handle == nil {
 		GetMyHandle()
 	}
-	did, err := GetDidFromHandle(context.Background(), *my_handle)
-	if err != nil {
-		return ""
-	}
+	did := os.Getenv("MY_DID")
 	my_did = &did
 	return did
 }
