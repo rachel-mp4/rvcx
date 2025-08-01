@@ -161,8 +161,8 @@ github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0leargg
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
 github.com/rachel-mp4/atproto-oauth-golang v0.0.0-20250616212213-a55a5f62b82d h1:FQ8YKfXnKmyEbKnO/blj3qWGhYdw+l3DtQCqSboJRvA=
 github.com/rachel-mp4/atproto-oauth-golang v0.0.0-20250616212213-a55a5f62b82d/go.mod h1:vVRo6BPEmWOZnYk9LtXLzBPzfkY63fUaBahA+o4h55Q=
-github.com/rachel-mp4/lrcd v0.0.0-20250722223647-fa97afddbda9 h1:3tUkA6SM6TiqdT5zZ7NqaGJp4iXQPbWemNI0Iwoh7eo=
-github.com/rachel-mp4/lrcd v0.0.0-20250722223647-fa97afddbda9/go.mod h1:lU5b8bC7vP56MT57i6gUYoXxHSVLyrUYMnUo7JELwSc=
+github.com/rachel-mp4/lrcd v0.0.0-20250731224514-2f8d47fe368c h1:/KXAMnA+PC9ihDVI2u4BQ5BITsR+WB0anx3Zk/sLW88=
+github.com/rachel-mp4/lrcd v0.0.0-20250731224514-2f8d47fe368c/go.mod h1:lU5b8bC7vP56MT57i6gUYoXxHSVLyrUYMnUo7JELwSc=
 github.com/rachel-mp4/lrcproto v0.0.0-20250720164211-c6162669b709 h1:P//gJE0zFv9Qvfn8dvp9ZrnG0FZh2MVcAX+uOP2flRw=
 github.com/rachel-mp4/lrcproto v0.0.0-20250720164211-c6162669b709/go.mod h1:hQzO36tQELGbkmRnUtKeM6NMU34t79ZcTlhM+MO7pHw=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
