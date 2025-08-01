@@ -50,7 +50,7 @@ func convertToPu(p lex.ProfileRecord, did string) *db.ProfileUpdate {
 func (rm *RecordManager) CreateInitialProfile(did string, id int, ctx context.Context) error {
 	nick := "wanderer"
 	status := "just setting up my xcvr"
-	color := uint64(3602605)
+	color := uint64(3702605)
 	handle, err := rm.db.ResolveDid(did, ctx)
 	if err != nil {
 		return errors.New("i couldn't find the handle, so i couldn't create default profile record. gootbye")
