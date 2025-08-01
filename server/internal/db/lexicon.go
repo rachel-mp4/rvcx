@@ -24,7 +24,7 @@ func (s *Store) InitializeProfile(did string,
 		) VALUES (
 		$1, $2, $3, $4, $5
 		) ON CONFLICT (did) DO NOTHING
-		`, did, displayname, status, "just setting up my xcvr", 3702605)
+		`, did, displayname, defaultnick, status, color)
 	if err != nil {
 		return errors.New("i'm not sure what happened: " + err.Error())
 	}
