@@ -9,6 +9,7 @@ import (
 	"rvcx/internal/atputils"
 	"rvcx/internal/types"
 	"strconv"
+	"time"
 )
 
 func (h *Handler) getChannels(w http.ResponseWriter, r *http.Request) {
@@ -128,4 +129,36 @@ func (h *Handler) serveProfileView(did string, handle string, w http.ResponseWri
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(profile)
+}
+
+func (h *Handler) getLastSeen(w http.ResponseWriter, r *http.Request) {
+	handle := r.URL.Query().Get("handle")
+	did := r.URL.Query().Get("did")
+	if did == "" {
+		if handle == "" {
+			h.badRequest(w, errors.New("did not provide did or handle"))
+			return
+		}
+		var err error
+		did, err = h.db.ResolveHandle(handle, r.Context())
+		if err != nil {
+			did, err = atputils.TryLookupHandle(r.Context(), handle)
+			if err != nil {
+				h.serverError(w, errors.New("i think the handle might not exist?"+err.Error()))
+				return
+			}
+			go h.db.StoreDidHandle(did, handle, context.Background())
+		}
+	}
+	where, when := h.db.GetLastSeen(did, r.Context())
+	type lastSeenResp struct {
+		Where *string    `json:"where,omitempty"`
+		When  *time.Time `json:"when,omitempty"`
+	}
+	resp := lastSeenResp{
+		where, when,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	encoder.Encode(resp)
 }

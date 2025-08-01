@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"rvcx/internal/types"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -83,6 +84,18 @@ func (s *Store) StoreDidHandle(did string, handle string, ctx context.Context) e
 		return errors.New("error storing did/handle: " + err.Error())
 	}
 	return nil
+}
+
+func (s *Store) GetLastSeen(did string, ctx context.Context) (where *string, when *time.Time) {
+	row := s.pool.QueryRow(ctx, `SELECT 
+		s.channel_uri, m.posted_at 
+		FROM messages m 
+		JOIN signets s ON m.signet_uri = s.uri
+		JOIN did_handles dh ON m.did = dh.did
+		WHERE m.did = $1 AND dh.handle = s.author_handle
+		ORDER BY s.message_id DESC`, did)
+	row.Scan(&where, &when)
+	return
 }
 
 func (s *Store) GetMessages(channelURI string, limit int, cursor *int, ctx context.Context) ([]types.SignedMessageView, error) {

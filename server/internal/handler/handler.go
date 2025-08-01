@@ -40,6 +40,7 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, model *mode
 	mux.HandleFunc("GET /xrpc/org.xcvr.actor.resolveChannel", h.WithCORS(h.resolveChannel))
 	mux.HandleFunc("GET /xrpc/org.xcvr.actor.getProfileView", h.WithCORS(h.getProfileView))
 	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.subscribeLexStream", h.WithCORS(h.subscribeLexStream))
+	mux.HandleFunc("GET /xrpc/org.xcvr.actor.getLastSeen", h.WithCORS(h.getLastSeen))
 	// backend metadata handlers
 	mux.HandleFunc(clientMetadataPath(), h.WithCORS(h.serveClientMetadata))
 	mux.HandleFunc(clientTOSPath(), h.WithCORS(h.serveTOS))

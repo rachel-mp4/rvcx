@@ -1,0 +1,45 @@
+{ 
+  "lexicon": 1,
+  "id": "org.xcvr.actor.getLastSeen",
+  "defs": {
+    "main": {
+			"type": "query",
+			"description": "gets a user's profileView",
+			"parameters": {
+				"type": "params"
+				"union": [
+					{
+						"type": "object",
+						"required": ["handle"],
+						"properties": {
+							"handle": {"type": "string"},
+						}
+					},
+					{
+						"type": "object",
+						"required": ["did"],
+						"properties": {
+							"did": {"type": "string"},
+						}
+					}
+				]
+			},
+			"output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "where": {
+              "type": "string",
+              "format": "at-uri"
+            },
+            "when": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+			}
+		}
+  }
+}
