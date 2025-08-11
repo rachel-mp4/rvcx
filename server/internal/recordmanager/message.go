@@ -128,7 +128,7 @@ func (rm *RecordManager) validateHandleAndNonce(handle *string, nonce []byte, si
 }
 
 func (rm *RecordManager) createMyMessage(lmr *lex.MessageRecord, now *time.Time, ctx context.Context) (*types.Message, error) {
-	uri, cid, err := rm.myClient.CreateXCVRMessage(lmr, ctx)
+	cid, uri, err := rm.myClient.CreateXCVRMessage(lmr, ctx)
 	if err != nil {
 		return nil, errors.New("couldn't add to user repo: " + err.Error())
 	}
