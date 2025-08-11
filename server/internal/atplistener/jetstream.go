@@ -207,6 +207,7 @@ func (h *handler) handleMessageCreate(ctx context.Context, event *models.Event) 
 	message, err := parseMessageRecord(event)
 	if err != nil {
 		h.l.Println("error parsing: " + err.Error())
+		return nil
 	}
 	err = h.rm.AcceptMessage(message, ctx)
 	if err != nil {
