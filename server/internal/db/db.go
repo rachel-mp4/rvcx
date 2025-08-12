@@ -93,7 +93,7 @@ func (s *Store) GetLastSeen(did string, ctx context.Context) (where *string, whe
 		JOIN signets s ON m.signet_uri = s.uri
 		JOIN did_handles dh ON m.did = dh.did
 		WHERE m.did = $1 AND dh.handle = s.author_handle
-		ORDER BY s.message_id DESC`, did)
+		ORDER BY m.posted_at DESC`, did)
 	row.Scan(&where, &when)
 	return
 }
