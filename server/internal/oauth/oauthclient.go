@@ -41,6 +41,10 @@ func NewOauthXRPCClient(s *db.Store, l *log.Logger, session *types.Session) *Oau
 	}
 }
 
+func (c *OauthXRPCClient) GetSession() *types.Session {
+	return c.session
+}
+
 func (c *OauthXRPCClient) getOauthSessionAuthArgs() (*oauth.XrpcAuthedRequestArgs, error) {
 	s := c.session
 	privateJwk, err := helpers.ParseJWKFromBytes([]byte(s.DpopPrivKey))

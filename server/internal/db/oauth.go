@@ -62,6 +62,18 @@ func (s *Store) StoreOAuthSession(session *types.Session, ctx context.Context) e
 	return nil
 }
 
+func (s *Store) UpdateSession(id int, session *types.Session, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `UPDATE oauthsessions
+		SET (dpop_auth_server_nonce, access_token, refresh_token)
+		VALUES ($1, $2, $3)
+		WHERE id = $4
+		`, session.DpopAuthServerNonce, session.AccessToken, session.RefreshToken, id)
+	if err != nil {
+		return errors.New("error updating session: " + err.Error())
+	}
+	return nil
+}
+
 func (s *Store) GetOauthRequest(state string, ctx context.Context) (*types.OAuthRequest, error) {
 	row := s.pool.QueryRow(ctx, `
 		SELECT

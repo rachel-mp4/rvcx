@@ -26,8 +26,8 @@ type RecordManager struct {
 	broadcaster LexBroadcaster
 }
 
-func New(log *log.Logger, db *db.Store, myClient *oauth.PasswordClient) *RecordManager {
-	clientmap := oauth.NewClientMap()
+func New(log *log.Logger, db *db.Store, myClient *oauth.PasswordClient, service *oauth.Service) *RecordManager {
+	clientmap := oauth.NewClientMap(service)
 	return &RecordManager{log, db, myClient, clientmap, nil}
 }
 
@@ -36,15 +36,23 @@ func (rm *RecordManager) SetBroadcaster(b LexBroadcaster) {
 }
 
 func (rm *RecordManager) getClient(id int, ctx context.Context) (*oauth.OauthXRPCClient, error) {
-	client := rm.clientmap.Map(id)
-	if client == nil {
-		client, err := rm.resetClient(id, ctx)
+	cli, refreshed, err := rm.clientmap.Map(id, ctx)
+	if cli == nil {
+		cli, err = rm.resetClient(id, ctx)
 		if err != nil {
 			return nil, err
 		}
-		return client, nil
+		return cli, nil
 	}
-	return client, nil
+
+	if err != nil {
+		return nil, errors.New("error getting client: " + err.Error())
+	}
+	if refreshed {
+		rm.db.UpdateSession(id, cli.GetSession(), ctx)
+	}
+
+	return cli, nil
 }
 
 func (rm *RecordManager) resetClient(id int, ctx context.Context) (*oauth.OauthXRPCClient, error) {

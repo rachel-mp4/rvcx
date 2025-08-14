@@ -12,6 +12,7 @@ import (
 	"rvcx/internal/oauth"
 
 	"github.com/gorilla/sessions"
+	// aog "github.com/haileyok/atproto-oauth-golang"
 	"github.com/haileyok/atproto-oauth-golang/helpers"
 )
 
@@ -29,6 +30,32 @@ func (h *Handler) serveJWKS(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 	encoder.Encode(ro)
 }
+
+// func (h *Handler) newOAuthLogin(w http.ResponseWriter, r *http.Request) {
+// 	err := r.ParseForm()
+// 	if err != nil {
+// 		h.badRequest(w, err)
+// 		return
+// 	}
+// 	clientID := oauth.GetClientMetadata().ClientId
+// 	callbackUrl := oauth.GetClientMetadata().RedirectUris[0]
+// 	k, err := oauth.GetJWKS()
+// 	if err != nil {
+// 		h.serverError(w, err)
+// 		return
+// 	}
+// 	cli, err := aog.NewClient(aog.ClientArgs{
+// 		ClientJwk:   *k,
+// 		ClientId:    clientID,
+// 		RedirectUri: callbackUrl,
+// 	})
+// 	if err != nil {
+// 		h.serverError(w, err)
+// 		return
+// 	}
+// 	cli.RefreshTokenRequest
+// 	handle := r.FormValue("handle")
+// }
 
 func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()

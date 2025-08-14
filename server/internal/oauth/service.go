@@ -158,3 +158,19 @@ func (s *Service) OauthCallback(ctx context.Context, oauthRequest *types.OAuthRe
 	}
 	return &oauthSession, nil
 }
+
+func (s *Service) RefreshToken(ctx context.Context, session *types.Session) (newexpiry time.Time, err error) {
+	jwk, err := helpers.ParseJWKFromBytes([]byte(session.DpopPrivKey))
+	if err != nil {
+		return
+	}
+	resp, err := s.oauth.RefreshTokenRequest(ctx, session.RefreshToken, session.AuthserverIss, session.DpopAuthServerNonce, jwk)
+	if err != nil {
+		return
+	}
+	session.AccessToken = resp.AccessToken
+	session.DpopAuthServerNonce = resp.DpopAuthserverNonce
+	session.RefreshToken = resp.RefreshToken
+	newexpiry = time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second)
+	return
+}
