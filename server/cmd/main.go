@@ -56,7 +56,7 @@ func main() {
 		logger.Println(err.Error())
 		panic(err)
 	}
-	recordmanager := recordmanager.New(logger, store, xrpc)
+	recordmanager := recordmanager.New(logger, store, xrpc, oauthclient)
 	model := model.Init(store, logger, xrpc, recordmanager)
 	recordmanager.SetBroadcaster(model)
 	h := handler.New(store, logger, oauthclient, model, recordmanager)
