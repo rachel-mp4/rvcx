@@ -228,18 +228,22 @@ func (h *Handler) oauthLogout(w http.ResponseWriter, r *http.Request) {
 	s, _ := h.sessionStore.Get(r, "oauthsession")
 	id, ok := s.Values["id"].(int)
 	if ok {
+		h.logger.Deprintln("deleting session to log out!")
 		err := h.rm.DeleteSession(id, r.Context())
 		if err != nil {
 			h.serverError(w, errors.New("couldn't log out: "+err.Error()))
 			return
 		}
+		h.logger.Deprintln("deleted session to log out!")
 	}
 	s.Values = make(map[interface{}]interface{})
 	s.Options.MaxAge = -1
+	h.logger.Deprintln("saving cookie to log out!")
 	err := s.Save(r, w)
 	if err != nil {
 		h.serverError(w, errors.New("issue logging out: "+err.Error()))
 		return
 	}
+	h.logger.Deprintln("saved cookie to log out!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

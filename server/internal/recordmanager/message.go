@@ -69,18 +69,22 @@ func (rm *RecordManager) checkInterference(m *types.Message, did string, ctx con
 }
 
 func (rm *RecordManager) PostMessage(id int, udid string, ctx context.Context, pmr *types.PostMessageRequest) error {
+	rm.log.Deprintln("validate")
 	lmr, now, _, _, err := rm.validateMessage(pmr, ctx)
 	if err != nil {
 		return errors.New("failed to validate message: " + err.Error())
 	}
+	rm.log.Deprintln("create")
 	m, err := rm.createMessage(id, udid, lmr, now, ctx)
 	if err != nil {
 		return errors.New("failed to create message: " + err.Error())
 	}
+	rm.log.Deprintln("store")
 	err = rm.storeMessage(m, ctx)
 	if err != nil {
 		return errors.New("failed to store message: " + err.Error())
 	}
+	rm.log.Deprintln("forward")
 	err = rm.forwardMessage(m, ctx)
 	if err != nil {
 		return errors.New("failed to forward message: " + err.Error())
