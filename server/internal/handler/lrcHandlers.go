@@ -100,6 +100,20 @@ func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		h.serverError(w, errors.New("error posting message: "+err.Error()))
+		return
+	}
+	w.Write(nil)
+}
+
+func (h *Handler) postMyMessage(w http.ResponseWriter, r *http.Request) {
+	pmr, err := h.parseMessageRequest(r)
+	if err != nil {
+		h.badRequest(w, errors.New("failed to parse message request: "+err.Error()))
+		return
+	}
+	err = h.rm.PostMyMessage(r.Context(), pmr)
+	if err != nil {
+		h.serverError(w, errors.New("error posting message: "+err.Error()))
 	}
 	w.Write(nil)
 }

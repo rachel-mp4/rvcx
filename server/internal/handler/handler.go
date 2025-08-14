@@ -31,6 +31,7 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, model *mode
 	mux.HandleFunc("DELETE /lrc/{user}/{rkey}/ws", h.deleteChannel)
 	mux.HandleFunc("POST /lrc/channel", h.postChannel)
 	mux.HandleFunc("POST /lrc/message", h.postMessage)
+	mux.HandleFunc("POST /lrc/mymessage", h.postMyMessage)
 	// xcvr handlers
 	mux.HandleFunc("POST /xcvr/profile", h.postProfile)
 	mux.HandleFunc("POST /xcvr/beep", h.beep)
