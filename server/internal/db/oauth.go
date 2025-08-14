@@ -127,6 +127,7 @@ func (s *Store) GetOauthSession(id int, ctx context.Context) (*types.Session, er
 	if err != nil {
 		return nil, errors.New("error scanning oauthsession row: " + err.Error())
 	}
+	session.ID = id
 	return &session, nil
 }
 

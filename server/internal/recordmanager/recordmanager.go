@@ -38,6 +38,7 @@ func (rm *RecordManager) SetBroadcaster(b LexBroadcaster) {
 func (rm *RecordManager) getClient(id int, ctx context.Context) (*oauth.OauthXRPCClient, error) {
 	cli, refreshed, err := rm.clientmap.Map(id, ctx)
 	if cli == nil {
+		rm.log.Deprintln("resetting client")
 		cli, err = rm.resetClient(id, ctx)
 		if err != nil {
 			return nil, err
@@ -49,6 +50,7 @@ func (rm *RecordManager) getClient(id int, ctx context.Context) (*oauth.OauthXRP
 		return nil, errors.New("error getting client: " + err.Error())
 	}
 	if refreshed {
+		rm.log.Deprintln("refreshed")
 		rm.db.UpdateSession(id, cli.GetSession(), ctx)
 	}
 
@@ -66,6 +68,10 @@ func (rm *RecordManager) resetClient(id int, ctx context.Context) (*oauth.OauthX
 func (rm *RecordManager) setupClient(session *types.Session) *oauth.OauthXRPCClient {
 	client := oauth.NewOauthXRPCClient(rm.db, rm.log, session)
 	rm.clientmap.Append(session.ID, client, session.Expiration)
+	rm.log.Deprintf("appended cli %d", session.ID)
+	if client == nil {
+		rm.log.Println("client nil!")
+	}
 	return client
 }
 
