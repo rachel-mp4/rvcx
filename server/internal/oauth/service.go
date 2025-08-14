@@ -171,6 +171,6 @@ func (s *Service) RefreshToken(ctx context.Context, session *types.Session) (new
 	session.AccessToken = resp.AccessToken
 	session.DpopAuthServerNonce = resp.DpopAuthserverNonce
 	session.RefreshToken = resp.RefreshToken
-	newexpiry = time.Now().Add(time.Duration(resp.ExpiresIn) * time.Second)
+	newexpiry = time.Now().Add(1 * time.Hour)
 	return
 }
