@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
 	"net/http"
 	"os"
 	"rvcx/internal/atputils"
@@ -25,24 +26,17 @@ func (h *Handler) acceptWebsocket(w http.ResponseWriter, r *http.Request) {
 	f(w, r)
 }
 
-func (h *Handler) postChannel(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) postChannel(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
 	cr, err := h.parseChannelRequest(r)
 	if err != nil {
 		h.badRequest(w, err)
 		return
 	}
-	session, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := session.Values["id"].(string)
-	var uri, did string
-	if !ok {
+	var did, uri string
+	if cs == nil {
 		did, uri, err = h.rm.PostMyChannel(r.Context(), cr)
 	} else {
-		udid, ok := session.Values["did"].(string)
-		if !ok {
-			h.badRequest(w, errors.New("user session has no did?"))
-			return
-		}
-		did, uri, err = h.rm.PostChannel(id, udid, r.Context(), cr)
+		did, uri, err = h.rm.PostChannel(cs, r.Context(), cr)
 	}
 	if err != nil {
 		h.serverError(w, err)
@@ -81,22 +75,16 @@ func (h *Handler) parseMessageRequest(r *http.Request) (*types.PostMessageReques
 	return &mr, nil
 }
 
-func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) postMessage(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
 	pmr, err := h.parseMessageRequest(r)
 	if err != nil {
 		h.badRequest(w, errors.New("failed to parse message request: "+err.Error()))
 		return
 	}
-	session, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := session.Values["id"].(string)
-	if !ok {
+	if cs == nil {
 		err = h.rm.PostMyMessage(r.Context(), pmr)
 	} else {
-		did, ok := session.Values["did"].(string)
-		if !ok {
-			h.badRequest(w, errors.New("has sid but doesn't have sdid!"))
-		}
-		err = h.rm.PostMessage(id, did, r.Context(), pmr)
+		err = h.rm.PostMessage(cs, r.Context(), pmr)
 	}
 	if err != nil {
 		h.serverError(w, errors.New("error posting message: "+err.Error()))
@@ -118,20 +106,20 @@ func (h *Handler) postMyMessage(w http.ResponseWriter, r *http.Request) {
 	w.Write(nil)
 }
 
-func (h *Handler) deleteChannel(w http.ResponseWriter, r *http.Request) {
-	did, handle, err := h.findDidAndHandle(r)
-	if err != nil {
+func (h *Handler) deleteChannel(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
+	if cs == nil {
 		h.logger.Deprintln("tried to anonymously delete")
 		return
 	}
 	rkey := r.PathValue("rkey")
 	user := r.PathValue("user")
-	if did != user && handle != os.Getenv("ADMIN_HANDLE") {
-		h.logger.Deprintln("tried to delete not logged in")
-		return
+	var err error
+	if cs.Data.AccountDID.String() == user {
+		err = h.rm.DeleteChannel(cs, rkey, r.Context())
+	} else if cs.Data.AccountDID.String() == os.Getenv("ADMIN_DID") {
+		uri := fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", user, rkey)
+		err = h.rm.AcceptChannelDelete(uri, r.Context())
 	}
-	uri := fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", user, rkey)
-	err = h.db.DeleteChannel(uri, r.Context())
 	if err != nil {
 		h.logger.Deprintln("failed to delete")
 		return

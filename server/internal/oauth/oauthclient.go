@@ -47,7 +47,12 @@ func CreateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx 
 		return nil, errors.New("failed to parse: " + err.Error())
 	}
 	var getOut atproto.RepoGetRecord_Output
-	err = c.Get(ctx, nsid, nil, &getOut)
+	body := map[string]any{
+		"collection": "org.xcvr.actor.profile",
+		"repo":       *c.AccountDID,
+		"rkey":       "self",
+	}
+	err = c.Get(ctx, nsid, body, &getOut)
 	if err == nil {
 		if getOut.Cid != nil {
 			var jsonBytes []byte
@@ -63,12 +68,7 @@ func CreateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx 
 			return &pro, nil
 		}
 	}
-	body := map[string]any{
-		"collection": "org.xcvr.actor.profile",
-		"repo":       *c.AccountDID,
-		"rkey":       "self",
-		"record":     profile,
-	}
+	body["record"] = profile
 	var out atproto.RepoCreateRecord_Output
 	err = c.Post(ctx, "com.atproto.repo.createRecord", body, out)
 	if err != nil {
@@ -81,14 +81,14 @@ func CreateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx 
 func CreateXCVRChannel(cs *oauth.ClientSession, channel *lex.ChannelRecord, ctx context.Context) (uri string, cid string, err error) {
 	c := cs.APIClient()
 	body := map[string]any{
-		"collection": "org.xcvr.actor.profile",
+		"collection": "org.xcvr.feed.channel",
 		"repo":       *c.AccountDID,
 		"record":     channel,
 	}
 	var out atproto.RepoCreateRecord_Output
 	err = c.Post(ctx, "com.atproto.repo.createRecord", body, out)
 	if err != nil {
-		err = errors.New("oops! failed to create a profile: " + err.Error())
+		err = errors.New("oops! failed to create a channel: " + err.Error())
 		return
 	}
 	uri = out.Uri
@@ -96,10 +96,33 @@ func CreateXCVRChannel(cs *oauth.ClientSession, channel *lex.ChannelRecord, ctx 
 	return
 }
 
+func DeleteXCVRChannel(cs *oauth.ClientSession, rkey string, ctx context.Context) error {
+	c := cs.APIClient()
+	var getOut atproto.RepoGetRecord_Output
+	body := map[string]any{
+		"collection": "org.xcvr.feed.channel",
+		"repo":       *c.AccountDID,
+		"rkey":       rkey,
+	}
+	err := c.Get(ctx, "com.atproto.repo.getRecord", body, &getOut)
+	if err != nil {
+		return err
+	}
+	if getOut.Cid == nil {
+		return nil
+	}
+	body["swapRecord"] = getOut.Cid
+	err = c.Post(ctx, "com.atproto.repo.deleteRecord", body, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func CreateXCVRMessage(cs *oauth.ClientSession, message *lex.MessageRecord, ctx context.Context) (uri string, cid string, err error) {
 	c := cs.APIClient()
 	body := map[string]any{
-		"collection": "org.xcvr.actor.profile",
+		"collection": "org.xcvr.lrc.message",
 		"repo":       *c.AccountDID,
 		"record":     message,
 	}

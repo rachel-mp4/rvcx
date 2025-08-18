@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"rvcx/internal/atputils"
 	"rvcx/internal/types"
 	"time"
 
@@ -44,23 +45,17 @@ func initialize() (*pgxpool.Pool, error) {
 }
 
 func (s *Store) ResolveHandle(handle string, ctx context.Context) (string, error) {
-	rows, err := s.pool.Query(ctx, `
+	row := s.pool.QueryRow(ctx, `
 		SELECT
 			h.did
 		FROM did_handles h
 		WHERE h.handle = $1
 		LIMIT 1
 	`, handle)
+	var did string
+	err := row.Scan(&did)
 	if err != nil {
 		return "", err
-	}
-	defer rows.Close()
-	var did string
-	for rows.Next() {
-		err := rows.Scan(&did)
-		if err != nil {
-			return "", err
-		}
 	}
 	return did, nil
 }
@@ -73,6 +68,18 @@ func (s *Store) ResolveDid(did string, ctx context.Context) (string, error) {
 		return "", errors.New("error scanning row for handle: " + err.Error())
 	}
 	return handle, nil
+}
+
+func (s *Store) FullResolveDid(did string, ctx context.Context) (string, error) {
+	hdl, err := s.ResolveDid(did, ctx)
+	if err == nil {
+		return hdl, nil
+	}
+	hdl, err = atputils.TryLookupDid(ctx, did)
+	if err != nil {
+		return "", errors.New("couldn't resolve: " + err.Error())
+	}
+	return hdl, nil
 }
 
 func (s *Store) StoreDidHandle(did string, handle string, ctx context.Context) error {

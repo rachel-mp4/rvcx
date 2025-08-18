@@ -3,6 +3,7 @@ package recordmanager
 import (
 	"context"
 	"errors"
+	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
 	"github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/rachel-mp4/lrcd"
 	"os"
@@ -69,14 +70,14 @@ func (rm *RecordManager) checkInterference(m *types.Message, did string, ctx con
 	return nil
 }
 
-func (rm *RecordManager) PostMessage(sessionId string, udid string, ctx context.Context, pmr *types.PostMessageRequest) error {
+func (rm *RecordManager) PostMessage(cs *atoauth.ClientSession, ctx context.Context, pmr *types.PostMessageRequest) error {
 	rm.log.Deprintln("validate")
 	lmr, now, _, _, err := rm.validateMessage(pmr, ctx)
 	if err != nil {
 		return errors.New("failed to validate message: " + err.Error())
 	}
 	rm.log.Deprintln("create")
-	m, err := rm.createMessage(udid, sessionId, lmr, now, ctx)
+	m, err := rm.createMessage(cs, lmr, now, ctx)
 	if err != nil {
 		return errors.New("failed to create message: " + err.Error())
 	}
@@ -155,16 +156,8 @@ func (rm *RecordManager) createMyMessage(lmr *lex.MessageRecord, now *time.Time,
 	return message, nil
 }
 
-func (rm *RecordManager) createMessage(did string, sessionID string, lmr *lex.MessageRecord, now *time.Time, ctx context.Context) (*types.Message, error) {
-	sdid, err := syntax.ParseDID(did)
-	if err != nil {
-		return nil, errors.New(" error: " + err.Error())
-	}
-	client, err := rm.service.ResumeSession(ctx, sdid, sessionID)
-	if err != nil {
-		return nil, errors.New("failed to get client: " + err.Error())
-	}
-	uri, cid, err := oauth.CreateXCVRMessage(client, lmr, ctx)
+func (rm *RecordManager) createMessage(cs *atoauth.ClientSession, lmr *lex.MessageRecord, now *time.Time, ctx context.Context) (*types.Message, error) {
+	uri, cid, err := oauth.CreateXCVRMessage(cs, lmr, ctx)
 	if err != nil {
 		return nil, errors.New("couldn't add to user repo: " + err.Error())
 	}
@@ -175,7 +168,7 @@ func (rm *RecordManager) createMessage(did string, sessionID string, lmr *lex.Me
 	}
 	message := &types.Message{
 		URI:       uri,
-		DID:       did,
+		DID:       cs.Data.AccountDID.String(),
 		CID:       cid,
 		SignetURI: lmr.SignetURI,
 		Body:      lmr.Body,

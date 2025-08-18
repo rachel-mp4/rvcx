@@ -10,7 +10,6 @@ import (
 	"rvcx/internal/types"
 
 	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
-	"github.com/bluesky-social/indigo/atproto/syntax"
 )
 
 func (rm *RecordManager) AcceptProfile(p lex.ProfileRecord, did string, ctx context.Context) error {
@@ -73,18 +72,10 @@ func (rm *RecordManager) CreateInitialProfile(sessData *atoauth.ClientSessionDat
 
 }
 
-func (rm *RecordManager) PostProfile(did string, sessionID string, ctx context.Context, p *types.PostProfileRequest) error {
-	sdid, err := syntax.ParseDID(did)
-	if err != nil {
-		return errors.New("bad: " + err.Error())
-	}
-	pu, err := rm.validateProfile(did, p)
+func (rm *RecordManager) PostProfile(cs *atoauth.ClientSession, ctx context.Context, p *types.PostProfileRequest) error {
+	pu, err := rm.validateProfile(cs.Data.AccountDID.String(), p)
 	if err != nil {
 		return errors.New("couldn't validate profile: " + err.Error())
-	}
-	cs, err := rm.service.ResumeSession(ctx, sdid, sessionID)
-	if err != nil {
-		return errors.New("couldn't resume session: " + err.Error())
 	}
 	err = rm.updateProfile(cs, p.DisplayName, p.DefaultNick, p.Status, p.Color, ctx)
 	if err != nil {

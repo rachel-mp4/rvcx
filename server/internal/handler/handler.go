@@ -28,13 +28,13 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, model *mode
 	h := &Handler{db, sessionStore, mux, logger, oauthserv, model, recordmanager}
 	// lrc handlers
 	mux.HandleFunc("GET /lrc/{user}/{rkey}/ws", h.WithCORS(h.acceptWebsocket))
-	mux.HandleFunc("DELETE /lrc/{user}/{rkey}/ws", h.deleteChannel)
-	mux.HandleFunc("POST /lrc/channel", h.postChannel)
-	mux.HandleFunc("POST /lrc/message", h.postMessage)
+	mux.HandleFunc("DELETE /lrc/{user}/{rkey}/ws", h.oauthMiddleware(h.deleteChannel))
+	mux.HandleFunc("POST /lrc/channel", h.oauthMiddleware(h.postChannel))
+	mux.HandleFunc("POST /lrc/message", h.oauthMiddleware(h.postMessage))
 	mux.HandleFunc("POST /lrc/mymessage", h.postMyMessage)
 	// xcvr handlers
-	mux.HandleFunc("POST /xcvr/profile", h.postProfile)
-	mux.HandleFunc("POST /xcvr/beep", h.beep)
+	mux.HandleFunc("POST /xcvr/profile", h.oauthMiddleware(h.postProfile))
+	mux.HandleFunc("POST /xcvr/beep", h.oauthMiddleware(h.beep))
 	// lexicon handlers
 	mux.HandleFunc("GET /xrpc/org.xcvr.feed.getChannels", h.WithCORS(h.getChannels))
 	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getMessages", h.WithCORS(h.getMessages))
@@ -49,7 +49,7 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, model *mode
 	// oauth handlers
 	mux.HandleFunc(oauthJWKSPath(), h.WithCORS(h.serveJWKS))
 	mux.HandleFunc("POST /oauth/login", h.oauthLogin)
-	mux.HandleFunc("POST /oauth/logout", h.oauthLogout)
+	mux.HandleFunc("POST /oauth/logout", h.oauthMiddleware(h.oauthLogout))
 	mux.HandleFunc("GET /oauth/whoami", h.getSession)
 	mux.HandleFunc(oauthCallbackPath(), h.WithCORS(h.oauthCallback))
 	return h

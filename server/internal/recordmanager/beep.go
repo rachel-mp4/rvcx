@@ -2,19 +2,10 @@ package recordmanager
 
 import (
 	"context"
-	"errors"
-	"github.com/bluesky-social/indigo/atproto/syntax"
+	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
 	"rvcx/internal/oauth"
 )
 
-func (rm *RecordManager) Beep(id string, did string, ctx context.Context) error {
-	sdid, err := syntax.ParseDID(did)
-	if err != nil {
-		return errors.New("aaaa bbeeeebpp : " + err.Error())
-	}
-	client, err := rm.service.ResumeSession(ctx, sdid, id)
-	if err != nil {
-		return err
-	}
-	return oauth.MakeBskyPost(client, "beep_", ctx)
+func (rm *RecordManager) Beep(cs *atoauth.ClientSession, ctx context.Context) error {
+	return oauth.MakeBskyPost(cs, "beep_", ctx)
 }

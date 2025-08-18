@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"rvcx/internal/atputils"
 	"rvcx/internal/oauth"
 	"strings"
 
+	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
+	"github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/gorilla/sessions"
 )
 
@@ -54,10 +55,6 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	session, _ := h.sessionStore.Get(r, "oauthsession")
-	if err != nil {
-		h.serverError(w, err)
-		return
-	}
 
 	session.Options = &sessions.Options{
 		Path:     "/",
@@ -87,60 +84,32 @@ func oauthJWKSPath() string {
 }
 
 func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
-	did, handle, err := h.findDidAndHandle(r)
+	s, _ := h.sessionStore.Get(r, "oauthsession")
+	did, ok := s.Values["did"].(string)
+	if !ok {
+		h.notFound(w, errors.New("couldn't find profile"))
+		return
+	}
+	handle, err := h.db.FullResolveDid(did, r.Context())
 	if err != nil {
-		h.handleFindDidAndHandleError(w, err)
+		h.notFound(w, errors.New("coudln't resolve did: "+err.Error()))
 		return
 	}
 	h.serveProfileView(did, handle, w, r)
 }
 
-func (h *Handler) findDidAndHandle(r *http.Request) (string, string, error) {
-	session, _ := h.sessionStore.Get(r, "oauthsession")
-	did, ok := session.Values["did"].(string)
-	if !ok || did == "" {
-		return "", "", errors.New("not authenticated")
-	}
-	handle, err := h.db.ResolveDid(did, r.Context())
-	if err != nil {
-		handle, err = atputils.GetHandleFromDid(r.Context(), did)
-		if err != nil {
-			return "", "", errors.New("error resolving handle" + err.Error())
-		}
-		h.logger.Deprintln("storing...")
-		err = h.db.StoreDidHandle(did, handle, r.Context())
-		if err != nil {
-			h.logger.Deprintln("error storing did_handle in findDidAndHandle: " + err.Error())
-		}
-	}
-	return did, handle, nil
-}
-
-func (h *Handler) handleFindDidAndHandleError(w http.ResponseWriter, err error) {
-	if err != nil {
-		if err.Error() == "not authenticated" {
-			http.Error(w, "not authenticated", http.StatusUnauthorized)
-			return
-		}
-		h.serverError(w, err)
-		return
-	}
-	h.logger.Deprintln("handling nil error?")
-}
-
-func (h *Handler) oauthLogout(w http.ResponseWriter, r *http.Request) {
-	s, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := s.Values["id"].(string)
-	did, bok := s.Values["did"].(string)
-	if ok && bok {
+func (h *Handler) oauthLogout(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
+	if cs != nil {
 		h.logger.Deprintln("deleting session to log out!")
-		err := h.rm.DeleteSession(did, id, r.Context())
+		err := h.db.DeleteSession(r.Context(), cs.Data.AccountDID, cs.Data.SessionID)
 		if err != nil {
 			h.serverError(w, errors.New("couldn't log out: "+err.Error()))
 			return
 		}
 		h.logger.Deprintln("deleted session to log out!")
 	}
+
+	s, _ := h.sessionStore.Get(r, "oauthsession")
 	s.Values = make(map[any]any)
 	s.Options.MaxAge = -1
 	h.logger.Deprintln("saving cookie to log out!")
@@ -151,4 +120,27 @@ func (h *Handler) oauthLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	h.logger.Deprintln("saved cookie to log out!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (h *Handler) oauthMiddleware(f func(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s, _ := h.sessionStore.Get(r, "oauthsession")
+		id, ok := s.Values["id"].(string)
+		did, bok := s.Values["did"].(string)
+		if !ok || !bok {
+			f(nil, w, r)
+			return
+		}
+		sdid, err := syntax.ParseDID(did)
+		if err != nil {
+			f(nil, w, r)
+			return
+		}
+		cs, err := h.oauth.ResumeSession(r.Context(), sdid, id)
+		if err != nil {
+			f(nil, w, r)
+			return
+		}
+		f(cs, w, r)
+	}
 }
