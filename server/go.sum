@@ -1,7 +1,5 @@
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
-github.com/bluesky-social/indigo v0.0.0-20250813051257-8be102876fb7 h1:FyoGfQFw/cTkDHdUTIYIHxfyUDgRS12K4o1mYC3ovRs=
-github.com/bluesky-social/indigo v0.0.0-20250813051257-8be102876fb7/go.mod h1:n6QE1NDPFoi7PRbMUZmc2y7FibCqiVU4ePpsvhHUBR8=
 github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e h1:P/O6TDHs53gwgV845uDHI+Nri889ixksRrh4bCkCdxo=
 github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e/go.mod h1:WiYEeyJSdUwqoaZ71KJSpTblemUCpwJfh5oVXplK6T4=
 github.com/carlmjohnson/versioninfo v0.22.5 h1:O00sjOLUAFxYQjlN/bzYTuZiS0y6fWDQjMRvwtKgwwc=
@@ -117,6 +115,8 @@ github.com/prometheus/common v0.54.0 h1:ZlZy0BgJhTwVZUn7dLOkwCZHUkrAqd3WYtcFCWnM
 github.com/prometheus/common v0.54.0/go.mod h1:/TQgMJP5CuVYveyT7n/0Ix8yLNNXy9yRSkhnLTHPDIQ=
 github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0learggepc=
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
+github.com/rachel-mp4/indigo v0.0.0-20250818172132-160dc435906d h1:rw2vFPL1iHDEY2JrDfBkHEm0TFJUDweFQ1ol+2ik95U=
+github.com/rachel-mp4/indigo v0.0.0-20250818172132-160dc435906d/go.mod h1:n6QE1NDPFoi7PRbMUZmc2y7FibCqiVU4ePpsvhHUBR8=
 github.com/rachel-mp4/lrcd v0.0.0-20250731224514-2f8d47fe368c h1:/KXAMnA+PC9ihDVI2u4BQ5BITsR+WB0anx3Zk/sLW88=
 github.com/rachel-mp4/lrcd v0.0.0-20250731224514-2f8d47fe368c/go.mod h1:lU5b8bC7vP56MT57i6gUYoXxHSVLyrUYMnUo7JELwSc=
 github.com/rachel-mp4/lrcproto v0.0.0-20250720164211-c6162669b709 h1:P//gJE0zFv9Qvfn8dvp9ZrnG0FZh2MVcAX+uOP2flRw=

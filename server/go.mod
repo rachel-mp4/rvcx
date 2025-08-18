@@ -61,4 +61,4 @@ require (
 	lukechampine.com/blake3 v1.2.1 // indirect
 )
 
-replace github.com/haileyok/atproto-oauth-golang => github.com/rachel-mp4/atproto-oauth-golang v0.0.0-20250616212213-a55a5f62b82d
+replace github.com/bluesky-social/indigo => github.com/rachel-mp4/indigo v0.0.0-20250818172132-160dc435906d
