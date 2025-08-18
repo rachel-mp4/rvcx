@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS oauthsessions;
 DROP TABLE IF EXISTS oauthrequests;
 
 CREATE TABLE requests (
-  state TEXT PRIMARY KEY,
+  state TEXT NOT NULL PRIMARY KEY,
   authserver_url TEXT NOT NULL,
   account_did TEXT,
   scopes TEXT NOT NULL,
@@ -25,4 +25,4 @@ CREATE TABLE sessions (
   dpop_authserver_nonce TEXT NOT NULL,
   dpop_host_nonce TEXT NOT NULL,
   dpop_privatekey_multibase TEXT NOT NULL
-)
+);
