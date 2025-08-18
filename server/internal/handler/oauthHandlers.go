@@ -19,7 +19,7 @@ func (h *Handler) serveJWKS(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.serverError(w, err)
 	}
-	pubKey, err := (*key).PublicKey()
+	pubKey, err := key.PublicKey()
 	if err != nil {
 		h.serverError(w, err)
 	}

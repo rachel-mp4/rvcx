@@ -5,9 +5,9 @@ import (
 	"os"
 )
 
-func GetPrivateKey() (*crypto.PrivateKeyK256, error) {
+func GetPrivateKey() (crypto.PrivateKeyExportable, error) {
 	csk := os.Getenv("CLIENT_SECRET_KEY")
-	key, err := crypto.ParsePrivateBytesK256([]byte(csk))
+	key, err := crypto.ParsePrivateMultibase(csk)
 	if err != nil {
 		return nil, err
 	}
