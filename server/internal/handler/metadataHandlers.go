@@ -9,10 +9,12 @@ import (
 )
 
 func (h *Handler) serveClientMetadata(w http.ResponseWriter, r *http.Request) {
-	metadata := oauth.GetClientMetadata()
+	doc := h.oauth.App.Config.ClientMetadata()
+	jwksuri := oauth.GetClientMetadata().JWKSUri
+	doc.JWKSURI = &jwksuri
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
-	encoder.Encode(metadata)
+	encoder.Encode(doc)
 }
 
 func (h *Handler) serveTOS(w http.ResponseWriter, r *http.Request) {

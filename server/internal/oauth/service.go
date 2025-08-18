@@ -10,7 +10,7 @@ import (
 )
 
 type Service struct {
-	app *oauth.ClientApp
+	App *oauth.ClientApp
 }
 
 func NewService(store db.Store) (*Service, error) {
@@ -25,13 +25,13 @@ func NewService(store db.Store) (*Service, error) {
 }
 
 func (s *Service) StartAuthFlow(ctx context.Context, identifier string) (redirectURL string, err error) {
-	return s.app.StartAuthFlow(ctx, identifier)
+	return s.App.StartAuthFlow(ctx, identifier)
 }
 
 func (s *Service) OauthCallback(ctx context.Context, params url.Values) (sessdata *oauth.ClientSessionData, err error) {
-	return s.app.ProcessCallback(ctx, params)
+	return s.App.ProcessCallback(ctx, params)
 }
 
 func (s *Service) ResumeSession(ctx context.Context, did syntax.DID, sessionId string) (sess *oauth.ClientSession, err error) {
-	return s.app.ResumeSession(ctx, did, sessionId)
+	return s.App.ResumeSession(ctx, did, sessionId)
 }
