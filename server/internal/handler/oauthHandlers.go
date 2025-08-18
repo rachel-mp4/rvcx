@@ -27,6 +27,9 @@ func (h *Handler) serveJWKS(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.serverError(w, err)
 	}
+
+	cski := os.Getenv("CLIENT_SECRET_KEY_ID")
+	ro.KeyID = &cski
 	rro := map[string]any{"keys": []any{ro}}
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)

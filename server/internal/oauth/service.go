@@ -7,6 +7,7 @@ import (
 
 	"github.com/bluesky-social/indigo/atproto/auth/oauth"
 	"github.com/bluesky-social/indigo/atproto/syntax"
+	"os"
 )
 
 type Service struct {
@@ -19,7 +20,7 @@ func NewService(store db.Store) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = config.SetClientSecret(key, "secret.key.name_")
+	err = config.SetClientSecret(key, os.Getenv("CLIENT_SECRET_KEY_ID"))
 	app := oauth.NewClientApp(&config, store)
 	return &Service{app}, nil
 }
