@@ -140,7 +140,7 @@ func (s Store) SaveAuthRequestInfo(ctx context.Context, info oauth.AuthRequestDa
   	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		info.State,
 		info.AuthServerURL,
-		info.AccountDID.String(),
+		info.AccountDID,
 		info.Scope,
 		info.AuthServerTokenEndpoint,
 		info.PKCEVerifier,
