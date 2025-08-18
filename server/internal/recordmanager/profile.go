@@ -6,7 +6,11 @@ import (
 	"rvcx/internal/atputils"
 	"rvcx/internal/db"
 	"rvcx/internal/lex"
+	"rvcx/internal/oauth"
 	"rvcx/internal/types"
+
+	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
+	"github.com/bluesky-social/indigo/atproto/syntax"
 )
 
 func (rm *RecordManager) AcceptProfile(p lex.ProfileRecord, did string, ctx context.Context) error {
@@ -47,21 +51,21 @@ func convertToPu(p lex.ProfileRecord, did string) *db.ProfileUpdate {
 	}
 }
 
-func (rm *RecordManager) CreateInitialProfile(did string, id int, ctx context.Context) error {
+func (rm *RecordManager) CreateInitialProfile(sessData *atoauth.ClientSessionData, ctx context.Context) error {
 	nick := "wanderer"
 	status := "just setting up my xcvr"
 	color := uint64(3702605)
-	handle, err := rm.db.ResolveDid(did, ctx)
+	handle, err := rm.db.ResolveDid(sessData.AccountDID.String(), ctx)
 	if err != nil {
 		return errors.New("i couldn't find the handle, so i couldn't create default profile record. gootbye")
 	}
 
-	p, err := rm.createProfile(&handle, &nick, &status, &color, id, ctx)
+	p, err := rm.createProfile(&handle, &nick, &status, &color, sessData, ctx)
 	if err != nil {
 		return errors.New("AAAAA error creating profile" + err.Error())
 	}
 	rm.log.Deprintln("initializing profile....")
-	err = rm.db.InitializeProfile(did, p.DisplayName, p.DefaultNick, p.Status, p.Color, ctx)
+	err = rm.db.InitializeProfile(sessData.AccountDID.String(), p.DisplayName, p.DefaultNick, p.Status, p.Color, ctx)
 	if err != nil {
 		return errors.New("failed to initialize profile: " + err.Error())
 	}
@@ -69,12 +73,20 @@ func (rm *RecordManager) CreateInitialProfile(did string, id int, ctx context.Co
 
 }
 
-func (rm *RecordManager) PostProfile(did string, id int, ctx context.Context, p *types.PostProfileRequest) error {
+func (rm *RecordManager) PostProfile(did string, sessionID string, ctx context.Context, p *types.PostProfileRequest) error {
+	sdid, err := syntax.ParseDID(did)
+	if err != nil {
+		return errors.New("bad: " + err.Error())
+	}
 	pu, err := rm.validateProfile(did, p)
 	if err != nil {
 		return errors.New("couldn't validate profile: " + err.Error())
 	}
-	err = rm.updateProfile(p.DisplayName, p.DefaultNick, p.Status, p.Color, id, ctx)
+	cs, err := rm.service.ResumeSession(ctx, sdid, sessionID)
+	if err != nil {
+		return errors.New("couldn't resume session: " + err.Error())
+	}
+	err = rm.updateProfile(cs, p.DisplayName, p.DefaultNick, p.Status, p.Color, ctx)
 	if err != nil {
 		return errors.New("couldn't create profile: " + err.Error())
 	}
@@ -93,36 +105,32 @@ func (rm *RecordManager) storeProfile(pu *db.ProfileUpdate, ctx context.Context)
 	return nil
 }
 
-func (rm *RecordManager) updateProfile(name *string, nick *string, status *string, color *uint64, id int, ctx context.Context) error {
+func (rm *RecordManager) updateProfile(cs *atoauth.ClientSession, name *string, nick *string, status *string, color *uint64, ctx context.Context) error {
 	profilerecord := &lex.ProfileRecord{
 		DisplayName: name,
 		DefaultNick: nick,
 		Status:      status,
 		Color:       color,
 	}
-	client, err := rm.getClient(id, ctx)
-	if err != nil {
-		return err
-	}
-	_, err = client.UpdateXCVRProfile(profilerecord, ctx)
+	_, err := oauth.UpdateXCVRProfile(cs, profilerecord, ctx)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rm *RecordManager) createProfile(name *string, nick *string, status *string, color *uint64, id int, ctx context.Context) (*lex.ProfileRecord, error) {
+func (rm *RecordManager) createProfile(name *string, nick *string, status *string, color *uint64, sessData *atoauth.ClientSessionData, ctx context.Context) (*lex.ProfileRecord, error) {
 	profilerecord := &lex.ProfileRecord{
 		DisplayName: name,
 		DefaultNick: nick,
 		Status:      status,
 		Color:       color,
 	}
-	client, err := rm.getClient(id, ctx)
+	client, err := rm.service.ResumeSession(ctx, sessData.AccountDID, sessData.SessionID)
 	if err != nil {
 		return nil, err
 	}
-	p, err := client.CreateXCVRProfile(profilerecord, ctx)
+	p, err := oauth.CreateXCVRProfile(client, profilerecord, ctx)
 	if err != nil {
 		return nil, errors.New("failed to create profile: " + err.Error())
 	}

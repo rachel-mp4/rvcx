@@ -1,27 +1,15 @@
 package oauth
 
 import (
+	"github.com/bluesky-social/indigo/atproto/crypto"
 	"os"
-	"github.com/haileyok/atproto-oauth-golang/helpers"
-	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 
-var (
-	key *jwk.Key
-)
-
-func GetJWKS() (*jwk.Key, error) {
-	if key != nil {
-		return key, nil
-	}
-	b, err := os.ReadFile("../jwks.json")
+func GetPrivateKey() (*crypto.PrivateKeyK256, error) {
+	csk := os.Getenv("CLIENT_SECRET_KEY")
+	key, err := crypto.ParsePrivateBytesK256([]byte(csk))
 	if err != nil {
 		return nil, err
 	}
-	k, err := helpers.ParseJWKFromBytes(b)
-	if err != nil {
-		return nil, err
-	}
-	key = &k
 	return key, nil
 }

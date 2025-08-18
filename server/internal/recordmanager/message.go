@@ -8,6 +8,7 @@ import (
 	"os"
 	"rvcx/internal/atputils"
 	"rvcx/internal/lex"
+	"rvcx/internal/oauth"
 	"rvcx/internal/types"
 	"slices"
 	"time"
@@ -68,14 +69,14 @@ func (rm *RecordManager) checkInterference(m *types.Message, did string, ctx con
 	return nil
 }
 
-func (rm *RecordManager) PostMessage(id int, udid string, ctx context.Context, pmr *types.PostMessageRequest) error {
+func (rm *RecordManager) PostMessage(sessionId string, udid string, ctx context.Context, pmr *types.PostMessageRequest) error {
 	rm.log.Deprintln("validate")
 	lmr, now, _, _, err := rm.validateMessage(pmr, ctx)
 	if err != nil {
 		return errors.New("failed to validate message: " + err.Error())
 	}
 	rm.log.Deprintln("create")
-	m, err := rm.createMessage(id, udid, lmr, now, ctx)
+	m, err := rm.createMessage(udid, sessionId, lmr, now, ctx)
 	if err != nil {
 		return errors.New("failed to create message: " + err.Error())
 	}
@@ -154,12 +155,16 @@ func (rm *RecordManager) createMyMessage(lmr *lex.MessageRecord, now *time.Time,
 	return message, nil
 }
 
-func (rm *RecordManager) createMessage(id int, did string, lmr *lex.MessageRecord, now *time.Time, ctx context.Context) (*types.Message, error) {
-	client, err := rm.getClient(id, ctx)
+func (rm *RecordManager) createMessage(did string, sessionID string, lmr *lex.MessageRecord, now *time.Time, ctx context.Context) (*types.Message, error) {
+	sdid, err := syntax.ParseDID(did)
+	if err != nil {
+		return nil, errors.New(" error: " + err.Error())
+	}
+	client, err := rm.service.ResumeSession(ctx, sdid, sessionID)
 	if err != nil {
 		return nil, errors.New("failed to get client: " + err.Error())
 	}
-	uri, cid, err := client.CreateXCVRMessage(lmr, ctx)
+	uri, cid, err := oauth.CreateXCVRMessage(client, lmr, ctx)
 	if err != nil {
 		return nil, errors.New("couldn't add to user repo: " + err.Error())
 	}

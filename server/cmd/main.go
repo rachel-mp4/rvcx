@@ -13,7 +13,6 @@ import (
 	"rvcx/internal/model"
 	"rvcx/internal/oauth"
 	"rvcx/internal/recordmanager"
-	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -45,13 +44,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	httpclient := &http.Client{
-		Timeout: 5 * time.Second,
-		Transport: &http.Transport{
-			IdleConnTimeout: 90 * time.Second,
-		},
-	}
-	oauthclient, err := oauth.NewService(httpclient)
+	oauthclient, err := oauth.NewService(*store)
 	if err != nil {
 		logger.Println(err.Error())
 		panic(err)

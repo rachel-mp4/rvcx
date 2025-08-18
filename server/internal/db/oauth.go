@@ -4,149 +4,159 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"rvcx/internal/types"
+	"strings"
+
+	"github.com/bluesky-social/indigo/atproto/auth/oauth"
+	"github.com/bluesky-social/indigo/atproto/syntax"
 )
 
-func (s *Store) StoreOAuthRequest(req *types.OAuthRequest, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `
-		INSERT INTO oauthrequests (
-		authserver_iss,
-		state,
-		did,
-		pds_url,
-		pkce_verifier,
-		dpop_auth_server_nonce,
-		dpop_private_jwk
-		) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		req.AuthserverIss,
-		req.State,
-		req.Did,
-		req.PdsUrl,
-		req.PkceVerifier,
-		req.DpopAuthServerNonce,
-		req.DpopPrivKey)
-	return err
-}
-
-func (s *Store) StoreOAuthSession(session *types.Session, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `
-		INSERT INTO oauthsessions (
-		id,
-		authserver_iss,
-		state,
-		did,
-		pds_url,
-		pkce_verifier,
-		dpop_auth_server_nonce,
-		dpop_private_jwk,
-		dpop_pds_nonce,
+func (s Store) GetSession(ctx context.Context, did syntax.DID, sessionID string) (*oauth.ClientSessionData, error) {
+	row := s.pool.QueryRow(ctx, `
+	SELECT 
+		host_url,
+		authserver_url,
+		authserver_token_endpoint,
+		scopes,
 		access_token,
 		refresh_token,
-		expiration
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-		session.ID,
-		session.AuthserverIss,
-		session.State,
-		session.Did,
-		session.PdsUrl,
-		session.PkceVerifier,
-		session.DpopAuthServerNonce,
-		session.DpopPrivKey,
-		session.DpopPdsNonce,
-		session.AccessToken,
-		session.RefreshToken,
-		session.Expiration)
+		dpop_authserver_nonce,
+		dpop_host_nonce,
+		dpop_privatekey_multibase
+	FROM sessions
+	WHERE did = $1 AND session_id = $2`, did.String(), sessionID)
+	var scope string
+	var csd oauth.ClientSessionData
+	csd.AccountDID = did
+	csd.SessionID = sessionID
+	err := row.Scan(&csd.HostURL,
+		&csd.AuthServerURL,
+		&csd.AuthServerTokenEndpoint,
+		&scope,
+		&csd.AccessToken,
+		&csd.RefreshToken,
+		&csd.DPoPAuthServerNonce,
+		&csd.DPoPHostNonce,
+		&csd.DPoPPrivateKeyMultibase,
+	)
 	if err != nil {
-		return errors.New("error storing oauth session" + err.Error())
+		return nil, errors.New("error scanning: " + err.Error())
+	}
+	scopes := strings.Fields(scope)
+	csd.Scopes = scopes
+	return &csd, nil
+}
+
+func (s Store) SaveSession(ctx context.Context, sess oauth.ClientSessionData) error {
+	scope := strings.Join(sess.Scopes, " ")
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO sessions (
+		session_id,
+		account_did,
+		host_url,
+		authserver_url,
+		authserver_token_endpoint,
+		scopes,
+		access_token,
+		refresh_token,
+		dpop_authserver_nonce,
+		dpop_host_nonce,
+		dpop_privatekey_multibase
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+		sess.SessionID,
+		sess.AccountDID.String(),
+		sess.HostURL,
+		sess.AuthServerURL,
+		sess.AuthServerTokenEndpoint,
+		scope,
+		sess.AccessToken,
+		sess.RefreshToken,
+		sess.DPoPAuthServerNonce,
+		sess.DPoPHostNonce,
+		sess.DPoPPrivateKeyMultibase,
+	)
+	if err != nil {
+		return errors.New("failed to insert: " + err.Error())
 	}
 	return nil
 }
 
-func (s *Store) UpdateSession(id int, session *types.Session, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `UPDATE oauthsessions
-		SET (dpop_auth_server_nonce, access_token, refresh_token)
-		VALUES ($1, $2, $3)
-		WHERE id = $4
-		`, session.DpopAuthServerNonce, session.AccessToken, session.RefreshToken, id)
+func (s Store) DeleteSession(ctx context.Context, did syntax.DID, sessionID string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM sessions WHERE account_did = $1 AND session_id = $2`, did.String(), sessionID)
 	if err != nil {
-		return errors.New("error updating session: " + err.Error())
+		return errors.New("failed to delete: " + err.Error())
 	}
 	return nil
 }
 
-func (s *Store) GetOauthRequest(state string, ctx context.Context) (*types.OAuthRequest, error) {
+func (s Store) GetAuthRequestInfo(ctx context.Context, state string) (*oauth.AuthRequestData, error) {
 	row := s.pool.QueryRow(ctx, `
-		SELECT
-			r.id,
-			r.authserver_iss,
-			r.did,
-			r.pds_url,
-			r.pkce_verifier,
-			r.dpop_auth_server_nonce,
-			r.dpop_private_jwk
-		FROM oauthrequests r
-		WHERE r.state = $1
-		LIMIT 1
+		SELECT 
+  		authserver_url,
+  		account_did,
+  		scopes,
+  		request_uri,
+  		authserver_token_endpoint,
+  		pkce_verifier,
+  		dpop_authserver_nonce,
+  		dpop_privatekey_multibase
+  	FROM requests
+		WHERE state = $1
 		`, state)
-	var req types.OAuthRequest
-	err := row.Scan(&req.ID, &req.AuthserverIss, &req.Did, &req.PdsUrl, &req.PkceVerifier, &req.DpopAuthServerNonce, &req.DpopPrivKey)
-	if err != nil {
-		return nil, errors.New("error scanning rows while getting oauth request:" + err.Error())
-	}
-	return &req, nil
-}
-
-func (s *Store) GetOauthSession(id int, ctx context.Context) (*types.Session, error) {
-	row := s.pool.QueryRow(ctx, `
-		SELECT
-			r.authserver_iss,
-			r.did,
-			r.pds_url,
-			r.pkce_verifier,
-			r.dpop_auth_server_nonce,
-			r.dpop_private_jwk,
-			r.dpop_pds_nonce,
-			r.access_token,
-			r.refresh_token,
-			r.expiration
-		FROM oauthsessions r
-		WHERE r.id = $1
-		`, id)
-	var session types.Session
+	var ari oauth.AuthRequestData
+	ari.State = state
+	var did string
 	err := row.Scan(
-		&session.AuthserverIss,
-		&session.Did,
-		&session.PdsUrl,
-		&session.PkceVerifier,
-		&session.DpopAuthServerNonce,
-		&session.DpopPrivKey,
-		&session.DpopPdsNonce,
-		&session.AccessToken,
-		&session.RefreshToken,
-		&session.Expiration)
+		&ari.AuthServerURL,
+		&did,
+		&ari.Scope,
+		&ari.AuthServerTokenEndpoint,
+		&ari.PKCEVerifier,
+		&ari.DPoPAuthServerNonce,
+		&ari.DPoPPrivateKeyMultibase,
+	)
 	if err != nil {
-		return nil, errors.New("error scanning oauthsession row: " + err.Error())
+		return nil, errors.New("failed to scan: " + err.Error())
 	}
-	session.ID = id
-	return &session, nil
+	sdid, err := syntax.ParseDID(did)
+	if err != nil {
+		return nil, errors.New("failed to parse did: " + err.Error())
+	}
+	ari.AccountDID = &sdid
+	return &ari, nil
 }
 
-func (s *Store) DeleteOauthRequest(state string, ctx context.Context) error {
+func (s Store) SaveAuthRequestInfo(ctx context.Context, info oauth.AuthRequestData) error {
 	_, err := s.pool.Exec(ctx, `
-		DELETE FROM oauthrequests r WHERE r.state = $1
-		`, state)
+		INSERT INTO requests (
+			state,
+  		authserver_url,
+  		account_did,
+  		scopes,
+  		request_uri,
+  		authserver_token_endpoint,
+  		pkce_verifier,
+  		dpop_authserver_nonce,
+  		dpop_privatekey_multibase)
+  	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		info.State,
+		info.AuthServerURL,
+		info.AccountDID.String(),
+		info.Scope,
+		info.AuthServerTokenEndpoint,
+		info.PKCEVerifier,
+		info.DPoPAuthServerNonce,
+		info.DPoPPrivateKeyMultibase,
+	)
 	if err != nil {
-		return errors.New("error deleting oauth request:" + err.Error())
+		return errors.New("failed to insert: " + err.Error())
 	}
 	return nil
 }
 
-func (s *Store) DeleteOauthSession(id int, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `
-		DELETE FROM oauthsessions s WHERE s.id = $1
-		`, id)
+func (s Store) DeleteAuthRequestInfo(ctx context.Context, state string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM requests WHERE state = $1`, state)
 	if err != nil {
-		return errors.New("error deleting oauth request:" + err.Error())
+		return errors.New("failed to delete: " + err.Error())
 	}
 	return nil
 }

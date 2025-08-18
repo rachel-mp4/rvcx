@@ -32,7 +32,7 @@ func (h *Handler) postChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	session, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := session.Values["id"].(int)
+	id, ok := session.Values["id"].(string)
 	var uri, did string
 	if !ok {
 		did, uri, err = h.rm.PostMyChannel(r.Context(), cr)
@@ -88,7 +88,7 @@ func (h *Handler) postMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	session, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := session.Values["id"].(int)
+	id, ok := session.Values["id"].(string)
 	if !ok {
 		err = h.rm.PostMyMessage(r.Context(), pmr)
 	} else {

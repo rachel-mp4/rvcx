@@ -6,6 +6,7 @@ import (
 	"github.com/bluesky-social/indigo/atproto/syntax"
 	"rvcx/internal/atputils"
 	"rvcx/internal/lex"
+	"rvcx/internal/oauth"
 	"rvcx/internal/types"
 	"time"
 )
@@ -46,8 +47,8 @@ func (rm *RecordManager) PostMyChannel(ctx context.Context, pcr *types.PostChann
 	return rm.postchannelflow(rm.createMyChannel(), ctx, pcr)
 }
 
-func (rm *RecordManager) PostChannel(id int, udid string, ctx context.Context, pcr *types.PostChannelRequest) (did string, uri string, err error) {
-	return rm.postchannelflow(rm.createChannel(id, udid), ctx, pcr)
+func (rm *RecordManager) PostChannel(sessionId string, udid string, ctx context.Context, pcr *types.PostChannelRequest) (did string, uri string, err error) {
+	return rm.postchannelflow(rm.createChannel(sessionId, udid), ctx, pcr)
 }
 
 func (rm *RecordManager) postchannelflow(f func(*lex.ChannelRecord, *time.Time, context.Context) (*types.Channel, error), ctx context.Context, pcr *types.PostChannelRequest) (did string, uri string, err error) {
@@ -92,13 +93,17 @@ func (rm *RecordManager) updateChannelmodel(c *types.Channel) error {
 	return rm.broadcaster.UpdateChannel(c)
 }
 
-func (rm *RecordManager) createChannel(id int, did string) func(*lex.ChannelRecord, *time.Time, context.Context) (*types.Channel, error) {
+func (rm *RecordManager) createChannel(sessionId string, did string) func(*lex.ChannelRecord, *time.Time, context.Context) (*types.Channel, error) {
 	return func(lcr *lex.ChannelRecord, now *time.Time, ctx context.Context) (*types.Channel, error) {
-		client, err := rm.getClient(id, ctx)
+		sdid, err := syntax.ParseDID(did)
+		if err != nil {
+			return nil, err
+		}
+		client, err := rm.service.ResumeSession(ctx, sdid, sessionId)
 		if err != nil {
 			return nil, errors.New("couldn't get client")
 		}
-		uri, cid, err := client.CreateXCVRChannel(lcr, ctx)
+		uri, cid, err := oauth.CreateXCVRChannel(client, lcr, ctx)
 		if err != nil {
 			return nil, errors.New("something bad probs happened when posting a channel " + err.Error())
 		}

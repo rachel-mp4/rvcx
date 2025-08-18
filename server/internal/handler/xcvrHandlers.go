@@ -21,7 +21,7 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := s.Values["id"].(int)
+	id, ok := s.Values["id"].(string)
 	if !ok {
 		h.badRequest(w, errors.New("must be logged in!"))
 		return
@@ -35,12 +35,13 @@ func (h *Handler) postProfile(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) beep(w http.ResponseWriter, r *http.Request) {
 	s, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := s.Values["id"].(int)
-	if !ok {
+	id, ok := s.Values["id"].(string)
+	did, bok := s.Values["did"].(string)
+	if !ok || !bok {
 		h.badRequest(w, errors.New("must be logged in!"))
 		return
 	}
-	err := h.rm.Beep(id, r.Context())
+	err := h.rm.Beep(did, id, r.Context())
 	if err != nil {
 		h.badRequest(w, err)
 		return

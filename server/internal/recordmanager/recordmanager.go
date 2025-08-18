@@ -1,9 +1,6 @@
 package recordmanager
 
 import (
-	"context"
-	"errors"
-	"fmt"
 	"rvcx/internal/db"
 	"rvcx/internal/log"
 	"rvcx/internal/oauth"
@@ -22,59 +19,14 @@ type RecordManager struct {
 	log         *log.Logger
 	db          *db.Store
 	myClient    *oauth.PasswordClient
-	clientmap   *oauth.ClientMap
+	service     *oauth.Service
 	broadcaster LexBroadcaster
 }
 
 func New(log *log.Logger, db *db.Store, myClient *oauth.PasswordClient, service *oauth.Service) *RecordManager {
-	clientmap := oauth.NewClientMap(service)
-	return &RecordManager{log, db, myClient, clientmap, nil}
+	return &RecordManager{log, db, myClient, service, nil}
 }
 
 func (rm *RecordManager) SetBroadcaster(b LexBroadcaster) {
 	rm.broadcaster = b
 }
-
-func (rm *RecordManager) getClient(id int, ctx context.Context) (*oauth.OauthXRPCClient, error) {
-	cli, refreshed, err := rm.clientmap.Map(id, ctx)
-	if cli == nil {
-		rm.log.Deprintln("resetting client")
-		cli, err = rm.resetClient(id, ctx)
-		if err != nil {
-			return nil, err
-		}
-		return cli, nil
-	}
-
-	if err != nil {
-		return nil, errors.New("error getting client: " + err.Error())
-	}
-	if refreshed {
-		rm.log.Deprintln("refreshed")
-		rm.db.UpdateSession(id, cli.GetSession(), ctx)
-	}
-
-	return cli, nil
-}
-
-func (rm *RecordManager) resetClient(id int, ctx context.Context) (*oauth.OauthXRPCClient, error) {
-	session, err := rm.db.GetOauthSession(id, ctx)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("errpr setting up session %d: %s", id, err.Error()))
-	}
-	return rm.setupClient(session), nil
-}
-
-func (rm *RecordManager) setupClient(session *types.Session) *oauth.OauthXRPCClient {
-	client := oauth.NewOauthXRPCClient(rm.db, rm.log, session)
-	rm.clientmap.Append(session.ID, client, session.Expiration)
-	rm.log.Deprintf("appended cli %d", session.ID)
-	if client == nil {
-		rm.log.Println("client nil!")
-	}
-	return client
-}
-
-// create - oauth
-// store - db
-// broadcast - channels model

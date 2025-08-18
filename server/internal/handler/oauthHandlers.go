@@ -1,23 +1,20 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 	"rvcx/internal/atputils"
 	"rvcx/internal/oauth"
+	"strings"
 
 	"github.com/gorilla/sessions"
-	// aog "github.com/haileyok/atproto-oauth-golang"
-	"github.com/haileyok/atproto-oauth-golang/helpers"
 )
 
 func (h *Handler) serveJWKS(w http.ResponseWriter, r *http.Request) {
-	key, err := oauth.GetJWKS()
+	key, err := oauth.GetPrivateKey()
 	if err != nil {
 		h.serverError(w, err)
 	}
@@ -25,37 +22,14 @@ func (h *Handler) serveJWKS(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.serverError(w, err)
 	}
-	ro := helpers.CreateJwksResponseObject(pubKey)
+	ro, err := pubKey.JWK()
+	if err != nil {
+		h.serverError(w, err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	encoder.Encode(ro)
 }
-
-// func (h *Handler) newOAuthLogin(w http.ResponseWriter, r *http.Request) {
-// 	err := r.ParseForm()
-// 	if err != nil {
-// 		h.badRequest(w, err)
-// 		return
-// 	}
-// 	clientID := oauth.GetClientMetadata().ClientId
-// 	callbackUrl := oauth.GetClientMetadata().RedirectUris[0]
-// 	k, err := oauth.GetJWKS()
-// 	if err != nil {
-// 		h.serverError(w, err)
-// 		return
-// 	}
-// 	cli, err := aog.NewClient(aog.ClientArgs{
-// 		ClientJwk:   *k,
-// 		ClientId:    clientID,
-// 		RedirectUri: callbackUrl,
-// 	})
-// 	if err != nil {
-// 		h.serverError(w, err)
-// 		return
-// 	}
-// 	cli.RefreshTokenRequest
-// 	handle := r.FormValue("handle")
-// }
 
 func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
@@ -63,94 +37,23 @@ func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
 		h.badRequest(w, err)
 		return
 	}
-	handle := r.FormValue("handle")
-	req, res, err := h.oauth.StartAuthFlow(r.Context(), handle)
+	identifier := r.FormValue("identifier")
+	redirectURL, err := h.oauth.StartAuthFlow(r.Context(), identifier)
 	if err != nil {
 		h.serverError(w, err)
 		return
 	}
-	err = h.db.StoreOAuthRequest(req, r.Context())
-	if err != nil {
-		h.serverError(w, err)
-		return
-	}
-	u, _ := url.Parse(res.AuthzEndpoint)
-	u.RawQuery = fmt.Sprintf("client_id=%s&request_uri=%s", url.QueryEscape(oauth.GetClientMetadata().ClientId), res.RequestUri)
-
-	session, _ := h.sessionStore.Get(r, "oauthsession")
-	session.Values = map[any]any{}
-
-	session.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   300,
-		HttpOnly: true,
-	}
-	session.Values["oauth_state"] = res.State
-	session.Values["oauth_did"] = res.DID
-	err = session.Save(r, w)
-	if err != nil {
-		h.serverError(w, err)
-		return
-	}
-	go func() {
-		err := h.db.StoreDidHandle(res.DID, handle, context.Background())
-		h.logger.Deprintln("storing....")
-		if err != nil {
-			h.logger.Deprintln("failed to store did handle: " + err.Error())
-		}
-	}()
-	http.Redirect(w, r, u.String(), http.StatusFound)
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
 func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
-	resState := r.FormValue("state")
-	resIss := r.FormValue("iss")
-	resCode := r.FormValue("code")
-	session, err := h.sessionStore.Get(r, "oauthsession")
+	sessData, err := h.oauth.OauthCallback(r.Context(), r.URL.Query())
+	err = h.rm.CreateInitialProfile(sessData, r.Context())
 	if err != nil {
 		h.serverError(w, err)
 		return
 	}
-	if resState == "" || resIss == "" || resCode == "" {
-		h.badRequest(w, errors.New("did not provide one of resState, resIss, resCode"))
-		return
-	}
-	sessionState, ok := session.Values["oauth_state"].(string)
-	if !ok {
-		h.serverError(w, errors.New("oauth_state not found in session"))
-		return
-	}
-	if resState != sessionState {
-		h.serverError(w, errors.New("resState and sessionState do not match!"))
-		return
-	}
-	params := oauth.CallbackParams{
-		State: resState,
-		Iss:   resIss,
-		Code:  resCode,
-	}
-	req, err := h.db.GetOauthRequest(resState, r.Context())
-	if err != nil {
-		h.serverError(w, err)
-		return
-	}
-	OauthSession, err := h.oauth.OauthCallback(r.Context(), req, params)
-	if err != nil {
-		h.serverError(w, err)
-		return
-	}
-	err = h.db.DeleteOauthRequest(resState, r.Context())
-	if err != nil {
-		h.serverError(w, err)
-		return
-	}
-	h.logger.Deprintf("id: %d %d", OauthSession.ID, req.ID)
-	err = h.db.StoreOAuthSession(OauthSession, r.Context())
-	if err != nil {
-		h.serverError(w, err)
-		return
-	}
-	err = h.rm.CreateInitialProfile(req.Did, req.ID, r.Context())
+	session, _ := h.sessionStore.Get(r, "oauthsession")
 	if err != nil {
 		h.serverError(w, err)
 		return
@@ -162,8 +65,9 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	}
 	session.Values = map[any]any{}
-	session.Values["did"] = req.Did
-	session.Values["id"] = req.ID
+	session.Values["did"] = sessData.AccountDID.String()
+	session.Values["id"] = sessData.SessionID
+	session.Values["scopes"] = strings.Join(sessData.Scopes, " ")
 	err = session.Save(r, w)
 	if err != nil {
 		h.serverError(w, err)
@@ -226,17 +130,18 @@ func (h *Handler) handleFindDidAndHandleError(w http.ResponseWriter, err error) 
 
 func (h *Handler) oauthLogout(w http.ResponseWriter, r *http.Request) {
 	s, _ := h.sessionStore.Get(r, "oauthsession")
-	id, ok := s.Values["id"].(int)
-	if ok {
+	id, ok := s.Values["id"].(string)
+	did, bok := s.Values["did"].(string)
+	if ok && bok {
 		h.logger.Deprintln("deleting session to log out!")
-		err := h.rm.DeleteSession(id, r.Context())
+		err := h.rm.DeleteSession(did, id, r.Context())
 		if err != nil {
 			h.serverError(w, errors.New("couldn't log out: "+err.Error()))
 			return
 		}
 		h.logger.Deprintln("deleted session to log out!")
 	}
-	s.Values = make(map[interface{}]interface{})
+	s.Values = make(map[any]any)
 	s.Options.MaxAge = -1
 	h.logger.Deprintln("saving cookie to log out!")
 	err := s.Save(r, w)
