@@ -53,6 +53,10 @@ func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 	sessData, err := h.oauth.OauthCallback(r.Context(), r.URL.Query())
+	if err != nil {
+		h.serverError(w, errors.New("my god.... :"+err.Error()))
+		return
+	}
 	err = h.rm.CreateInitialProfile(sessData, r.Context())
 	if err != nil {
 		h.serverError(w, err)
