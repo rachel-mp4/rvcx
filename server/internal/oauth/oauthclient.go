@@ -70,7 +70,7 @@ func CreateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx 
 	}
 	body["record"] = profile
 	var out atproto.RepoCreateRecord_Output
-	err = c.Post(ctx, "com.atproto.repo.createRecord", body, out)
+	err = c.Post(ctx, "com.atproto.repo.createRecord", body, &out)
 	if err != nil {
 		err = errors.New("oops! failed to create a profile: " + err.Error())
 		return
@@ -86,7 +86,7 @@ func CreateXCVRChannel(cs *oauth.ClientSession, channel *lex.ChannelRecord, ctx 
 		"record":     channel,
 	}
 	var out atproto.RepoCreateRecord_Output
-	err = c.Post(ctx, "com.atproto.repo.createRecord", body, out)
+	err = c.Post(ctx, "com.atproto.repo.createRecord", body, &out)
 	if err != nil {
 		err = errors.New("oops! failed to create a channel: " + err.Error())
 		return
@@ -127,7 +127,7 @@ func CreateXCVRMessage(cs *oauth.ClientSession, message *lex.MessageRecord, ctx 
 		"record":     message,
 	}
 	var out atproto.RepoCreateRecord_Output
-	err = c.Post(ctx, "com.atproto.repo.createRecord", body, out)
+	err = c.Post(ctx, "com.atproto.repo.createRecord", body, &out)
 	if err != nil {
 		err = errors.New("oops! failed to create a message: " + err.Error())
 		return
@@ -167,7 +167,7 @@ func UpdateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx 
 		"record":     profile,
 	}
 	var out atproto.RepoCreateRecord_Output
-	err = c.Post(ctx, "com.atproto.repo.createRecord", body, out)
+	err = c.Post(ctx, "com.atproto.repo.createRecord", body, &out)
 	if err != nil {
 		err = errors.New("oops! failed to create a profile: " + err.Error())
 		return
