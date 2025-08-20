@@ -67,7 +67,7 @@ func (s Store) SaveSession(ctx context.Context, sess oauth.ClientSessionData) er
 			account_did = EXCLUDED.account_did,
 			host_url = EXCLUDED.host_url,
 			authserver_url = EXCLUDED.authserver_url,
-			authserver_token_endpoint = EXCLUDED.host_url,
+			authserver_token_endpoint = EXCLUDED.authserver_token_endpoint,
 			scopes = EXCLUDED.scopes,
 			access_token = EXCLUDED.access_token,
 			refresh_token = EXCLUDED.refresh_token,
