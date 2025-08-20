@@ -61,7 +61,20 @@ func (s Store) SaveSession(ctx context.Context, sess oauth.ClientSessionData) er
 		dpop_authserver_nonce,
 		dpop_host_nonce,
 		dpop_privatekey_multibase
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		ON CONFLICT (session_id)
+		DO UPDATE SET 
+			account_did = EXCLUDED.account_did,
+			host_url = EXCLUDED.host_url,
+			authserver_url = EXCLUDED.authserver_url,
+			authserver_token_endpoint = EXCLUDED.host_url,
+			scopes = EXCLUDED.scopes,
+			access_token = EXCLUDED.access_token,
+			refresh_token = EXCLUDED.refresh_token,
+			dpop_authserver_nonce = EXCLUDED.dpop_authserver_nonce,
+			dpop_host_nonce = EXCLUDED.dpop_host_nonce,
+			dpop_privatekey_multibase = EXCLUDED.privatekey_multibase
+		`,
 		sess.SessionID,
 		sess.AccountDID.String(),
 		sess.HostURL,
