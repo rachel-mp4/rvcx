@@ -54,7 +54,7 @@ func (rm *RecordManager) CreateInitialProfile(sessData *atoauth.ClientSessionDat
 	nick := "wanderer"
 	status := "just setting up my xcvr"
 	color := uint64(3702605)
-	handle, err := rm.db.ResolveDid(sessData.AccountDID.String(), ctx)
+	handle, err := rm.db.FullResolveDid(sessData.AccountDID.String(), ctx)
 	if err != nil {
 		return errors.New("i couldn't find the handle, so i couldn't create default profile record. gootbye")
 	}

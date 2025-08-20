@@ -79,6 +79,7 @@ func (s *Store) FullResolveDid(did string, ctx context.Context) (string, error) 
 	if err != nil {
 		return "", errors.New("couldn't resolve: " + err.Error())
 	}
+	s.StoreDidHandle(did, hdl, ctx)
 	return hdl, nil
 }
 
