@@ -73,7 +73,7 @@ func (s Store) SaveSession(ctx context.Context, sess oauth.ClientSessionData) er
 			refresh_token = EXCLUDED.refresh_token,
 			dpop_authserver_nonce = EXCLUDED.dpop_authserver_nonce,
 			dpop_host_nonce = EXCLUDED.dpop_host_nonce,
-			dpop_privatekey_multibase = EXCLUDED.privatekey_multibase
+			dpop_privatekey_multibase = EXCLUDED.dpop_privatekey_multibase
 		`,
 		sess.SessionID,
 		sess.AccountDID.String(),
