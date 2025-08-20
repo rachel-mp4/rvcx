@@ -42,7 +42,7 @@ func (h *Handler) oauthLogin(w http.ResponseWriter, r *http.Request) {
 		h.badRequest(w, err)
 		return
 	}
-	identifier := r.FormValue("identifier")
+	identifier := strings.TrimSpace(r.FormValue("identifier"))
 	redirectURL, err := h.oauth.StartAuthFlow(r.Context(), identifier)
 	if err != nil {
 		h.serverError(w, err)
