@@ -23,7 +23,7 @@ func (s Store) GetSession(ctx context.Context, did syntax.DID, sessionID string)
 		dpop_host_nonce,
 		dpop_privatekey_multibase
 	FROM sessions
-	WHERE did = $1 AND session_id = $2`, did.String(), sessionID)
+	WHERE account_did = $1 AND session_id = $2`, did.String(), sessionID)
 	var scope string
 	var csd oauth.ClientSessionData
 	csd.AccountDID = did
