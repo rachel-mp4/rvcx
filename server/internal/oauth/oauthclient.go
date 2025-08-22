@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+
 	"github.com/bluesky-social/indigo/api/atproto"
 	"github.com/bluesky-social/indigo/atproto/auth/oauth"
 	"github.com/bluesky-social/indigo/atproto/syntax"
 
+	"rvcx/internal/atputils"
 	"rvcx/internal/lex"
 	"rvcx/internal/log"
 	"rvcx/internal/types"
@@ -40,6 +42,56 @@ func MakeBskyPost(cs *oauth.ClientSession, text string, ctx context.Context) err
 	return nil
 }
 
+func Follow(cs *oauth.ClientSession, did string, ctx context.Context) error {
+	c := cs.APIClient()
+	body := map[string]any{
+		"repo":       *c.AccountDID,
+		"collection": "app.bsky.graph.follow",
+		"record": map[string]any{
+			"$type":     "app.bsky.graph.follow",
+			"did":       did,
+			"createdAt": syntax.DatetimeNow(),
+		},
+	}
+	err := c.Post(ctx, "com.atproto.repo.createRecord", body, nil)
+	if err != nil {
+		return errors.New("failed to follow: " + err.Error())
+	}
+	return nil
+}
+
+func Unfollow(cs *oauth.ClientSession, followuri string, ctx context.Context) error {
+	c := cs.APIClient()
+	rkey, err := atputils.RkeyFromUri(followuri)
+	if err != nil {
+		return errors.New("bad" + err.Error())
+	}
+
+	params := map[string]any{
+		"repo":       *c.AccountDID,
+		"collection": "app.bsky.graph.follow",
+		"rkey":       rkey,
+	}
+	var getOut atproto.RepoGetRecord_Output
+	err = c.Get(ctx, "com.atproto.repo.getRecord", params, &getOut)
+	if err != nil {
+		return errors.New("error getting: " + err.Error())
+	}
+	if getOut.Cid == nil {
+		return errors.New("not sure what to do in this case, no cid from good req")
+	}
+	body := map[string]any{
+		"repo":       *c.AccountDID,
+		"collection": "app.bsky.graph.follow",
+		"rkey":       rkey,
+		"swapRecord": "getOut.cid",
+	}
+	err = c.Post(ctx, "com.atproto.repo.deleteRecord", body, nil)
+	if err != nil {
+		return errors.New("failed to tweet: " + err.Error())
+	}
+	return nil
+}
 func CreateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx context.Context) (p *lex.ProfileRecord, err error) {
 	c := cs.APIClient()
 	nsid, err := syntax.ParseNSID("com.atproto.repo.getRecord")
