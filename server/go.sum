@@ -119,8 +119,12 @@ github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0leargg
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
 github.com/rachel-mp4/lrcd v0.0.0-20250822143425-69eddc6acc95 h1:1JTdISKo6SkzwjJJXT78GlbXxASEEfSQZ2WN6LhKfzI=
 github.com/rachel-mp4/lrcd v0.0.0-20250822143425-69eddc6acc95/go.mod h1:lU5b8bC7vP56MT57i6gUYoXxHSVLyrUYMnUo7JELwSc=
+github.com/rachel-mp4/lrcd v0.0.0-20250905154658-1d34083d4287 h1:UW2tLW8yQ+VNU0cEBJUgmM/8+FZ1Kpz1xOMRU3hcwyA=
+github.com/rachel-mp4/lrcd v0.0.0-20250905154658-1d34083d4287/go.mod h1:aWUVglSyrLf2RGpQdqTucX498b434yWBFJkD6Yzr0OE=
 github.com/rachel-mp4/lrcproto v0.0.0-20250720164211-c6162669b709 h1:P//gJE0zFv9Qvfn8dvp9ZrnG0FZh2MVcAX+uOP2flRw=
 github.com/rachel-mp4/lrcproto v0.0.0-20250720164211-c6162669b709/go.mod h1:hQzO36tQELGbkmRnUtKeM6NMU34t79ZcTlhM+MO7pHw=
+github.com/rachel-mp4/lrcproto v0.0.0-20250905151943-8e3a1989ea5a h1:W3zPeGz/jHYyWj8ZfsuA9yigPMNlA/h7Fu+SQKgiBmQ=
+github.com/rachel-mp4/lrcproto v0.0.0-20250905151943-8e3a1989ea5a/go.mod h1:hQzO36tQELGbkmRnUtKeM6NMU34t79ZcTlhM+MO7pHw=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
 github.com/spaolacci/murmur3 v1.1.0 h1:7c1g84S4BPRrfL5Xrdp6fOJ206sU9y293DDHaoy0bLI=

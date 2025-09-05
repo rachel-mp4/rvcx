@@ -10,8 +10,8 @@ require (
 	github.com/ipfs/go-cid v0.4.1
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
-	github.com/rachel-mp4/lrcd v0.0.0-20250822143425-69eddc6acc95
-	github.com/rachel-mp4/lrcproto v0.0.0-20250720164211-c6162669b709
+	github.com/rachel-mp4/lrcd v0.0.0-20250905154658-1d34083d4287
+	github.com/rachel-mp4/lrcproto v0.0.0-20250905151943-8e3a1989ea5a
 	github.com/rivo/uniseg v0.4.7
 	github.com/whyrusleeping/cbor-gen v0.3.1
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028
