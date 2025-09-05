@@ -118,10 +118,11 @@ func (s Store) GetAuthRequestInfo(ctx context.Context, state string) (*oauth.Aut
 	var ari oauth.AuthRequestData
 	ari.State = state
 	var did string
+	var scope string
 	err := row.Scan(
 		&ari.AuthServerURL,
 		&did,
-		&ari.Scope,
+		&scope,
 		&ari.RequestURI,
 		&ari.AuthServerTokenEndpoint,
 		&ari.PKCEVerifier,
@@ -131,6 +132,8 @@ func (s Store) GetAuthRequestInfo(ctx context.Context, state string) (*oauth.Aut
 	if err != nil {
 		return nil, errors.New("failed to scan: " + err.Error())
 	}
+	scopes := strings.Fields(scope)
+	ari.Scopes = scopes
 	sdid, err := syntax.ParseDID(did)
 	if err != nil {
 		return nil, errors.New("failed to parse did: " + err.Error())
@@ -140,6 +143,7 @@ func (s Store) GetAuthRequestInfo(ctx context.Context, state string) (*oauth.Aut
 }
 
 func (s Store) SaveAuthRequestInfo(ctx context.Context, info oauth.AuthRequestData) error {
+	scope := strings.Join(info.Scopes, " ")
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO requests (
 			state,
@@ -155,7 +159,7 @@ func (s Store) SaveAuthRequestInfo(ctx context.Context, info oauth.AuthRequestDa
 		info.State,
 		info.AuthServerURL,
 		info.AccountDID,
-		info.Scope,
+		scope,
 		info.RequestURI,
 		info.AuthServerTokenEndpoint,
 		info.PKCEVerifier,
