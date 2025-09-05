@@ -1,5 +1,7 @@
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
+github.com/bluesky-social/indigo v0.0.0-20250903055927-b7ac82546b27 h1:nA87EiGUjzK1o0vpGm1HeEYGziht7sn28iAoobVSAYA=
+github.com/bluesky-social/indigo v0.0.0-20250903055927-b7ac82546b27/go.mod h1:n6QE1NDPFoi7PRbMUZmc2y7FibCqiVU4ePpsvhHUBR8=
 github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e h1:P/O6TDHs53gwgV845uDHI+Nri889ixksRrh4bCkCdxo=
 github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e/go.mod h1:WiYEeyJSdUwqoaZ71KJSpTblemUCpwJfh5oVXplK6T4=
 github.com/carlmjohnson/versioninfo v0.22.5 h1:O00sjOLUAFxYQjlN/bzYTuZiS0y6fWDQjMRvwtKgwwc=

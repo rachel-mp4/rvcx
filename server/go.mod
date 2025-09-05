@@ -3,7 +3,7 @@ module rvcx
 go 1.24.2
 
 require (
-	github.com/bluesky-social/indigo v0.0.0-20250813051257-8be102876fb7
+	github.com/bluesky-social/indigo v0.0.0-20250903055927-b7ac82546b27
 	github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e
 	github.com/gorilla/sessions v1.4.0
 	github.com/gorilla/websocket v1.5.3
@@ -60,5 +60,3 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 	lukechampine.com/blake3 v1.2.1 // indirect
 )
-
-replace github.com/bluesky-social/indigo => github.com/rachel-mp4/indigo v0.0.0-20250818172132-160dc435906d
