@@ -45,39 +45,3 @@ func (h *Handler) beep(cs *atoauth.ClientSession, w http.ResponseWriter, r *http
 	}
 	w.Write(nil)
 }
-
-func (h *Handler) unfollow(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
-	if cs == nil {
-		h.badRequest(w, errors.New("must be logged in!"))
-		return
-	}
-	qp := r.URL.Query()
-	furi := qp.Get("followUri")
-	if furi == "" {
-		h.badRequest(w, errors.New("must unfollow a user"))
-		return
-	}
-	err := h.rm.Unfollow(cs, furi, r.Context())
-	if err != nil {
-		h.serverError(w, errors.New("failed to unfollow: "+err.Error()))
-	}
-	w.Write(nil)
-}
-
-func (h *Handler) follow(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
-	if cs == nil {
-		h.badRequest(w, errors.New("must be logged in!"))
-		return
-	}
-	qp := r.URL.Query()
-	did := qp.Get("did")
-	if did == "" {
-		h.badRequest(w, errors.New("must unfollow a user"))
-		return
-	}
-	err := h.rm.Follow(cs, did, r.Context())
-	if err != nil {
-		h.serverError(w, errors.New("failed to unfollow: "+err.Error()))
-	}
-	w.Write(nil)
-}

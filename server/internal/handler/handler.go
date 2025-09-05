@@ -35,8 +35,6 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, model *mode
 	// xcvr handlers
 	mux.HandleFunc("POST /xcvr/profile", h.oauthMiddleware(h.postProfile))
 	mux.HandleFunc("POST /xcvr/beep", h.oauthMiddleware(h.beep))
-	mux.HandleFunc("DELETE /xcvr/follow", h.oauthMiddleware(h.unfollow))
-	mux.HandleFunc("POST /xcvr/follow", h.oauthMiddleware(h.follow))
 	// lexicon handlers
 	mux.HandleFunc("GET /xrpc/org.xcvr.feed.getChannels", h.WithCORS(h.getChannels))
 	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getMessages", h.WithCORS(h.getMessages))
