@@ -40,7 +40,7 @@ func (h *Handler) getChannel(w http.ResponseWriter, r *http.Request) {
 	if uri != "" {
 		cv, err = h.db.GetChannelView(uri, r.Context())
 	} else {
-		h.db.GetChannelViewHR(handle, rkey, r.Context())
+		cv, err = h.db.GetChannelViewHR(handle, rkey, r.Context())
 	}
 	if err != nil {
 		h.notFound(w, err)
