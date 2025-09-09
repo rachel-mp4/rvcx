@@ -140,12 +140,7 @@ func CreateXCVRMessage(cs *oauth.ClientSession, message *lex.MessageRecord, ctx 
 
 func UpdateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx context.Context) (p *lex.ProfileRecord, err error) {
 	c := cs.APIClient()
-	nsid, err := syntax.ParseNSID("com.atproto.repo.getRecord")
-	if err != nil {
-		return nil, errors.New("failed to parse: " + err.Error())
-	}
-	var getOut atproto.RepoGetRecord_Output
-	err = c.Get(ctx, nsid, nil, &getOut)
+	getOut, err := atproto.RepoGetRecord(ctx, c, "", "org.xcvr.actor.profile", c.AccountDID.String(), "self")
 	if err == nil {
 		if getOut.Cid != nil {
 			var jsonBytes []byte
