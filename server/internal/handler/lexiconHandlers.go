@@ -31,6 +31,17 @@ func (h *Handler) getChannels(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 	encoder.Encode(cvs)
 }
+func (h *Handler) getChannel(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.Query().Get("uri")
+	cv, err := h.db.GetChannelView(uri, r.Context())
+	if err != nil {
+		h.notFound(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	encoder.Encode(cv)
+}
 
 func (h *Handler) getMessages(w http.ResponseWriter, r *http.Request) {
 	limitstr := r.URL.Query().Get("limit")
