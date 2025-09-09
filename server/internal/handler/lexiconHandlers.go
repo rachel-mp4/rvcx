@@ -33,7 +33,15 @@ func (h *Handler) getChannels(w http.ResponseWriter, r *http.Request) {
 }
 func (h *Handler) getChannel(w http.ResponseWriter, r *http.Request) {
 	uri := r.URL.Query().Get("uri")
-	cv, err := h.db.GetChannelView(uri, r.Context())
+	handle := r.URL.Query().Get("handle")
+	rkey := r.URL.Query().Get("rkey")
+	var cv *types.ChannelView
+	var err error
+	if uri != "" {
+		cv, err = h.db.GetChannelView(uri, r.Context())
+	} else {
+		h.db.getChannelViewHR(handle, rkey, r.Context())
+	}
 	if err != nil {
 		h.notFound(w, err)
 		return

@@ -319,6 +319,39 @@ func (s *Store) GetChannelView(uri string, ctx context.Context) (*types.ChannelV
 	c.Creator = p
 	return &c, nil
 }
+func (s *Store) GetChannelViewHR(handle string, rkey string, ctx context.Context) (*types.ChannelView, error) {
+	did, err := s.ResolveHandle(handle, ctx)
+	if err != nil {
+		return nil, err
+	}
+	uri := fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", did, rkey)
+	row := s.pool.QueryRow(ctx, `
+		SELECT 
+			channels.uri,  
+			channels.host, 
+			channels.title, 
+			channels.topic, 
+			channels.created_at,
+			did_handles.did,
+			did_handles.handle,
+			profiles.display_name,
+			profiles.status,
+			profiles.color,
+			profiles.avatar_cid
+		FROM channels
+		LEFT JOIN profiles ON channels.did = profiles.did
+		LEFT JOIN did_handles ON profiles.did = did_handles.did
+		WHERE channels.uri = $1
+		`, uri)
+	var c types.ChannelView
+	var p types.ProfileView
+	err = row.Scan(&c.URI, &c.Host, &c.Title, &c.Topic, &c.CreatedAt, &p.DID, &p.Handle, &p.DisplayName, &p.Status, &p.Color, &p.Avatar)
+	if err != nil {
+		return nil, err
+	}
+	c.Creator = p
+	return &c, nil
+}
 
 func (s *Store) DeleteChannel(uri string, ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `DELETE FROM channels WHERE uri = $1`, uri)
