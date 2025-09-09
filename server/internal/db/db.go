@@ -45,13 +45,7 @@ func initialize() (*pgxpool.Pool, error) {
 }
 
 func (s *Store) ResolveHandle(handle string, ctx context.Context) (string, error) {
-	row := s.pool.QueryRow(ctx, `
-		SELECT
-			h.did
-		FROM did_handles h
-		WHERE h.handle = $1
-		LIMIT 1
-	`, handle)
+	row := s.pool.QueryRow(ctx, `SELECT h.did FROM did_handles h WHERE h.handle = $1`, handle)
 	var did string
 	err := row.Scan(&did)
 	if err != nil {
