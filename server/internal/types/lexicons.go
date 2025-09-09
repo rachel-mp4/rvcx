@@ -91,8 +91,8 @@ type ChannelView struct {
 	Host           string      `json:"host"`
 	Creator        ProfileView `json:"creator"`
 	Title          string      `json:"title"`
-	ConnectedCount *int        `json:"int"`
-	Topic          *string     `json:"topic"`
+	ConnectedCount *int        `json:"connectedCount,omitempty"`
+	Topic          *string     `json:"topic,omitempty"`
 	CreatedAt      time.Time   `json:"createdAt"`
 }
 
