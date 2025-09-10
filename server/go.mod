@@ -10,7 +10,7 @@ require (
 	github.com/ipfs/go-cid v0.4.1
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
-	github.com/rachel-mp4/lrcd v0.0.0-20250905154658-1d34083d4287
+	github.com/rachel-mp4/lrcd v0.0.0-20250906202657-38adb092ac1a
 	github.com/rachel-mp4/lrcproto v0.0.0-20250905154858-2ddb78e31d0c
 	github.com/rivo/uniseg v0.4.7
 	github.com/whyrusleeping/cbor-gen v0.3.1
@@ -57,6 +57,6 @@ require (
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
-	google.golang.org/protobuf v1.36.8 // indirect
+	google.golang.org/protobuf v1.36.9 // indirect
 	lukechampine.com/blake3 v1.2.1 // indirect
 )
