@@ -10,7 +10,7 @@ require (
 	github.com/ipfs/go-cid v0.4.1
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
-	github.com/rachel-mp4/lrcd v0.0.0-20250906202657-38adb092ac1a
+	github.com/rachel-mp4/lrcd v0.0.1
 	github.com/rachel-mp4/lrcproto v0.0.0-20250905154858-2ddb78e31d0c
 	github.com/rivo/uniseg v0.4.7
 	github.com/whyrusleeping/cbor-gen v0.3.1
