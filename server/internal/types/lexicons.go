@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"rvcx/internal/lex"
 	"time"
 )
 
@@ -208,4 +209,26 @@ func (m SignedMessageView) MarshalJSON() ([]byte, error) {
 type GetMessagesOut struct {
 	Messages []SignedMessageView `json:"messages"`
 	Cursor   *string             `json:"cursor,omitempty"`
+}
+
+type Image struct {
+	URI       string
+	DID       string
+	SignetURI string
+	ImageCID  *string
+	ImageMIME *string
+	Alt       string
+	Nick      *string
+	Color     *uint32
+	CID       string
+	PostedAt  time.Time
+	IndexedAt time.Time
+}
+
+type ParseMediaRequest struct {
+	Nick      *string    `json:"nick,omitempty"`
+	Color     *uint32    `json:"color,omitempty"`
+	SignetURI string     `json:"signetURI"`
+	Image     *lex.Image `json:"image,omitempty"`
+	Type      string     `json:"type"`
 }

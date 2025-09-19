@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
 	"net/http"
 	"os"
 	"rvcx/internal/atputils"
 	"rvcx/internal/types"
+	"strings"
+
+	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
 )
 
 func (h *Handler) acceptWebsocket(w http.ResponseWriter, r *http.Request) {
@@ -137,4 +139,93 @@ func (h *Handler) subscribeLexStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	f(w, r)
+}
+
+func (h *Handler) uploadImage(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
+	if cs == nil {
+		h.badRequest(w, errors.New("must be authorized to post image"))
+		return
+	}
+	err := r.ParseMultipartForm(1 << 20)
+	if err != nil {
+		h.badRequest(w, errors.New("beep bop bad image: "+err.Error()))
+		return
+	}
+	file, fheader, err := r.FormFile("image")
+	if err != nil {
+		h.badRequest(w, errors.New("failed to formfile: "+err.Error()))
+		return
+	}
+	defer file.Close()
+	ct := fheader.Header.Get("Content-Type")
+	if !strings.HasPrefix(ct, "image/") {
+		h.badRequest(w, errors.New("must post an image"))
+		return
+	}
+	blob, err := h.rm.PostImage(cs, file, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("failed to upload: "+err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	encoder.Encode(blob)
+}
+
+func (h *Handler) postMedia(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
+	if cs == nil {
+		h.badRequest(w, errors.New("must be authorized to post media"))
+	}
+	mr, err := parseMediaRequest(r)
+	if err != nil {
+		h.badRequest(w, err)
+		return
+	}
+	h.rm.PostMedia(cs, mr, r.Context())
+}
+
+func parseMediaRequest(r *http.Request) (*types.ParseMediaRequest, error) {
+	beep := json.NewDecoder(r.Body)
+	var mr types.ParseMediaRequest
+	err := beep.Decode(&mr)
+	if err != nil {
+		return nil, errors.New("A aaaaaa : " + err.Error())
+	}
+	return &mr, nil
+}
+
+// func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
+// 	vals := r.URL.Query()
+// 	uri := vals.Get("uri")
+// 	if uri == "" {
+// 		h.badRequest(w, errors.New("must provide a did and cid"))
+// 		return
+// 	}
+// 	image, err := h.db.GetImage(uri, r.Context())
+// 	if err != nil {
+// 		h.notFound(w, err)
+// 		return
+// 	}
+// 	uploadDir := fmt.Sprintf("./uploads/%s", image.DID)
+// 	_, err = os.Stat(uploadDir)
+// 	if os.IsNotExist(err) {
+// 		os.Mkdir(uploadDir, 0755)
+// 	}
+//
+// 	imgPath := fmt.Sprintf("./uploads/%s", image.ImageCID)
+// 	_, err = os.Stat(imgPath)
+// 	if err != nil {
+// 		syncGetBlob(image.DID, image.ImageCID)
+// 	}
+//
+// 	img, err := os.Open(fmt.Sprintf("%s/%s", uploadDir, image.ImageCID))
+// 	img.WriteTo(w)
+// }
+
+// func syncGetBlob(did string, cid *string) {
+// 	//TODO: impl
+// }
+
+func (h *Handler) postImagePub(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
+
 }

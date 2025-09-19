@@ -1,0 +1,49 @@
+{
+	"lexicon": 1,
+	"id": "org.xcvr.lrc.media",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "A piece of media",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["signetURI", "media"],
+				"properties": {
+					"signetURI": {
+						"type": "string",
+						"format": "at-uri"
+					},
+          "media": {
+            "type": "union",
+            "required": ["image", "alt"],
+            "properties": {
+              "image": {
+                "type": "blob",
+                "accept": ["image/*"],
+                "maxSize": 1000000
+              },
+              "alt": {
+                "type": "string",
+                "description": "Alt text description of the image, for accessibility."
+              }
+            }
+          },
+					"color": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 16777215
+					},
+					"nick": {
+						"type": "string",
+						"maxLength": 16,
+					},
+					"postedAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		}
+	}
+}

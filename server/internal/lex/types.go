@@ -44,3 +44,28 @@ type SignetRecord struct {
 	AuthorHandle  string  `json:"authorHandle" cborgen:"authorHandle"`
 	StartedAt     *string `json:"startedAt,omitempty" cborgen:"startedAt,omitempty"`
 }
+
+type MediaRecord struct {
+	LexiconTypeID string  `json:"$type,const=org.xcvr.lrc.media" cborgen:"$type,const=org.xcvr.lrc.media"`
+	SignetURI     string  `json:"signetURI" cborgen:"signetURI"`
+	Media         Media   `json:"media" cborgen:"media"`
+	Nick          *string `json:"nick,omitempty" cborgen:"nick,omitempty"`
+	Color         *uint64 `json:"color,omitempty" cborgen:"color,omitempty"`
+	PostedAt      string  `json:"postedAt" cborgen:"postedAt"`
+}
+
+type Media struct {
+	Image *Image
+}
+
+type Image struct {
+	LexiconTypeID string           `json:"$type,const=org.xcvr.lrc.image" cborgen:"$type,const=org.xcvr.lrc.image"`
+	Alt           string           `json:"alt" cborgen:"alt"`
+	AspectRatio   *AspectRatio     `json:"aspectRatio,omitempty" cborgen:"aspectRatio,omitempty"`
+	Image         *util.BlobSchema `json:"image,omitempty" cborgen:"image,omitempty"`
+}
+
+type AspectRatio struct {
+	Height int64 `json:"height" cborgen:"height"`
+	Width  int64 `json:"width" cborgen:"width"`
+}

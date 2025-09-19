@@ -14,12 +14,11 @@
 						"format": "at-uri"
 					},
 					"body": {
-						"type": "string",
+						"type": "string"
 					}, 
 					"nick": {
 						"type": "string",
-						"maxLength": 16,
-						"default": "wanderer"
+						"maxLength": 16
 					},
 					"color": {
 						"type": "integer",

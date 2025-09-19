@@ -4,11 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/bluesky-social/indigo/api/atproto"
 	"github.com/bluesky-social/indigo/atproto/auth/oauth"
+	atpclient "github.com/bluesky-social/indigo/atproto/client"
 	"github.com/bluesky-social/indigo/atproto/syntax"
+	lexutil "github.com/bluesky-social/indigo/lex/util"
 
+	"mime/multipart"
 	"rvcx/internal/lex"
 	"rvcx/internal/log"
 	"rvcx/internal/types"
@@ -169,4 +173,43 @@ func UpdateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx 
 		return
 	}
 	return profile, nil
+}
+
+func UploadBLOB(cs *oauth.ClientSession, file multipart.File, ctx context.Context) (*lexutil.BlobSchema, error) {
+	client := cs.APIClient()
+
+	req := atpclient.NewAPIRequest("POST", "com.atproto.repo.uploadBlob", file)
+	resp, err := client.Do(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("upload failed withy status %d", resp.StatusCode)
+	}
+	var result lexutil.BlobSchema
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&result)
+	if err != nil {
+		return nil, errors.New("failed to decode: " + err.Error())
+	}
+	return &result, nil
+}
+
+func CreateXCVRMedia(cs *oauth.ClientSession, imr *lex.MediaRecord, ctx context.Context) (uri string, cid string, err error) {
+	c := cs.APIClient()
+	body := map[string]any{
+		"collection": "org.xcvr.lrc.message",
+		"repo":       *c.AccountDID,
+		"record":     imr,
+	}
+	var out atproto.RepoCreateRecord_Output
+	err = c.Post(ctx, "com.atproto.repo.createRecord", body, &out)
+	if err != nil {
+		err = errors.New("oops! failed to create a media: " + err.Error())
+		return
+	}
+	uri = out.Uri
+	cid = out.Cid
+	return
 }

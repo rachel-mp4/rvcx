@@ -287,3 +287,102 @@ func (s *Store) DeleteSignet(uri string, ctx context.Context) error {
 		`, uri)
 	return err
 }
+
+func (s *Store) StoreImage(image *types.Image, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `INSERT INTO medias (
+		uri,
+		did,
+		signet_uri,
+		image_cid,
+		image_mime,
+		alt,
+		nick,
+		color,
+		cid,
+		posted_at
+		) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+		) ON CONFLICT (uri) DO NOTHING`,
+		image.URI,
+		image.DID,
+		image.SignetURI,
+		image.ImageCID,
+		image.ImageMIME,
+		image.Alt,
+		image.Nick,
+		image.Color,
+		image.CID,
+		image.PostedAt)
+	if err != nil {
+		return errors.New("effor storing image: " + err.Error())
+	}
+	return nil
+}
+
+func (s *Store) UpdateImage(image *types.Image, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `INSERT INTO medias (
+		uri,
+		did,
+		signet_uri,
+		image_cid,
+		image_mime,
+		alt,
+		nick,
+		color,
+		cid,
+		posted_at
+		) VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+		)`,
+		image.URI,
+		image.DID,
+		image.SignetURI,
+		image.ImageCID,
+		image.ImageMIME,
+		image.Alt,
+		image.Nick,
+		image.Color,
+		image.CID,
+		image.PostedAt)
+	if err != nil {
+		return errors.New("effor updating image: " + err.Error())
+	}
+	return nil
+}
+
+func (s *Store) DeleteImage(uri string, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `DELETE from medias m WHERE m.uri = $1`, uri)
+	if err != nil {
+		return errors.New("bep bep bop: " + err.Error())
+	}
+	return nil
+}
+
+func (s *Store) GetImage(uri string, ctx context.Context) (*types.Image, error) {
+	row := s.pool.QueryRow(ctx, `SELECT FROM medias (
+		did,
+		signet_uri,
+		media_cid,
+		media_mime,
+		alt,
+		nick,
+		color,
+		cid,
+		posted_at
+		) WHERE uri = $1`, uri)
+	var image types.Image
+	err := row.Scan(&image.DID,
+		&image.SignetURI,
+		&image.ImageCID,
+		&image.ImageMIME,
+		&image.Alt,
+		&image.Nick,
+		&image.Color,
+		&image.CID,
+		&image.PostedAt)
+	if err != nil {
+		return nil, errors.New("effor storing image: " + err.Error())
+	}
+	image.URI = uri
+	return &image, nil
+}
