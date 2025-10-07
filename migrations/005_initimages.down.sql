@@ -1,2 +1,2 @@
-DROP INDEX IF EXISTS medias_signet_uri_idx;
-DROP TABLE IF EXISTS medias;
+DROP INDEX IF EXISTS images_signet_uri_idx;
+DROP TABLE IF EXISTS images;
