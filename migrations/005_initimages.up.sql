@@ -1,4 +1,4 @@
-CREATE TABLE iamges (
+CREATE TABLE images (
 	uri TEXT PRIMARY KEY,
 	did TEXT NOT NULL,
 	signet_uri TEXT NOT NULL,
