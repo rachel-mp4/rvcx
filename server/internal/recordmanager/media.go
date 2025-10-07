@@ -51,7 +51,7 @@ func (rm *RecordManager) validateImageRecord(mr *types.ParseMediaRequest) (*lex.
 		cnum := uint64(*cptr)
 		imr.Color = &cnum
 	}
-	imr.Media.Image = mr.Image
+	imr.Image = mr.Image
 	nowsyn := syntax.DatetimeNow()
 	imr.PostedAt = nowsyn.String()
 	nt := nowsyn.Time()
@@ -68,12 +68,12 @@ func (rm *RecordManager) createImageRecord(cs *atoauth.ClientSession, imr *lex.M
 	img.URI = uri
 	img.DID = cs.Data.AccountDID.String()
 	img.SignetURI = imr.SignetURI
-	if imr.Media.Image != nil {
-		img.Alt = imr.Media.Image.Alt
-		if imr.Media.Image.Image != nil {
-			img.ImageMIME = &imr.Media.Image.Image.MimeType
-			icid := imr.Media.Image.Image.Ref.String()
-			img.ImageCID = &icid
+	if imr.Image != nil {
+		img.Alt = imr.Image.Alt
+		if imr.Image.Blob != nil {
+			img.BlobMIME = &imr.Image.Blob.MimeType
+			icid := imr.Image.Blob.Ref.String()
+			img.BlobCID = &icid
 		}
 	}
 	img.Nick = imr.Nick

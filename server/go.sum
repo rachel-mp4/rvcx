@@ -117,8 +117,6 @@ github.com/prometheus/common v0.54.0 h1:ZlZy0BgJhTwVZUn7dLOkwCZHUkrAqd3WYtcFCWnM
 github.com/prometheus/common v0.54.0/go.mod h1:/TQgMJP5CuVYveyT7n/0Ix8yLNNXy9yRSkhnLTHPDIQ=
 github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0learggepc=
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
-github.com/rachel-mp4/lrcd v0.0.0-20250906202657-38adb092ac1a h1:AWXrdTM1ew/J6mup1xBKkmg/nC6xx6BkL4wT6INdAWI=
-github.com/rachel-mp4/lrcd v0.0.0-20250906202657-38adb092ac1a/go.mod h1:aWUVglSyrLf2RGpQdqTucX498b434yWBFJkD6Yzr0OE=
 github.com/rachel-mp4/lrcd v0.0.1 h1:9d5if0HJ/+TLKdupd7Zu9dISA5fF3QRtI/yr+gYVqXM=
 github.com/rachel-mp4/lrcd v0.0.1/go.mod h1:aWUVglSyrLf2RGpQdqTucX498b434yWBFJkD6Yzr0OE=
 github.com/rachel-mp4/lrcproto v0.0.0-20250905154858-2ddb78e31d0c h1:t33xVlfSwvB80nj1jroRXUaq/RTgjWwD4l7p/ISatUQ=

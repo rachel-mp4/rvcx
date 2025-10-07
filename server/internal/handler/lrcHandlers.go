@@ -181,7 +181,12 @@ func (h *Handler) postMedia(cs *atoauth.ClientSession, w http.ResponseWriter, r 
 		h.badRequest(w, err)
 		return
 	}
-	h.rm.PostMedia(cs, mr, r.Context())
+	err = h.rm.PostMedia(cs, mr, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("failing to post the media :c"))
+		return
+	}
+	w.Write(nil)
 }
 
 func parseMediaRequest(r *http.Request) (*types.ParseMediaRequest, error) {
@@ -225,7 +230,3 @@ func parseMediaRequest(r *http.Request) (*types.ParseMediaRequest, error) {
 // func syncGetBlob(did string, cid *string) {
 // 	//TODO: impl
 // }
-
-func (h *Handler) postImagePub(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
-
-}

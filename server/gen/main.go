@@ -10,7 +10,10 @@ func main() {
 		lex.ProfileRecord{},
 		lex.ChannelRecord{},
 		lex.MessageRecord{},
-		lex.SignetRecord{}); err != nil {
+		lex.SignetRecord{},
+		lex.AspectRatio{},
+		lex.Image{},
+		lex.MediaRecord{}); err != nil {
 		panic(err)
 	}
 }

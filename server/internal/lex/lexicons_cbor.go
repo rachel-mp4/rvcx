@@ -969,29 +969,6 @@ func (t *SignetRecord) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Author (string) (string)
-	if len("nick") > 8192 {
-		return xerrors.Errorf("Value in field \"nick\" was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("nick"))); err != nil {
-		return err
-	}
-	if _, err := cw.WriteString(string("nick")); err != nil {
-		return err
-	}
-
-	if len(t.AuthorHandle) > 8192 {
-		return xerrors.Errorf("Value in field t.Author was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.AuthorHandle))); err != nil {
-		return err
-	}
-	if _, err := cw.WriteString(string(t.AuthorHandle)); err != nil {
-		return err
-	}
-
 	// t.LexiconTypeID (string) (string)
 	if len("$type") > 8192 {
 		return xerrors.Errorf("Value in field \"$type\" was too long")
@@ -1081,6 +1058,29 @@ func (t *SignetRecord) MarshalCBOR(w io.Writer) error {
 	if _, err := cw.WriteString(string(t.ChannelURI)); err != nil {
 		return err
 	}
+
+	// t.AuthorHandle (string) (string)
+	if len("authorHandle") > 8192 {
+		return xerrors.Errorf("Value in field \"authorHandle\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("authorHandle"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("authorHandle")); err != nil {
+		return err
+	}
+
+	if len(t.AuthorHandle) > 8192 {
+		return xerrors.Errorf("Value in field t.AuthorHandle was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.AuthorHandle))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.AuthorHandle)); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1109,7 +1109,7 @@ func (t *SignetRecord) UnmarshalCBOR(r io.Reader) (err error) {
 
 	n := extra
 
-	nameBuf := make([]byte, 10)
+	nameBuf := make([]byte, 12)
 	for i := uint64(0); i < n; i++ {
 		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 8192)
 		if err != nil {
@@ -1125,18 +1125,7 @@ func (t *SignetRecord) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		switch string(nameBuf[:nameLen]) {
-		// t.Author (string) (string)
-		case "authorHandle":
-
-			{
-				sval, err := cbg.ReadStringWithMax(cr, 8192)
-				if err != nil {
-					return err
-				}
-
-				t.AuthorHandle = string(sval)
-			}
-			// t.LexiconTypeID (string) (string)
+		// t.LexiconTypeID (string) (string)
 		case "$type":
 
 			{
@@ -1193,6 +1182,717 @@ func (t *SignetRecord) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 				t.ChannelURI = string(sval)
+			}
+			// t.AuthorHandle (string) (string)
+		case "authorHandle":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 8192)
+				if err != nil {
+					return err
+				}
+
+				t.AuthorHandle = string(sval)
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *AspectRatio) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write([]byte{162}); err != nil {
+		return err
+	}
+
+	// t.Width (int64) (int64)
+	if len("width") > 8192 {
+		return xerrors.Errorf("Value in field \"width\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("width"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("width")); err != nil {
+		return err
+	}
+
+	if t.Width >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Width)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.Width-1)); err != nil {
+			return err
+		}
+	}
+
+	// t.Height (int64) (int64)
+	if len("height") > 8192 {
+		return xerrors.Errorf("Value in field \"height\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("height"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("height")); err != nil {
+		return err
+	}
+
+	if t.Height >= 0 {
+		if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.Height)); err != nil {
+			return err
+		}
+	} else {
+		if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-t.Height-1)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *AspectRatio) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = AspectRatio{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("AspectRatio: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 6)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 8192)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Width (int64) (int64)
+		case "width":
+			{
+				maj, extra, err := cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				var extraI int64
+				switch maj {
+				case cbg.MajUnsignedInt:
+					extraI = int64(extra)
+					if extraI < 0 {
+						return fmt.Errorf("int64 positive overflow")
+					}
+				case cbg.MajNegativeInt:
+					extraI = int64(extra)
+					if extraI < 0 {
+						return fmt.Errorf("int64 negative overflow")
+					}
+					extraI = -1 - extraI
+				default:
+					return fmt.Errorf("wrong type for int64 field: %d", maj)
+				}
+
+				t.Width = int64(extraI)
+			}
+			// t.Height (int64) (int64)
+		case "height":
+			{
+				maj, extra, err := cr.ReadHeader()
+				if err != nil {
+					return err
+				}
+				var extraI int64
+				switch maj {
+				case cbg.MajUnsignedInt:
+					extraI = int64(extra)
+					if extraI < 0 {
+						return fmt.Errorf("int64 positive overflow")
+					}
+				case cbg.MajNegativeInt:
+					extraI = int64(extra)
+					if extraI < 0 {
+						return fmt.Errorf("int64 negative overflow")
+					}
+					extraI = -1 - extraI
+				default:
+					return fmt.Errorf("wrong type for int64 field: %d", maj)
+				}
+
+				t.Height = int64(extraI)
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *Image) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 4
+
+	if t.AspectRatio == nil {
+		fieldCount--
+	}
+
+	if t.Blob == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Alt (string) (string)
+	if len("alt") > 8192 {
+		return xerrors.Errorf("Value in field \"alt\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("alt"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("alt")); err != nil {
+		return err
+	}
+
+	if len(t.Alt) > 8192 {
+		return xerrors.Errorf("Value in field t.Alt was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Alt))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Alt)); err != nil {
+		return err
+	}
+
+	// t.Blob (util.BlobSchema) (struct)
+	if t.Blob != nil {
+
+		if len("blob") > 8192 {
+			return xerrors.Errorf("Value in field \"blob\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("blob"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("blob")); err != nil {
+			return err
+		}
+
+		if err := t.Blob.MarshalCBOR(cw); err != nil {
+			return err
+		}
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 8192 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("org.xcvr.lrc.image"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("org.xcvr.lrc.image")); err != nil {
+		return err
+	}
+
+	// t.AspectRatio (lex.AspectRatio) (struct)
+	if t.AspectRatio != nil {
+
+		if len("aspectRatio") > 8192 {
+			return xerrors.Errorf("Value in field \"aspectRatio\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("aspectRatio"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("aspectRatio")); err != nil {
+			return err
+		}
+
+		if err := t.AspectRatio.MarshalCBOR(cw); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *Image) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = Image{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("Image: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 11)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 8192)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Alt (string) (string)
+		case "alt":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 8192)
+				if err != nil {
+					return err
+				}
+
+				t.Alt = string(sval)
+			}
+			// t.Blob (util.BlobSchema) (struct)
+		case "blob":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.Blob = new(util.BlobSchema)
+					if err := t.Blob.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.Blob pointer: %w", err)
+					}
+				}
+
+			}
+			// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 8192)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.AspectRatio (lex.AspectRatio) (struct)
+		case "aspectRatio":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.AspectRatio = new(AspectRatio)
+					if err := t.AspectRatio.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.AspectRatio pointer: %w", err)
+					}
+				}
+
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *MediaRecord) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 6
+
+	if t.Image == nil {
+		fieldCount--
+	}
+
+	if t.Nick == nil {
+		fieldCount--
+	}
+
+	if t.Color == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Nick (string) (string)
+	if t.Nick != nil {
+
+		if len("nick") > 8192 {
+			return xerrors.Errorf("Value in field \"nick\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("nick"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("nick")); err != nil {
+			return err
+		}
+
+		if t.Nick == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Nick) > 8192 {
+				return xerrors.Errorf("Value in field t.Nick was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Nick))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Nick)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 8192 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("org.xcvr.lrc.media"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("org.xcvr.lrc.media")); err != nil {
+		return err
+	}
+
+	// t.Color (uint64) (uint64)
+	if t.Color != nil {
+
+		if len("color") > 8192 {
+			return xerrors.Errorf("Value in field \"color\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("color"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("color")); err != nil {
+			return err
+		}
+
+		if t.Color == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(*t.Color)); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	// t.Image (lex.Image) (struct)
+	if t.Image != nil {
+
+		if len("image") > 8192 {
+			return xerrors.Errorf("Value in field \"image\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("image"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("image")); err != nil {
+			return err
+		}
+
+		if err := t.Image.MarshalCBOR(cw); err != nil {
+			return err
+		}
+	}
+
+	// t.PostedAt (string) (string)
+	if len("postedAt") > 8192 {
+		return xerrors.Errorf("Value in field \"postedAt\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("postedAt"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("postedAt")); err != nil {
+		return err
+	}
+
+	if len(t.PostedAt) > 8192 {
+		return xerrors.Errorf("Value in field t.PostedAt was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.PostedAt))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.PostedAt)); err != nil {
+		return err
+	}
+
+	// t.SignetURI (string) (string)
+	if len("signetURI") > 8192 {
+		return xerrors.Errorf("Value in field \"signetURI\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("signetURI"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("signetURI")); err != nil {
+		return err
+	}
+
+	if len(t.SignetURI) > 8192 {
+		return xerrors.Errorf("Value in field t.SignetURI was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.SignetURI))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.SignetURI)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *MediaRecord) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = MediaRecord{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("MediaRecord: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 9)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 8192)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Nick (string) (string)
+		case "nick":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 8192)
+					if err != nil {
+						return err
+					}
+
+					t.Nick = (*string)(&sval)
+				}
+			}
+			// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 8192)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.Color (uint64) (uint64)
+		case "color":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					maj, extra, err = cr.ReadHeader()
+					if err != nil {
+						return err
+					}
+					if maj != cbg.MajUnsignedInt {
+						return fmt.Errorf("wrong type for uint64 field")
+					}
+					typed := uint64(extra)
+					t.Color = &typed
+				}
+
+			}
+			// t.Image (lex.Image) (struct)
+		case "image":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.Image = new(Image)
+					if err := t.Image.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.Image pointer: %w", err)
+					}
+				}
+
+			}
+			// t.PostedAt (string) (string)
+		case "postedAt":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 8192)
+				if err != nil {
+					return err
+				}
+
+				t.PostedAt = string(sval)
+			}
+			// t.SignetURI (string) (string)
+		case "signetURI":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 8192)
+				if err != nil {
+					return err
+				}
+
+				t.SignetURI = string(sval)
 			}
 
 		default:

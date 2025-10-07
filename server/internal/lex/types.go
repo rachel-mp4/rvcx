@@ -48,21 +48,17 @@ type SignetRecord struct {
 type MediaRecord struct {
 	LexiconTypeID string  `json:"$type,const=org.xcvr.lrc.media" cborgen:"$type,const=org.xcvr.lrc.media"`
 	SignetURI     string  `json:"signetURI" cborgen:"signetURI"`
-	Media         Media   `json:"media" cborgen:"media"`
+	Image         *Image  `json:"image,omitempty" cborgen:"image,omitempty"`
 	Nick          *string `json:"nick,omitempty" cborgen:"nick,omitempty"`
 	Color         *uint64 `json:"color,omitempty" cborgen:"color,omitempty"`
 	PostedAt      string  `json:"postedAt" cborgen:"postedAt"`
-}
-
-type Media struct {
-	Image *Image
 }
 
 type Image struct {
 	LexiconTypeID string           `json:"$type,const=org.xcvr.lrc.image" cborgen:"$type,const=org.xcvr.lrc.image"`
 	Alt           string           `json:"alt" cborgen:"alt"`
 	AspectRatio   *AspectRatio     `json:"aspectRatio,omitempty" cborgen:"aspectRatio,omitempty"`
-	Image         *util.BlobSchema `json:"image,omitempty" cborgen:"image,omitempty"`
+	Blob          *util.BlobSchema `json:"blob,omitempty" cborgen:"blob,omitempty"`
 }
 
 type AspectRatio struct {

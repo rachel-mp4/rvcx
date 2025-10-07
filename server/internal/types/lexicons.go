@@ -215,12 +215,14 @@ type Image struct {
 	URI       string
 	DID       string
 	SignetURI string
-	ImageCID  *string
-	ImageMIME *string
+	BlobCID   *string
+	BlobMIME  *string
 	Alt       string
 	Nick      *string
 	Color     *uint32
 	CID       string
+	Width     *int64
+	Height    *int64
 	PostedAt  time.Time
 	IndexedAt time.Time
 }

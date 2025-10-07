@@ -293,22 +293,26 @@ func (s *Store) StoreImage(image *types.Image, ctx context.Context) error {
 		uri,
 		did,
 		signet_uri,
-		image_cid,
-		image_mime,
+		blob_cid,
+		blob_mime,
 		alt,
+		height,
+		width,
 		nick,
 		color,
 		cid,
 		posted_at
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 		) ON CONFLICT (uri) DO NOTHING`,
 		image.URI,
 		image.DID,
 		image.SignetURI,
-		image.ImageCID,
-		image.ImageMIME,
+		image.BlobCID,
+		image.BlobMIME,
 		image.Alt,
+		image.Height,
+		image.Width,
 		image.Nick,
 		image.Color,
 		image.CID,
@@ -320,26 +324,30 @@ func (s *Store) StoreImage(image *types.Image, ctx context.Context) error {
 }
 
 func (s *Store) UpdateImage(image *types.Image, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `INSERT INTO medias (
+	_, err := s.pool.Exec(ctx, `INSERT INTO images (
 		uri,
 		did,
 		signet_uri,
-		image_cid,
-		image_mime,
+		blob_cid,
+		blob_mime,
 		alt,
+		height,
+		width,
 		nick,
 		color,
 		cid,
 		posted_at
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
 		)`,
 		image.URI,
 		image.DID,
 		image.SignetURI,
-		image.ImageCID,
-		image.ImageMIME,
+		image.BlobCID,
+		image.BlobMIME,
 		image.Alt,
+		image.Height,
+		image.Width,
 		image.Nick,
 		image.Color,
 		image.CID,
@@ -351,7 +359,7 @@ func (s *Store) UpdateImage(image *types.Image, ctx context.Context) error {
 }
 
 func (s *Store) DeleteImage(uri string, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `DELETE from medias m WHERE m.uri = $1`, uri)
+	_, err := s.pool.Exec(ctx, `DELETE from images i WHERE i.uri = $1`, uri)
 	if err != nil {
 		return errors.New("bep bep bop: " + err.Error())
 	}
@@ -362,9 +370,11 @@ func (s *Store) GetImage(uri string, ctx context.Context) (*types.Image, error) 
 	row := s.pool.QueryRow(ctx, `SELECT FROM medias (
 		did,
 		signet_uri,
-		media_cid,
-		media_mime,
+		blob_cid,
+		blob_mime,
 		alt,
+		height,
+		width,
 		nick,
 		color,
 		cid,
@@ -373,9 +383,11 @@ func (s *Store) GetImage(uri string, ctx context.Context) (*types.Image, error) 
 	var image types.Image
 	err := row.Scan(&image.DID,
 		&image.SignetURI,
-		&image.ImageCID,
-		&image.ImageMIME,
+		&image.BlobCID,
+		&image.BlobMIME,
 		&image.Alt,
+		&image.Height,
+		&image.Width,
 		&image.Nick,
 		&image.Color,
 		&image.CID,
