@@ -1,10 +1,12 @@
 package oauth
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/bluesky-social/indigo/api/atproto"
 	"github.com/bluesky-social/indigo/atproto/auth/oauth"
@@ -178,7 +180,13 @@ func UpdateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx 
 func UploadBLOB(cs *oauth.ClientSession, file multipart.File, ctx context.Context) (*lexutil.BlobSchema, error) {
 	client := cs.APIClient()
 
-	req := atpclient.NewAPIRequest("POST", "com.atproto.repo.uploadBlob", file)
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, errors.New("failed to readall: " + err.Error())
+	}
+	fileReader := bytes.NewReader(fileBytes)
+
+	req := atpclient.NewAPIRequest("POST", "com.atproto.repo.uploadBlob", fileReader)
 	resp, err := client.Do(ctx, req)
 	if err != nil {
 		return nil, err
