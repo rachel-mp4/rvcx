@@ -289,7 +289,7 @@ func (s *Store) DeleteSignet(uri string, ctx context.Context) error {
 }
 
 func (s *Store) StoreImage(image *types.Image, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `INSERT INTO medias (
+	_, err := s.pool.Exec(ctx, `INSERT INTO images (
 		uri,
 		did,
 		signet_uri,
@@ -367,7 +367,7 @@ func (s *Store) DeleteImage(uri string, ctx context.Context) error {
 }
 
 func (s *Store) GetImage(uri string, ctx context.Context) (*types.Image, error) {
-	row := s.pool.QueryRow(ctx, `SELECT FROM medias (
+	row := s.pool.QueryRow(ctx, `SELECT FROM images (
 		did,
 		signet_uri,
 		blob_cid,
