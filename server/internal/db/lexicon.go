@@ -424,7 +424,7 @@ func (s *Store) GetImageDidCID(did string, cid string, ctx context.Context) (*ty
 		&image.Color,
 		&image.PostedAt)
 	if err != nil {
-		return nil, errors.New("effor storing image: " + err.Error())
+		return nil, errors.New("error getting image: " + err.Error())
 	}
 	image.DID = did
 	image.CID = cid
