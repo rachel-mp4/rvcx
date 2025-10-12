@@ -199,7 +199,8 @@ func UploadBLOB(cs *oauth.ClientSession, file multipart.File, fileHeader *multip
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("upload failed withy status %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("upload failed withy status %d: %s", resp.StatusCode, body)
 	}
 	var result lexutil.BlobSchema
 	decoder := json.NewDecoder(resp.Body)
