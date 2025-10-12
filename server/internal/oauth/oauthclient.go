@@ -202,13 +202,15 @@ func UploadBLOB(cs *oauth.ClientSession, file multipart.File, fileHeader *multip
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("upload failed withy status %d: %s", resp.StatusCode, body)
 	}
-	var result lexutil.BlobSchema
+	var uploadResp struct {
+		Blob *lexutil.BlobSchema `json:"blob"`
+	}
 	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&result)
+	err = decoder.Decode(&uploadResp)
 	if err != nil {
 		return nil, errors.New("failed to decode: " + err.Error())
 	}
-	return &result, nil
+	return uploadResp.Blob, nil
 }
 
 func CreateXCVRMedia(cs *oauth.ClientSession, imr *lex.MediaRecord, ctx context.Context) (uri string, cid string, err error) {
