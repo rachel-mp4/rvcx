@@ -190,7 +190,7 @@ func (h *Handler) postMedia(cs *atoauth.ClientSession, w http.ResponseWriter, r 
 	}
 	err = h.rm.PostMedia(cs, mr, r.Context())
 	if err != nil {
-		h.serverError(w, errors.New("failing to post the media :c"))
+		h.serverError(w, errors.New("failing to post the media :c"+err.Error()))
 		return
 	}
 	w.Write(nil)
