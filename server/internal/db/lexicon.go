@@ -367,7 +367,7 @@ func (s *Store) DeleteImage(uri string, ctx context.Context) error {
 }
 
 func (s *Store) GetImage(uri string, ctx context.Context) (*types.Image, error) {
-	row := s.pool.QueryRow(ctx, `SELECT (
+	row := s.pool.QueryRow(ctx, `SELECT 
 		did,
 		signet_uri,
 		blob_cid,
@@ -379,7 +379,7 @@ func (s *Store) GetImage(uri string, ctx context.Context) (*types.Image, error) 
 		color,
 		cid,
 		posted_at
-		) FROM images WHERE uri = $1`, uri)
+		FROM images WHERE uri = $1`, uri)
 	var image types.Image
 	err := row.Scan(&image.DID,
 		&image.SignetURI,
@@ -400,7 +400,7 @@ func (s *Store) GetImage(uri string, ctx context.Context) (*types.Image, error) 
 }
 
 func (s *Store) GetImageDidCID(did string, cid string, ctx context.Context) (*types.Image, error) {
-	row := s.pool.QueryRow(ctx, `SELECT (
+	row := s.pool.QueryRow(ctx, `SELECT 
 		uri,
 		signet_uri,
 		cid,
@@ -411,7 +411,6 @@ func (s *Store) GetImageDidCID(did string, cid string, ctx context.Context) (*ty
 		nick,
 		color,
 		posted_at
-		) 
 		FROM images
 		WHERE did = $1 AND blob_cid = $2`, did, cid)
 	var image types.Image
