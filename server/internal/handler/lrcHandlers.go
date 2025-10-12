@@ -247,30 +247,10 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 	if cid == "" {
 		h.serverError(w, errors.New("empty cid"))
 	}
-	uploadDir := "./uploads"
-	_, err = os.Stat(uploadDir)
-	if os.IsNotExist(err) {
-		os.Mkdir(uploadDir, 0755)
-	}
-
-	imgPath := fmt.Sprintf("%s/%s%s", uploadDir, did, cid)
-	_, err = os.Stat(imgPath)
+	imgPath, err := h.rm.AddImageToCache(did, cid, r.Context())
 	if err != nil {
-		blob, err := atputils.SyncGetBlob(did, cid, r.Context())
-		if err != nil {
-			h.serverError(w, err)
-			return
-		}
-		file, err := os.Create(imgPath)
-		if err != nil {
-			h.serverError(w, err)
-			return
-		}
-		_, err = file.Write(blob)
-		if err != nil {
-			h.serverError(w, err)
-			return
-		}
+		h.serverError(w, errors.New("beep: "+err.Error()))
+		return
 	}
 
 	stats, err := os.Stat(imgPath)

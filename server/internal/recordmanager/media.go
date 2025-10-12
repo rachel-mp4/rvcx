@@ -3,10 +3,13 @@ package recordmanager
 import (
 	"context"
 	"errors"
+	"fmt"
 	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
 	"github.com/bluesky-social/indigo/atproto/syntax"
 	lexutil "github.com/bluesky-social/indigo/lex/util"
 	"mime/multipart"
+	"os"
+	"rvcx/internal/atputils"
 	"rvcx/internal/lex"
 	"rvcx/internal/oauth"
 	"rvcx/internal/types"
@@ -15,6 +18,32 @@ import (
 
 func (rm *RecordManager) PostImage(cs *atoauth.ClientSession, file multipart.File, fileHeader *multipart.FileHeader, ctx context.Context) (*lexutil.BlobSchema, error) {
 	return oauth.UploadBLOB(cs, file, fileHeader, ctx)
+}
+
+func (rm *RecordManager) AddImageToCache(did string, cid string, ctx context.Context) (string, error) {
+	uploadDir := "./uploads"
+	_, err := os.Stat(uploadDir)
+	if os.IsNotExist(err) {
+		os.Mkdir(uploadDir, 0755)
+	}
+
+	imgPath := fmt.Sprintf("%s/%s%s", uploadDir, did, cid)
+	_, err = os.Stat(imgPath)
+	if err != nil {
+		blob, err := atputils.SyncGetBlob(did, cid, ctx)
+		if err != nil {
+			return "", err
+		}
+		file, err := os.Create(imgPath)
+		if err != nil {
+			return "", err
+		}
+		_, err = file.Write(blob)
+		if err != nil {
+			return "", err
+		}
+	}
+	return imgPath, nil
 }
 
 func (rm *RecordManager) PostMedia(cs *atoauth.ClientSession, mr *types.ParseMediaRequest, ctx context.Context) error {
