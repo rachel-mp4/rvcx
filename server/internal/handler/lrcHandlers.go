@@ -167,9 +167,16 @@ func (h *Handler) uploadImage(cs *atoauth.ClientSession, w http.ResponseWriter, 
 		h.serverError(w, errors.New("failed to upload: "+err.Error()))
 		return
 	}
+	if blob == nil {
+		h.logger.Deprintln("blob is nil")
+	}
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
-	encoder.Encode(blob)
+	err = encoder.Encode(blob)
+	if err != nil {
+		h.badRequest(w, err)
+		return
+	}
 }
 
 func (h *Handler) postMedia(cs *atoauth.ClientSession, w http.ResponseWriter, r *http.Request) {
