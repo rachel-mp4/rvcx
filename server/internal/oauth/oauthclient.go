@@ -216,7 +216,7 @@ func UploadBLOB(cs *oauth.ClientSession, file multipart.File, fileHeader *multip
 func CreateXCVRMedia(cs *oauth.ClientSession, imr *lex.MediaRecord, ctx context.Context) (uri string, cid string, err error) {
 	c := cs.APIClient()
 	body := map[string]any{
-		"collection": "org.xcvr.lrc.message",
+		"collection": "org.xcvr.lrc.media",
 		"repo":       *c.AccountDID,
 		"record":     imr,
 	}
