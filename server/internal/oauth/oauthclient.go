@@ -189,9 +189,9 @@ func UploadBLOB(cs *oauth.ClientSession, file multipart.File, fileHeader *multip
 	req := atpclient.NewAPIRequest("POST", "com.atproto.repo.uploadBlob", fileReader)
 	contentType := fileHeader.Header.Get("Content-Type")
 	if contentType == "" {
-
-		req.Headers.Add("Content-Type", "application/octet-stream")
+		contentType = "application/octet-stream"
 	}
+	req.Headers.Add("Content-Type", contentType)
 	req.Headers.Add("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
 	resp, err := client.Do(ctx, req)
 	if err != nil {
