@@ -411,7 +411,7 @@ func (s *Store) GetImageDidCID(did string, cid string, ctx context.Context) (*ty
 		nick,
 		color,
 		posted_at
-		) WHERE did = $1 AND cid = $2`, did, cid)
+		) WHERE did = $1 AND blob_cid = $2`, did, cid)
 	var image types.Image
 	err := row.Scan(&image.URI,
 		&image.SignetURI,
