@@ -403,7 +403,7 @@ func (s *Store) GetImageDidCID(did string, cid string, ctx context.Context) (*ty
 	row := s.pool.QueryRow(ctx, `SELECT FROM images (
 		uri,
 		signet_uri,
-		blob_cid,
+		cid,
 		blob_mime,
 		alt,
 		height,
@@ -415,7 +415,7 @@ func (s *Store) GetImageDidCID(did string, cid string, ctx context.Context) (*ty
 	var image types.Image
 	err := row.Scan(&image.URI,
 		&image.SignetURI,
-		&image.BlobCID,
+		&image.CID,
 		&image.BlobMIME,
 		&image.Alt,
 		&image.Height,
@@ -427,6 +427,6 @@ func (s *Store) GetImageDidCID(did string, cid string, ctx context.Context) (*ty
 		return nil, errors.New("error getting image: " + err.Error())
 	}
 	image.DID = did
-	image.CID = cid
+	image.BlobCID = &cid
 	return &image, nil
 }
