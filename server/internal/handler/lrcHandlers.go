@@ -162,7 +162,7 @@ func (h *Handler) uploadImage(cs *atoauth.ClientSession, w http.ResponseWriter, 
 		h.badRequest(w, errors.New("must post an image"))
 		return
 	}
-	blob, err := h.rm.PostImage(cs, file, r.Context())
+	blob, err := h.rm.PostImage(cs, file, fheader, r.Context())
 	if err != nil {
 		h.serverError(w, errors.New("failed to upload: "+err.Error()))
 		return

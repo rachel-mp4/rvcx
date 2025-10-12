@@ -177,7 +177,7 @@ func UpdateXCVRProfile(cs *oauth.ClientSession, profile *lex.ProfileRecord, ctx 
 	return profile, nil
 }
 
-func UploadBLOB(cs *oauth.ClientSession, file multipart.File, ctx context.Context) (*lexutil.BlobSchema, error) {
+func UploadBLOB(cs *oauth.ClientSession, file multipart.File, fileHeader *multipart.FileHeader, ctx context.Context) (*lexutil.BlobSchema, error) {
 	client := cs.APIClient()
 
 	fileBytes, err := io.ReadAll(file)
@@ -187,6 +187,12 @@ func UploadBLOB(cs *oauth.ClientSession, file multipart.File, ctx context.Contex
 	fileReader := bytes.NewReader(fileBytes)
 
 	req := atpclient.NewAPIRequest("POST", "com.atproto.repo.uploadBlob", fileReader)
+	contentType := fileHeader.Header.Get("Content-Type")
+	if contentType == "" {
+
+		req.Headers.Add("Content-Type", "application/octet-stream")
+	}
+	req.Headers.Add("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
 	resp, err := client.Do(ctx, req)
 	if err != nil {
 		return nil, err

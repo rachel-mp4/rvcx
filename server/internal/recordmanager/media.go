@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-func (rm *RecordManager) PostImage(cs *atoauth.ClientSession, file multipart.File, ctx context.Context) (*lexutil.BlobSchema, error) {
-	return oauth.UploadBLOB(cs, file, ctx)
+func (rm *RecordManager) PostImage(cs *atoauth.ClientSession, file multipart.File, fileHeader *multipart.FileHeader, ctx context.Context) (*lexutil.BlobSchema, error) {
+	return oauth.UploadBLOB(cs, file, fileHeader, ctx)
 }
 
 func (rm *RecordManager) PostMedia(cs *atoauth.ClientSession, mr *types.ParseMediaRequest, ctx context.Context) error {
