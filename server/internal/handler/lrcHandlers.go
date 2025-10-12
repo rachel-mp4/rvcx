@@ -206,34 +206,101 @@ func parseMediaRequest(r *http.Request) (*types.ParseMediaRequest, error) {
 	return &mr, nil
 }
 
-// func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
-// 	vals := r.URL.Query()
-// 	uri := vals.Get("uri")
-// 	if uri == "" {
-// 		h.badRequest(w, errors.New("must provide a did and cid"))
-// 		return
-// 	}
-// 	image, err := h.db.GetImage(uri, r.Context())
-// 	if err != nil {
-// 		h.notFound(w, err)
-// 		return
-// 	}
-// 	uploadDir := fmt.Sprintf("./uploads/%s", image.DID)
-// 	_, err = os.Stat(uploadDir)
-// 	if os.IsNotExist(err) {
-// 		os.Mkdir(uploadDir, 0755)
-// 	}
-//
-// 	imgPath := fmt.Sprintf("./uploads/%s", image.ImageCID)
-// 	_, err = os.Stat(imgPath)
-// 	if err != nil {
-// 		syncGetBlob(image.DID, image.ImageCID)
-// 	}
-//
-// 	img, err := os.Open(fmt.Sprintf("%s/%s", uploadDir, image.ImageCID))
-// 	img.WriteTo(w)
-// }
+func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
+	vals := r.URL.Query()
+	var did string
+	var cid string
+	uri := vals.Get("uri")
+	var image *types.Image
+	var err error
+	if uri != "" {
+		image, err = h.db.GetImage(uri, r.Context())
+		if err == nil {
+			did = image.DID
+			if image.BlobCID != nil {
+				cid = *image.BlobCID
+			}
+		}
+	}
+	if did == "" {
+		did = vals.Get("did")
+		if did == "" {
+			handle := vals.Get("handle")
+			if handle == "" {
+				h.badRequest(w, errors.New("must provide an identity"))
+				return
+			}
+			did, err = h.db.ResolveHandle(handle, r.Context())
+			if err != nil {
+				h.badRequest(w, errors.New("failed to resolve handle"))
+				return
+			}
+		}
+	}
+	if did == "" {
+		h.serverError(w, errors.New("empty did"))
+		return
+	}
+	if cid == "" {
+		cid = vals.Get("cid")
+	}
+	if cid == "" {
+		h.serverError(w, errors.New("empty cid"))
+	}
+	uploadDir := "./uploads"
+	_, err = os.Stat(uploadDir)
+	if os.IsNotExist(err) {
+		os.Mkdir(uploadDir, 0755)
+	}
 
-// func syncGetBlob(did string, cid *string) {
-// 	//TODO: impl
-// }
+	imgPath := fmt.Sprintf("%s/%s%s", uploadDir, did, cid)
+	_, err = os.Stat(imgPath)
+	if err != nil {
+		blob, err := atputils.SyncGetBlob(did, cid, r.Context())
+		if err != nil {
+			h.serverError(w, err)
+			return
+		}
+		file, err := os.Create(imgPath)
+		if err != nil {
+			h.serverError(w, err)
+			return
+		}
+		_, err = file.Write(blob)
+		if err != nil {
+			h.serverError(w, err)
+			return
+		}
+	}
+
+	stats, err := os.Stat(imgPath)
+	if err != nil {
+		h.serverError(w, errors.New("yikes, file not there even though it should?: "+err.Error()))
+		return
+	}
+
+	if image == nil {
+		image, err = h.db.GetImageDidCID(did, cid, r.Context())
+		if err != nil {
+			h.serverError(w, err)
+			return
+		}
+		if image == nil {
+			h.serverError(w, errors.New("beep obop i didn't cache it"))
+			return
+		}
+	}
+	mime := "application/octet-stream"
+	if image.BlobMIME != nil {
+		mime = *image.BlobMIME
+	}
+	w.Header().Add("Content-Type", mime)
+	w.Header().Add("Content-Length", fmt.Sprintf("%d", stats.Size()))
+
+	img, err := os.Open(imgPath)
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+	img.WriteTo(w)
+}

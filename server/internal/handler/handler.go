@@ -33,7 +33,7 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, model *mode
 	mux.HandleFunc("POST /lrc/message", h.oauthMiddleware(h.postMessage))
 	mux.HandleFunc("POST /lrc/image", h.oauthMiddleware(h.uploadImage))
 	mux.HandleFunc("POST /lrc/media", h.oauthMiddleware(h.postMedia))
-	// mux.HandleFunc("GET  /lrc/image", h.getImage)
+	mux.HandleFunc("GET  /lrc/image", h.WithCORS(h.getImage))
 	mux.HandleFunc("POST /lrc/mymessage", h.postMyMessage)
 	// xcvr handlers
 	mux.HandleFunc("POST /xcvr/profile", h.oauthMiddleware(h.postProfile))

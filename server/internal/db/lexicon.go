@@ -398,3 +398,35 @@ func (s *Store) GetImage(uri string, ctx context.Context) (*types.Image, error) 
 	image.URI = uri
 	return &image, nil
 }
+
+func (s *Store) GetImageDidCID(did string, cid string, ctx context.Context) (*types.Image, error) {
+	row := s.pool.QueryRow(ctx, `SELECT FROM images (
+		uri,
+		signet_uri,
+		blob_cid,
+		blob_mime,
+		alt,
+		height,
+		width,
+		nick,
+		color,
+		posted_at
+		) WHERE did = $1 AND cid = $2`, did, cid)
+	var image types.Image
+	err := row.Scan(&image.URI,
+		&image.SignetURI,
+		&image.BlobCID,
+		&image.BlobMIME,
+		&image.Alt,
+		&image.Height,
+		&image.Width,
+		&image.Nick,
+		&image.Color,
+		&image.PostedAt)
+	if err != nil {
+		return nil, errors.New("effor storing image: " + err.Error())
+	}
+	image.DID = did
+	image.CID = cid
+	return &image, nil
+}
