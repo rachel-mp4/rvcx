@@ -10,6 +10,7 @@ import (
 type LexBroadcaster interface {
 	BroadcastSignet(uri string, s *types.Signet) error
 	BroadcastMessage(uri string, m *types.Message) error
+	BroadcastImage(uri string, i *types.Image) error
 	AddChannel(c *types.Channel) error
 	UpdateChannel(c *types.Channel) error
 	DeleteChannel(uri string) error

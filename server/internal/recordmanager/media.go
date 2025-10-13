@@ -75,7 +75,19 @@ func (rm *RecordManager) postImageRecord(cs *atoauth.ClientSession, mr *types.Pa
 	if err != nil {
 		return errors.New("beeped that up!: " + err.Error())
 	}
+	err = rm.forwardImage(img, ctx)
+	if err != nil {
+		return errors.New("YIEKRSa, " + err.Error())
+	}
 	return nil
+}
+
+func (rm *RecordManager) forwardImage(i *types.Image, ctx context.Context) error {
+	curi, err := rm.db.GetMsgChannelURI(i.SignetURI, ctx)
+	if err != nil {
+		return errors.New("failed to get curi: " + err.Error())
+	}
+	return rm.broadcaster.BroadcastImage(curi, i)
 }
 
 func (rm *RecordManager) validateImageRecord(mr *types.ParseMediaRequest) (*lex.MediaRecord, *time.Time, error) {
