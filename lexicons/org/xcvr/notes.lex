@@ -103,7 +103,7 @@ org.xcvr
 
     image: def
       alt: string
-      blob: blob
+      blob?: blob
       aspectRatio?: aspectRatio
 
     aspectRatio: def
@@ -112,7 +112,7 @@ org.xcvr
 
     video: def
       alt: string
-      blob: blob
+      blob?: blob
       # captions?
     
     messageView: def
@@ -146,14 +146,13 @@ org.xcvr
 
     imageView: def
       alt: string
-      src: string
+      src?: string
       aspectRatio?: aspectRatio
 
     videoView: def
       alt: string
-      src: string
+      src?: string
       # captions?
-      
 
     signedMessageView: def
       uri: uri

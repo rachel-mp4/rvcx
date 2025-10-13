@@ -3,8 +3,11 @@ package model
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"rvcx/internal/atputils"
+	"rvcx/internal/lex"
 	"rvcx/internal/types"
 	"time"
 
@@ -128,6 +131,39 @@ func (m *Model) BroadcastMessage(uri string, msg *types.Message) error {
 		Color:     msg.Color,
 		SignetURI: msg.SignetURI,
 		PostedAt:  msg.PostedAt,
+	}
+	cm.broadcast(mv)
+	return nil
+}
+
+func (m *Model) BroadcastImage(uri string, media *types.Image) error {
+	cm := m.uriMap[uri]
+	if cm == nil {
+		return errors.New("failed to map uri to lsm!")
+	}
+	pv, err := m.store.GetProfileView(media.DID, context.Background())
+	if err != nil {
+		return errors.New("failed to get profile view: " + err.Error())
+	}
+	ar := lex.AspectRatio{
+		Width:  *media.Width,
+		Height: *media.Height,
+	}
+	src := fmt.Sprintf("%s/xrpc/org.xcvr.lrc.getImage?uri=%s", os.Getenv("MY_IDENTITY"), media.URI)
+
+	img := types.ImageView{
+		Alt:         media.Alt,
+		Src:         &src,
+		AspectRatio: &ar,
+	}
+	mv := types.MediaView{
+		URI:       media.URI,
+		Author:    *pv,
+		Image:     &img,
+		Nick:      media.Nick,
+		Color:     media.Color,
+		SignetURI: media.SignetURI,
+		PostedAt:  media.PostedAt,
 	}
 	cm.broadcast(mv)
 	return nil

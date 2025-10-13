@@ -227,10 +227,38 @@ type Image struct {
 	IndexedAt time.Time
 }
 
+type MediaView struct {
+	Type      string      `json:"$type,const=org.xcvr.lrc.defs#messageView"`
+	URI       string      `json:"uri"`
+	Author    ProfileView `json:"author"`
+	Image     *ImageView  `json:"imageView,omitempty"`
+	Nick      *string     `json:"nick,omitempty"`
+	Color     *uint32     `json:"color,omitempty"`
+	SignetURI string      `json:"signetURI"`
+	PostedAt  time.Time   `json:"postedAt"`
+}
+
+type ImageView struct {
+	Alt         string           `json:"alt"`
+	Src         *string          `json:"src,omitempty"`
+	AspectRatio *lex.AspectRatio `json:"AspectRatio,omitempty"`
+}
+
 type ParseMediaRequest struct {
 	Nick      *string    `json:"nick,omitempty"`
 	Color     *uint32    `json:"color,omitempty"`
 	SignetURI string     `json:"signetURI"`
 	Image     *lex.Image `json:"image,omitempty"`
 	Type      string     `json:"type"`
+}
+
+func (m MediaView) MarshalJSON() ([]byte, error) {
+	type Alias MediaView
+	return json.Marshal(&struct {
+		Type string `json:"$type"`
+		*Alias
+	}{
+		Type:  "org.xcvr.lrc.defs#mediaView",
+		Alias: (*Alias)(&m),
+	})
 }
