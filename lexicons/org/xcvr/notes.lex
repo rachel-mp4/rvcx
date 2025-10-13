@@ -107,8 +107,8 @@ org.xcvr
       aspectRatio?: aspectRatio
 
     aspectRatio: def
-      width?: int
-      height?: int
+      width: int
+      height: int
 
     video: def
       alt: string
