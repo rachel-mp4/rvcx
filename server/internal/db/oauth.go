@@ -102,7 +102,7 @@ func (s Store) DeleteSession(ctx context.Context, did syntax.DID, sessionID stri
 }
 
 func (s Store) DeleteAllSessions(ctx context.Context, did string) error {
-	_, err := s.pool.Exec(ctx, `DELETE FROM sessions WHERE account_did = $1`)
+	_, err := s.pool.Exec(ctx, `DELETE FROM sessions WHERE account_did = $1`, did)
 	return err
 }
 

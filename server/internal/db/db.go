@@ -377,7 +377,7 @@ func (s *Store) GetBanId(id int, ctx context.Context) (*types.Ban, error) {
 		banned_at
 		FROM bans WHERE id = $1`, id)
 	var ban types.Ban
-	err := row.Scan(&ban.Id, &ban.Reason, &ban.Till, &ban.BannedAt)
+	err := row.Scan(&ban.Did, &ban.Reason, &ban.Till, &ban.BannedAt)
 	if err != nil {
 		return nil, err
 	}
