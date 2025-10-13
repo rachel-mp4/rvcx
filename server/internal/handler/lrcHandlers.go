@@ -241,11 +241,17 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, errors.New("empty did"))
 		return
 	}
+	ib, _ := h.db.IsBanned(did, r.Context())
+	if ib {
+		h.badRequest(w, errors.New("i don't serve banned content"))
+		return
+	}
 	if cid == "" {
 		cid = vals.Get("cid")
 	}
 	if cid == "" {
 		h.serverError(w, errors.New("empty cid"))
+		return
 	}
 	imgPath, err := h.rm.AddImageToCache(did, cid, r.Context())
 	if err != nil {

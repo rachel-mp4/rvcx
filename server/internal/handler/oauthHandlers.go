@@ -21,14 +21,17 @@ func (h *Handler) serveJWKS(w http.ResponseWriter, r *http.Request) {
 	key, err := oauth.GetPrivateKey()
 	if err != nil {
 		h.serverError(w, err)
+		return
 	}
 	pubKey, err := key.PublicKey()
 	if err != nil {
 		h.serverError(w, err)
+		return
 	}
 	ro, err := pubKey.JWK()
 	if err != nil {
 		h.serverError(w, err)
+		return
 	}
 
 	cski := os.Getenv("CLIENT_SECRET_KEY_ID")
@@ -186,6 +189,7 @@ func (h *Handler) postBan(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		h.badRequest(w, err)
+		return
 	}
 	userhandle := r.FormValue("user")
 	userdid, err := atputils.GetDidFromHandle(r.Context(), userhandle)
