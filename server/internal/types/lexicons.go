@@ -228,7 +228,7 @@ type Image struct {
 }
 
 type MediaView struct {
-	Type      string      `json:"$type,const=org.xcvr.lrc.defs#messageView"`
+	Type      string      `json:"$type,const=org.xcvr.lrc.defs#mediaView"`
 	URI       string      `json:"uri"`
 	Author    ProfileView `json:"author"`
 	Image     *ImageView  `json:"imageView,omitempty"`
@@ -259,6 +259,28 @@ func (m MediaView) MarshalJSON() ([]byte, error) {
 		*Alias
 	}{
 		Type:  "org.xcvr.lrc.defs#mediaView",
+		Alias: (*Alias)(&m),
+	})
+}
+
+type SignedMediaView struct {
+	Type     string      `json:"$type,const=org.xcvr.lrc.defs#signedMediaView"`
+	URI      string      `json:"uri"`
+	Author   ProfileView `json:"author"`
+	Image    *ImageView  `json:"imageView,omitempty"`
+	Nick     *string     `json:"nick,omitempty"`
+	Color    *uint32     `json:"color,omitempty"`
+	Signet   SignetView  `json:"signet"`
+	PostedAt time.Time   `json:"postedAt"`
+}
+
+func (m SignedMediaView) MarshalJSON() ([]byte, error) {
+	type Alias SignedMediaView
+	return json.Marshal(&struct {
+		Type string `json:"$type"`
+		*Alias
+	}{
+		Type:  "org.xcvr.lrc.defs#signedMediaView",
 		Alias: (*Alias)(&m),
 	})
 }
