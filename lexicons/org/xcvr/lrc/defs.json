@@ -36,6 +36,7 @@
 				}
 			}
 		},
+
 		"signetView": {
 			"type": "object",
 			"required": ["uri", "issuer", "channelURI", "lrcID", "authorHandle", "startedAt"],
@@ -66,6 +67,7 @@
 				}
 			}
 		},
+
 		"signedMessageView": {
 			"type": "object",
 			"required": ["uri", "author", "body", "signet", "postedAt"],
@@ -92,13 +94,44 @@
 				},
 				"signet": {
 					"type": "ref",
-					"ref": "org.xcvr.actor.defs#profileView"
+					"ref": "org.xcvr.actor.defs#signetView"
 				},
 				"postedAt": {
 					"type": "string",
 					"format": "datetime"
 				}
+		},
 
-		}
+		"mediaView": {
+			"type": "object",
+			"required": ["uri", "author", "media", "signetURI", "postedAt"],
+			"properties": {
+				"uri": { 
+					"type": "string", 
+					"format": "at-uri" 
+				},
+				"author": {
+					"type": "ref", 
+					"ref": "org.xcvr.actor.defs#profileView" 
+				},
+				"nick": {
+					"type": "string",
+					"maxLength": 16
+				}, 
+				"color": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 16777215
+				},
+				"signetURI": {
+					"type": "string",
+					"format": "at-uri"
+				},
+				"postedAt": {
+					"type": "string",
+					"format": "datetime"
+				}
+			}
+		},
 	}
 }
