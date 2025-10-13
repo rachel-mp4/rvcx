@@ -216,7 +216,9 @@ func (h *Handler) postBan(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, errors.New("failed to kick user "+ban.Did+err.Error()))
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("%s%d", os.Getenv("BAN_ENDPOINT"), ban.Id), http.StatusFound)
+	w.Header().Set("Location", fmt.Sprintf("%s%d", os.Getenv("BAN_ENDPOINT"), ban.Id))
+	w.WriteHeader(http.StatusCreated)
+	w.Write(nil)
 }
 
 func (h *Handler) getBan(w http.ResponseWriter, r *http.Request) {
