@@ -55,6 +55,8 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, model *mode
 	mux.HandleFunc(oauthJWKSPath(), h.WithCORS(h.serveJWKS))
 	mux.HandleFunc("POST /oauth/login", h.oauthLogin)
 	mux.HandleFunc("POST /oauth/logout", h.oauthMiddleware(h.oauthLogout))
+	mux.HandleFunc("POST /oauth/ban", h.postBan)
+	mux.HandleFunc("GET /oauth/ban", h.getBan)
 	mux.HandleFunc("GET /oauth/whoami", h.getSession)
 	mux.HandleFunc(oauthCallbackPath(), h.WithCORS(h.oauthCallback))
 	return h

@@ -21,8 +21,15 @@ func (rm *RecordManager) PostImage(cs *atoauth.ClientSession, file multipart.Fil
 }
 
 func (rm *RecordManager) AddImageToCache(did string, cid string, ctx context.Context) (string, error) {
+	ib, err := rm.db.IsBanned(did, ctx)
+	if err != nil {
+		return "", err
+	}
+	if ib {
+		return "", errors.New("user banned")
+	}
 	uploadDir := "./uploads"
-	_, err := os.Stat(uploadDir)
+	_, err = os.Stat(uploadDir)
 	if os.IsNotExist(err) {
 		os.Mkdir(uploadDir, 0755)
 	}

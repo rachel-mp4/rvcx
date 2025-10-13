@@ -9,6 +9,7 @@ import (
 	"rvcx/internal/types"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -321,8 +322,8 @@ func (s *Store) GetChannelViewHR(handle string, rkey string, ctx context.Context
 	uri := fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", did, rkey)
 	row := s.pool.QueryRow(ctx, `
 		SELECT 
-			channels.uri,  
-			channels.host, 
+			channels.uri,
+			channels.host,
 			channels.title, 
 			channels.topic, 
 			channels.created_at,
@@ -350,4 +351,67 @@ func (s *Store) GetChannelViewHR(handle string, rkey string, ctx context.Context
 func (s *Store) DeleteChannel(uri string, ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `DELETE FROM channels WHERE uri = $1`, uri)
 	return err
+}
+
+func (s *Store) GetBanned(did string, ctx context.Context) (*types.Ban, error) {
+	row := s.pool.QueryRow(ctx, `SELECT 
+		id,
+		reason,
+		till,
+		banned_at
+		FROM bans WHERE did = $1`, did)
+	var ban types.Ban
+	err := row.Scan(&ban.Id, &ban.Reason, &ban.Till, &ban.BannedAt)
+	if err != nil {
+		return nil, err
+	}
+	ban.Did = did
+	return &ban, nil
+}
+
+func (s *Store) GetBanId(id int, ctx context.Context) (*types.Ban, error) {
+	row := s.pool.QueryRow(ctx, `SELECT 
+		did,
+		reason,
+		till,
+		banned_at
+		FROM bans WHERE id = $1`, id)
+	var ban types.Ban
+	err := row.Scan(&ban.Id, &ban.Reason, &ban.Till, &ban.BannedAt)
+	if err != nil {
+		return nil, err
+	}
+	ban.Id = id
+	return &ban, nil
+}
+
+func (s *Store) AddBan(did string, reason *string, till *time.Time, ctx context.Context) error {
+	_, err := s.pool.Exec(ctx, `INSERT INTO bans (
+		did,
+		reason,
+		till
+		) VALUES (
+		$1, $2, $3
+		)
+		`, did, reason, till)
+	return err
+}
+
+func (s *Store) IsBanned(did string, ctx context.Context) (bool, error) {
+	ban, err := s.GetBanned(did, ctx)
+	if ban != nil {
+		defbanned := false
+		if ban.Till == nil {
+			defbanned = true
+		} else {
+			defbanned = time.Now().Before(*ban.Till)
+		}
+		if defbanned {
+			return true, nil
+		}
+	}
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return false, err
+	}
+	return false, nil
 }

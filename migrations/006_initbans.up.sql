@@ -1,0 +1,7 @@
+CREATE TABLE bans (
+  id SERIAL PRIMARY KEY,
+  did TEXT PRIMARY KEY,
+  reason TEXT,
+  till TIMESTAMPTZ,
+	banned_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

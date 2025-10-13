@@ -29,3 +29,11 @@ type Session struct {
 	RefreshToken string
 	Expiration   time.Time
 }
+
+type Ban struct {
+	Id       int        `json:"id"`
+	Did      string     `json:"did"`
+	Reason   *string    `json:"reason,omitempty"`
+	Till     *time.Time `json:"till,omitempty"`
+	BannedAt time.Time  `json:"bannedAt"`
+}

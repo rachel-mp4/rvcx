@@ -101,6 +101,11 @@ func (s Store) DeleteSession(ctx context.Context, did syntax.DID, sessionID stri
 	return nil
 }
 
+func (s Store) DeleteAllSessions(ctx context.Context, did string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM sessions WHERE account_did = $1`)
+	return err
+}
+
 func (s Store) GetAuthRequestInfo(ctx context.Context, state string) (*oauth.AuthRequestData, error) {
 	row := s.pool.QueryRow(ctx, `
 		SELECT 

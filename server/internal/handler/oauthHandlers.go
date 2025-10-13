@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"rvcx/internal/atputils"
 	"rvcx/internal/oauth"
+	"strconv"
 	"strings"
+	"time"
 
 	atoauth "github.com/bluesky-social/indigo/atproto/auth/oauth"
 	"github.com/bluesky-social/indigo/atproto/syntax"
@@ -57,6 +60,17 @@ func (h *Handler) oauthCallback(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, errors.New("my god.... :"+err.Error()))
 		return
 	}
+	isban, err := h.db.IsBanned(sessData.AccountDID.String(), r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("i'm not sure if user is banned, error, "+err.Error()))
+		return
+	}
+	if isban {
+		ban, _ := h.db.GetBanned(sessData.AccountDID.String(), r.Context())
+		http.Redirect(w, r, fmt.Sprintf("%s%d", os.Getenv("BAN_ENDPOINT"), ban.Id), http.StatusSeeOther)
+		return
+	}
+
 	err = h.rm.CreateInitialProfile(sessData, r.Context())
 	if err != nil {
 		h.serverError(w, err)
@@ -151,4 +165,73 @@ func (h *Handler) oauthMiddleware(f func(cs *atoauth.ClientSession, w http.Respo
 		}
 		f(cs, w, r)
 	}
+}
+
+func (h *Handler) postBan(w http.ResponseWriter, r *http.Request) {
+	s, _ := h.sessionStore.Get(r, "oauthsession")
+	did, bok := s.Values["did"].(string)
+	if !bok {
+		h.badRequest(w, errors.New("not authorized"))
+		return
+	}
+	handle, err := h.db.ResolveDid(did, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("failed to resolve"+err.Error()))
+		return
+	}
+	if handle != os.Getenv("ADMIN_HANDLE") {
+		h.badRequest(w, errors.New("must be admin to ban"))
+		return
+	}
+	userhandle := r.Header.Get("user")
+	userdid, err := atputils.GetDidFromHandle(r.Context(), userhandle)
+	if err != nil {
+		h.badRequest(w, errors.New("failed to resolve user handle"))
+		return
+	}
+	daysstring := r.Header.Get("days")
+	daysint, err := strconv.Atoi(daysstring)
+	var till *time.Time
+	if err == nil {
+		tillt := time.Now().Add(time.Hour * 24 * time.Duration(daysint))
+		till = &tillt
+	}
+	var reason *string
+	reasonstr := r.Header.Get("reason")
+	if reasonstr != "" {
+		reason = &reasonstr
+	}
+	err = h.db.AddBan(userdid, reason, till, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("failed to ban, "+err.Error()))
+		return
+	}
+	ban, err := h.db.GetBanned(userdid, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("succeeded to ban and then failed again"+err.Error()))
+		return
+	}
+	err = h.db.DeleteAllSessions(r.Context(), ban.Did)
+	if err != nil {
+		h.serverError(w, errors.New("failed to kick user "+ban.Did+err.Error()))
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("%s%d", os.Getenv("BAN_ENDPOINT"), ban.Id), http.StatusFound)
+}
+
+func (h *Handler) getBan(w http.ResponseWriter, r *http.Request) {
+	banid := r.Header.Get("id")
+	id, err := strconv.Atoi(banid)
+	if err != nil {
+		h.badRequest(w, err)
+		return
+	}
+	ban, err := h.db.GetBanId(id, r.Context())
+	if err != nil {
+		h.serverError(w, err)
+		return
+	}
+	encoder := json.NewEncoder(w)
+	w.Header().Add("Content-Type", "application/json")
+	encoder.Encode(ban)
 }
