@@ -136,13 +136,24 @@ org.xcvr
       uri: uri
       author: org.xcvr.lrc.profileView
       union
-        image
+        imageView
       |
-        video
+        videoView
       nick?: string, bytes<=16
       color?: int, [0 16777215]
       signetURI: uri
       postedAt: date
+
+    imageView: def
+      alt: string
+      src: string
+      aspectRatio?: aspectRatio
+
+    videoView: def
+      alt: string
+      src: string
+      # captions?
+      
 
     signedMessageView: def
       uri: uri
@@ -157,9 +168,9 @@ org.xcvr
       uri: uri
       author: org.xcvr.lrc.profileView
       union
-        image
+        imageView
       |
-        video
+        videoView
       nick?: string, bytes<=16
       color?: int, [0 16777215]
       signet: signetView
