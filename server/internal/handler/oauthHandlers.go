@@ -183,13 +183,17 @@ func (h *Handler) postBan(w http.ResponseWriter, r *http.Request) {
 		h.badRequest(w, errors.New("must be admin to ban"))
 		return
 	}
-	userhandle := r.Header.Get("user")
+	err = r.ParseForm()
+	if err != nil {
+		h.badRequest(w, err)
+	}
+	userhandle := r.FormValue("user")
 	userdid, err := atputils.GetDidFromHandle(r.Context(), userhandle)
 	if err != nil {
 		h.badRequest(w, errors.New("failed to resolve user handle"))
 		return
 	}
-	daysstring := r.Header.Get("days")
+	daysstring := r.FormValue("days")
 	daysint, err := strconv.Atoi(daysstring)
 	var till *time.Time
 	if err == nil {
@@ -197,7 +201,7 @@ func (h *Handler) postBan(w http.ResponseWriter, r *http.Request) {
 		till = &tillt
 	}
 	var reason *string
-	reasonstr := r.Header.Get("reason")
+	reasonstr := r.FormValue("reason")
 	if reasonstr != "" {
 		reason = &reasonstr
 	}
@@ -222,7 +226,7 @@ func (h *Handler) postBan(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getBan(w http.ResponseWriter, r *http.Request) {
-	banid := r.Header.Get("id")
+	banid := r.URL.Query().Get("id")
 	id, err := strconv.Atoi(banid)
 	if err != nil {
 		h.badRequest(w, err)
