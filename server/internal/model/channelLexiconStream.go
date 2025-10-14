@@ -152,7 +152,7 @@ func (m *Model) BroadcastImage(uri string, media *types.Image) error {
 			Height: *media.Height,
 		}
 	}
-	src := fmt.Sprintf("%s/xrpc/org.xcvr.lrc.getImage?uri=%s", os.Getenv("MY_IDENTITY"), media.URI)
+	src := fmt.Sprintf("https://%s/xrpc/org.xcvr.lrc.getImage?uri=%s", os.Getenv("MY_IDENTITY"), media.URI)
 
 	img := types.ImageView{
 		Alt:         media.Alt,
