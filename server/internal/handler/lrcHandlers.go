@@ -146,7 +146,7 @@ func (h *Handler) uploadImage(cs *atoauth.ClientSession, w http.ResponseWriter, 
 		h.badRequest(w, errors.New("must be authorized to post image"))
 		return
 	}
-	err := r.ParseMultipartForm(1 << 20)
+	err := r.ParseMultipartForm(1 << 21)
 	if err != nil {
 		h.badRequest(w, errors.New("beep bop bad image: "+err.Error()))
 		return
