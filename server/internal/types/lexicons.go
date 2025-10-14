@@ -231,7 +231,7 @@ type MediaView struct {
 	Type      string      `json:"$type,const=org.xcvr.lrc.defs#mediaView"`
 	URI       string      `json:"uri"`
 	Author    ProfileView `json:"author"`
-	Image     *ImageView  `json:"image,omitempty"`
+	Image     *ImageView  `json:"imageView,omitempty"`
 	Nick      *string     `json:"nick,omitempty"`
 	Color     *uint32     `json:"color,omitempty"`
 	SignetURI string      `json:"signetURI"`
