@@ -145,16 +145,19 @@ func (m *Model) BroadcastImage(uri string, media *types.Image) error {
 	if err != nil {
 		return errors.New("failed to get profile view: " + err.Error())
 	}
-	ar := lex.AspectRatio{
-		Width:  *media.Width,
-		Height: *media.Height,
+	var ar *lex.AspectRatio
+	if media.Width != nil && media.Height != nil {
+		ar = &lex.AspectRatio{
+			Width:  *media.Width,
+			Height: *media.Height,
+		}
 	}
 	src := fmt.Sprintf("%s/xrpc/org.xcvr.lrc.getImage?uri=%s", os.Getenv("MY_IDENTITY"), media.URI)
 
 	img := types.ImageView{
 		Alt:         media.Alt,
 		Src:         &src,
-		AspectRatio: &ar,
+		AspectRatio: ar,
 	}
 	mv := types.MediaView{
 		URI:       media.URI,

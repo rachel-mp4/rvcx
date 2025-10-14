@@ -94,9 +94,9 @@ org.xcvr
     media: record
       signetURI: uri
       union
-        image
+        image: image
       |
-        video
+        video: video
       nick?: string, bytes<=16
       color?: int, [0 16777215]
       postedAt?: date
@@ -136,9 +136,9 @@ org.xcvr
       uri: uri
       author: org.xcvr.lrc.profileView
       union
-        imageView
+        imageView: imageView
       |
-        videoView
+        videoView: videoView
       nick?: string, bytes<=16
       color?: int, [0 16777215]
       signetURI: uri
