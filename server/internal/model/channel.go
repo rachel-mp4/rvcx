@@ -31,12 +31,13 @@ type channelModel struct {
 	logger *log.Logger
 	valid  bool
 
-	welcome  string
-	server   *lrcd.Server
-	lastID   uint32
-	initChan <-chan lrcpb.Event_Init
-	ctx      context.Context
-	cancel   func()
+	welcome       string
+	server        *lrcd.Server
+	lastID        uint32
+	initChan      <-chan lrcpb.Event_Init
+	mediainitChan <-chan lrcpb.Event_Mediainit
+	ctx           context.Context
+	cancel        func()
 
 	clients   map[*client]bool
 	clientsmu sync.Mutex
@@ -164,12 +165,14 @@ func (m *Model) getServer(uri string) (*lrcd.Server, error) {
 		var err error
 		lastID := cm.lastID
 		initChan := make(chan lrcpb.Event_Init, 100)
+		mediainitChan := make(chan lrcpb.Event_Mediainit, 100)
 
 		server, err := lrcd.NewServer(
 			lrcd.WithWelcome(cm.welcome),
 			lrcd.WithLogging(os.Stdout, true),
 			lrcd.WithInitialID(lastID),
 			lrcd.WithInitChannel(initChan),
+			lrcd.WithMediainitChannel(mediainitChan),
 			lrcd.WithServerURIAndSecret(uri, os.Getenv("LRCD_SECRET")),
 		)
 		if err != nil {
@@ -189,6 +192,7 @@ func (m *Model) getServer(uri string) (*lrcd.Server, error) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cm.server = server
 		cm.initChan = initChan
+		cm.mediainitChan = mediainitChan
 		cm.cancel = cancel
 		cm.ctx = ctx
 
@@ -225,6 +229,21 @@ func (m *Model) handleInitEvents(cm *channelModel) {
 			if !ok {
 				cm.logger.Println("this is a weird case!")
 				return
+			}
+			err := m.rm.PostSignet(e, cm.uri, context.Background())
+			if err != nil {
+				m.logger.Println("error posting signet: " + err.Error())
+			}
+		case me, ok := <-cm.mediainitChan:
+			if !ok {
+				cm.logger.Println("this is a weird case!")
+				return
+			}
+			e := lrcpb.Event_Init{
+				Init: &lrcpb.Init{
+					Id:         me.Mediainit.Id,
+					ExternalID: me.Mediainit.ExternalID,
+				},
 			}
 			err := m.rm.PostSignet(e, cm.uri, context.Background())
 			if err != nil {
