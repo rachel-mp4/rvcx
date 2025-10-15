@@ -121,6 +121,8 @@ github.com/rachel-mp4/lrcd v0.0.1 h1:9d5if0HJ/+TLKdupd7Zu9dISA5fF3QRtI/yr+gYVqXM
 github.com/rachel-mp4/lrcd v0.0.1/go.mod h1:aWUVglSyrLf2RGpQdqTucX498b434yWBFJkD6Yzr0OE=
 github.com/rachel-mp4/lrcd v0.1.0 h1:iW3ux8otqo+9tYpP2Bsxu5VgbhP324Mjy0vOBf3M39Q=
 github.com/rachel-mp4/lrcd v0.1.0/go.mod h1:CyBPWmy94oQ0sTOj24VJjxWoZ9zSnqCKQ/qlR+vhtVE=
+github.com/rachel-mp4/lrcd v0.1.1 h1:2AXK61+pnL71ZqINLnxNfKqX/F0hUw+REFbBFZOjJcY=
+github.com/rachel-mp4/lrcd v0.1.1/go.mod h1:CyBPWmy94oQ0sTOj24VJjxWoZ9zSnqCKQ/qlR+vhtVE=
 github.com/rachel-mp4/lrcproto v0.0.0-20250905154858-2ddb78e31d0c h1:t33xVlfSwvB80nj1jroRXUaq/RTgjWwD4l7p/ISatUQ=
 github.com/rachel-mp4/lrcproto v0.0.0-20250905154858-2ddb78e31d0c/go.mod h1:hQzO36tQELGbkmRnUtKeM6NMU34t79ZcTlhM+MO7pHw=
 github.com/rachel-mp4/lrcproto v1.2.0 h1:nZI80WQKO6yKgX0O5H6OO1cM/tiJqugs0p52KCoIDOw=
@@ -170,6 +172,8 @@ golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 h1:+cNy6SZtPcJQH3LJVLOSm
 golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028/go.mod h1:NDW/Ps6MPRej6fsCIbMTohpP40sJ/P/vI1MoTEGwX90=
 google.golang.org/protobuf v1.36.9 h1:w2gp2mA27hUeUzj9Ex9FBjsBm40zfaDtEWow293U7Iw=
 google.golang.org/protobuf v1.36.9/go.mod h1:fuxRtAxBytpl4zzqUh6/eyUujkJdNiuEkXntxiD/uRU=
+google.golang.org/protobuf v1.36.10 h1:AYd7cD/uASjIL6Q9LiTjz8JLcrh/88q5UObnmY3aOOE=
+google.golang.org/protobuf v1.36.10/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
