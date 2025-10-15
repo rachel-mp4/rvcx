@@ -245,11 +245,13 @@ type ImageView struct {
 }
 
 type ParseMediaRequest struct {
-	Nick      *string    `json:"nick,omitempty"`
-	Color     *uint32    `json:"color,omitempty"`
-	SignetURI string     `json:"signetURI"`
-	Image     *lex.Image `json:"image,omitempty"`
-	Type      string     `json:"type"`
+	Nick       *string    `json:"nick,omitempty"`
+	Color      *uint32    `json:"color,omitempty"`
+	SignetURI  *string    `json:"signetURI,omitempty"`
+	ChannelURI *string    `json:"channelURI,omitempty"`
+	MessageID  *uint32    `json:"messageID,omitempty"`
+	Image      *lex.Image `json:"image,omitempty"`
+	Type       string     `json:"type"`
 }
 
 func (m MediaView) MarshalJSON() ([]byte, error) {

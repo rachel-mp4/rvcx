@@ -90,9 +90,19 @@ func (rm *RecordManager) forwardImage(i *types.Image, ctx context.Context) error
 	return rm.broadcaster.BroadcastImage(curi, i)
 }
 
-func (rm *RecordManager) validateImageRecord(mr *types.ParseMediaRequest) (*lex.MediaRecord, *time.Time, error) {
+func (rm *RecordManager) validateImageRecord(mr *types.ParseMediaRequest, ctx context.Context) (*lex.MediaRecord, *time.Time, error) {
 	var imr lex.MediaRecord
-	imr.SignetURI = mr.SignetURI
+	if mr.SignetURI == nil {
+		if mr.ChannelURI == nil || mr.MessageID == nil {
+			return nil, nil, errors.New("not enough info!")
+		}
+		suri, _, err := rm.db.QuerySignet(*mr.ChannelURI, *mr.MessageID, ctx)
+		if err != nil {
+			return nil, nil, errors.New("failed to get signet!")
+		}
+		mr.SignetURI = &suri
+	}
+	imr.SignetURI = *mr.SignetURI
 	imr.Nick = mr.Nick
 	cptr := mr.Color
 	if cptr != nil {

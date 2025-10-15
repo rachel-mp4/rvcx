@@ -183,7 +183,7 @@ func (h *Handler) postMedia(cs *atoauth.ClientSession, w http.ResponseWriter, r 
 	if cs == nil {
 		h.badRequest(w, errors.New("must be authorized to post media"))
 	}
-	mr, err := parseMediaRequest(r)
+	mr, err := h.parseMediaRequest(r)
 	if err != nil {
 		h.badRequest(w, err)
 		return
@@ -196,7 +196,7 @@ func (h *Handler) postMedia(cs *atoauth.ClientSession, w http.ResponseWriter, r 
 	w.Write(nil)
 }
 
-func parseMediaRequest(r *http.Request) (*types.ParseMediaRequest, error) {
+func (h *Handler) parseMediaRequest(r *http.Request) (*types.ParseMediaRequest, error) {
 	beep := json.NewDecoder(r.Body)
 	var mr types.ParseMediaRequest
 	err := beep.Decode(&mr)
