@@ -63,7 +63,7 @@ func (rm *RecordManager) PostMedia(cs *atoauth.ClientSession, mr *types.ParseMed
 }
 
 func (rm *RecordManager) postImageRecord(cs *atoauth.ClientSession, mr *types.ParseMediaRequest, ctx context.Context) error {
-	imr, now, err := rm.validateImageRecord(mr)
+	imr, now, err := rm.validateImageRecord(mr, ctx)
 	if err != nil {
 		return errors.New("coudlnt validate media record: " + err.Error())
 	}
