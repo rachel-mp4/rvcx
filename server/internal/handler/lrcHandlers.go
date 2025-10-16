@@ -151,6 +151,11 @@ func (h *Handler) uploadImage(cs *atoauth.ClientSession, w http.ResponseWriter, 
 		h.badRequest(w, errors.New("beep bop bad image: "+err.Error()))
 		return
 	}
+	uuid := r.FormValue("uuid")
+	if uuid == "" {
+		h.badRequest(w, errors.New("uuid is required"))
+		return
+	}
 	file, fheader, err := r.FormFile("image")
 	if err != nil {
 		h.badRequest(w, errors.New("failed to formfile: "+err.Error()))
@@ -172,7 +177,13 @@ func (h *Handler) uploadImage(cs *atoauth.ClientSession, w http.ResponseWriter, 
 	}
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
-	err = encoder.Encode(blob)
+	response := struct {
+		Blob interface{} `json:"blob"`
+		UUID string      `json:"uuid"`
+	}{
+		Blob: blob, UUID: uuid,
+	}
+	err = encoder.Encode(response)
 	if err != nil {
 		h.badRequest(w, err)
 		return
