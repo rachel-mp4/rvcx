@@ -27,6 +27,7 @@ func (rm *RecordManager) PostSignet(e lrcpb.Event_Init, uri string, ctx context.
 	if !wasNew {
 		return nil
 	}
+	rm.log.Deprintln("i was new, so i am forwarding")
 	err = rm.forwardSignet(signet, uri)
 	if err != nil {
 		return errors.New("failed to forward signet: " + err.Error())
@@ -58,6 +59,7 @@ func (rm *RecordManager) AcceptSignet(s *types.Signet, ctx context.Context) erro
 	if !wasNew {
 		return nil
 	}
+	rm.log.Deprintln("i was new & originated elsewhere, so i am forwarding")
 	return rm.forwardSignet(s, s.ChannelURI)
 }
 
