@@ -326,7 +326,7 @@ func parseSignetRecord(event *models.Event) (*types.Signet, error) {
 		then = time.Now()
 	}
 	signet := types.Signet{
-		URI:          fmt.Sprintf("at://%s/org.xcvr.feed.channel/%s", event.Did, event.Commit.RKey),
+		URI:          fmt.Sprintf("at://%s/org.xcvr.lrc.signet/%s", event.Did, event.Commit.RKey),
 		CID:          event.Commit.CID,
 		IssuerDID:    event.Did,
 		AuthorHandle: sr.AuthorHandle,
