@@ -42,6 +42,7 @@ func NewConsumer(jsAddr string, l *log.Logger, db *db.Store, cli *oauth.Password
 		"org.xcvr.feed.channel",
 		"org.xcvr.lrc.message",
 		"org.xcvr.lrc.signet",
+		"org.xcvr.lrc.media",
 	}
 	cfg.WantedDids = []string{}
 	return &Consumer{
@@ -84,6 +85,8 @@ func (h *handler) HandleEvent(ctx context.Context, event *models.Event) error {
 		return h.handleMessage(ctx, event)
 	case "org.xcvr.lrc.signet":
 		return h.handleSignet(ctx, event)
+	case "org.xcvr.lrc.media":
+		return h.handleMedia(ctx, event)
 	}
 	return nil
 }
@@ -335,6 +338,140 @@ func parseSignetRecord(event *models.Event) (*types.Signet, error) {
 		StartedAt:    then,
 	}
 	return &signet, nil
+}
+
+func (h *handler) handleMedia(ctx context.Context, event *models.Event) error {
+	h.l.Deprintln("handling media")
+	switch event.Commit.Operation {
+	case "create":
+		return h.handleMediaCreate(ctx, event)
+	case "update":
+		return h.handleMediaUpdate(ctx, event)
+	case "delete":
+		return h.handleMediaDelete(ctx, event)
+	}
+	return errors.New("unimplemented Operation")
+}
+
+func (h *handler) handleMediaCreate(ctx context.Context, event *models.Event) error {
+	mr, err := parseMediaRecord(event)
+	if err != nil {
+		h.l.Deprintln(err.Error())
+		return nil
+	}
+	if mr.Image != nil {
+		image, err := wrangeMediaRecordIntoImage(event, mr)
+		if err != nil {
+			h.l.Deprintln(err.Error())
+			return nil
+		}
+		err = h.rm.AcceptImage(image, ctx)
+		if err != nil {
+			h.l.Deprintln(err.Error())
+			return nil
+		}
+		return nil
+	}
+	return nil
+}
+
+func (h *handler) handleMediaUpdate(ctx context.Context, event *models.Event) error {
+	mr, err := parseMediaRecord(event)
+	if err != nil {
+		h.l.Deprintln(err.Error())
+		return nil
+	}
+	if mr.Image != nil {
+		image, err := wrangeMediaRecordIntoImage(event, mr)
+		if err != nil {
+			h.l.Deprintln(err.Error())
+			return nil
+		}
+		err = h.rm.AcceptImageUpdate(image, ctx)
+		if err != nil {
+			h.l.Deprintln(err.Error())
+			return nil
+		}
+		return nil
+	}
+	return nil
+}
+
+func (h *handler) handleMediaDelete(ctx context.Context, event *models.Event) error {
+	mr, err := parseMediaRecord(event)
+	if err != nil {
+		h.l.Deprintln(err.Error())
+		return nil
+	}
+	if mr.Image != nil {
+		image, err := wrangeMediaRecordIntoImage(event, mr)
+		if err != nil {
+			h.l.Deprintln(err.Error())
+			return nil
+		}
+		err = h.rm.AcceptImageDelete(image, ctx)
+		if err != nil {
+			h.l.Deprintln(err.Error())
+			return nil
+		}
+		return nil
+	}
+	return nil
+}
+
+func parseMediaRecord(event *models.Event) (*lex.MediaRecord, error) {
+	var mr lex.MediaRecord
+	err := json.Unmarshal(event.Commit.Record, &mr)
+	if err != nil {
+		return nil, errors.New("error unmarshl: " + err.Error())
+	}
+	return &mr, nil
+}
+
+func wrangeMediaRecordIntoImage(event *models.Event, mr *lex.MediaRecord) (*types.Image, error) {
+	if mr.Image != nil {
+		then, err := syntax.ParseDatetimeTime(mr.PostedAt)
+		if err != nil {
+			then = time.Now()
+		}
+		var color *uint32
+		if mr.Color != nil {
+			c := uint32(*mr.Color)
+			color = &c
+		}
+		var blobcid *string
+		var blobmime *string
+		if mr.Image.Blob != nil {
+			bcid := mr.Image.Blob.Ref.String()
+			bmime := mr.Image.Blob.MimeType
+			blobcid = &bcid
+			blobmime = &bmime
+		}
+		var width, height *int64
+		if mr.Image.AspectRatio != nil {
+			w := mr.Image.AspectRatio.Width
+			h := mr.Image.AspectRatio.Height
+			width = &w
+			height = &h
+		}
+		image := types.Image{
+			URI:       URI(event),
+			DID:       event.Did,
+			SignetURI: mr.SignetURI,
+			BlobCID:   blobcid,
+			BlobMIME:  blobmime,
+			Alt:       mr.Image.Alt,
+			Nick:      mr.Nick,
+			Color:     color,
+			CID:       event.Commit.CID,
+			Width:     width,
+			Height:    height,
+			PostedAt:  then,
+		}
+		return &image, nil
+	}
+	return nil, errors.New("image should be non nil")
+
 }
 
 func URI(event *models.Event) string {

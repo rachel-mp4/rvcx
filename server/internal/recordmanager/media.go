@@ -62,6 +62,37 @@ func (rm *RecordManager) PostMedia(cs *atoauth.ClientSession, mr *types.ParseMed
 	}
 }
 
+func (rm *RecordManager) AcceptImage(img *types.Image, ctx context.Context) error {
+	wasNew, err := rm.db.StoreImage(img, ctx)
+	if err != nil {
+		return err
+	}
+	if !wasNew {
+		return nil
+	}
+	err = rm.forwardImage(img, ctx)
+	if err != nil {
+		return errors.New("error forwarding image: " + err.Error())
+	}
+	return nil
+}
+
+func (rm *RecordManager) AcceptImageUpdate(img *types.Image, ctx context.Context) error {
+	err := rm.db.UpdateImage(img, ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (rm *RecordManager) AcceptImageDelete(img *types.Image, ctx context.Context) error {
+	err := rm.db.DeleteImage(img.URI, ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (rm *RecordManager) postImageRecord(cs *atoauth.ClientSession, mr *types.ParseMediaRequest, ctx context.Context) error {
 	imr, now, err := rm.validateImageRecord(mr, ctx)
 	if err != nil {
