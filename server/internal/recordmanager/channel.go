@@ -14,9 +14,12 @@ import (
 )
 
 func (rm *RecordManager) AcceptChannel(c *types.Channel, ctx context.Context) error {
-	err := rm.storeChannel(c, ctx)
+	wasNew, err := rm.storeChannel(c, ctx)
 	if err != nil {
 		return errors.New("failed to store channel: " + err.Error())
+	}
+	if !wasNew {
+		return nil
 	}
 	err = rm.initChannel(c)
 	if err != nil {
@@ -72,9 +75,14 @@ func (rm *RecordManager) postchannelflow(f func(*lex.ChannelRecord, *time.Time, 
 		err = errors.New("couldn't create channel: " + err.Error())
 		return
 	}
-	err = rm.storeChannel(channel, ctx)
+	wasNew, err := rm.storeChannel(channel, ctx)
 	if err != nil {
 		err = errors.New("couldn't store channel: " + err.Error())
+		return
+	}
+	if !wasNew {
+		did = channel.DID
+		uri = channel.URI
 		return
 	}
 	err = rm.initChannel(channel)
@@ -87,7 +95,7 @@ func (rm *RecordManager) postchannelflow(f func(*lex.ChannelRecord, *time.Time, 
 	return
 }
 
-func (rm *RecordManager) storeChannel(c *types.Channel, ctx context.Context) error {
+func (rm *RecordManager) storeChannel(c *types.Channel, ctx context.Context) (wasNew bool, err error) {
 	return rm.db.StoreChannel(c, ctx)
 }
 

@@ -16,9 +16,12 @@ import (
 )
 
 func (rm *RecordManager) AcceptMessage(m *types.Message, ctx context.Context) error {
-	err := rm.storeMessage(m, ctx)
+	wasNew, err := rm.storeMessage(m, ctx)
 	if err != nil {
 		return errors.New("failed to store message: " + err.Error())
+	}
+	if !wasNew {
+		return nil
 	}
 	err = rm.forwardMessage(m, ctx)
 	if err != nil {
@@ -82,9 +85,12 @@ func (rm *RecordManager) PostMessage(cs *atoauth.ClientSession, ctx context.Cont
 		return errors.New("failed to create message: " + err.Error())
 	}
 	rm.log.Deprintln("store")
-	err = rm.storeMessage(m, ctx)
+	wasNew, err := rm.storeMessage(m, ctx)
 	if err != nil {
 		return errors.New("failed to store message: " + err.Error())
+	}
+	if !wasNew {
+		return nil
 	}
 	rm.log.Deprintln("forward")
 	err = rm.forwardMessage(m, ctx)
@@ -107,9 +113,12 @@ func (rm *RecordManager) PostMyMessage(ctx context.Context, pmr *types.PostMessa
 	if err != nil {
 		return errors.New("failed to create message: " + err.Error())
 	}
-	err = rm.storeMessage(m, ctx)
+	wasNew, err := rm.storeMessage(m, ctx)
 	if err != nil {
 		return errors.New("failed to store message: " + err.Error())
+	}
+	if !wasNew {
+		return nil
 	}
 	err = rm.forwardMessage(m, ctx)
 	if err != nil {
@@ -183,7 +192,7 @@ func (rm *RecordManager) updateMessage(m *types.Message, ctx context.Context) er
 	return rm.db.UpdateMessage(m, ctx)
 }
 
-func (rm *RecordManager) storeMessage(m *types.Message, ctx context.Context) error {
+func (rm *RecordManager) storeMessage(m *types.Message, ctx context.Context) (wasNew bool, err error) {
 	return rm.db.StoreMessage(m, ctx)
 }
 

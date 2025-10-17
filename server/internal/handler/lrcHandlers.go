@@ -178,8 +178,8 @@ func (h *Handler) uploadImage(cs *atoauth.ClientSession, w http.ResponseWriter, 
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	response := struct {
-		Blob interface{} `json:"blob"`
-		UUID string      `json:"uuid"`
+		Blob any    `json:"blob"`
+		UUID string `json:"uuid"`
 	}{
 		Blob: blob, UUID: uuid,
 	}

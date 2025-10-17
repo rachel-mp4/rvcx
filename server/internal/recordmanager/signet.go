@@ -20,9 +20,12 @@ func (rm *RecordManager) PostSignet(e lrcpb.Event_Init, uri string, ctx context.
 	if err != nil {
 		return errors.New("failed to create signet: " + err.Error())
 	}
-	err = rm.storeSignet(signet, ctx)
+	wasNew, err := rm.storeSignet(signet, ctx)
 	if err != nil {
 		return errors.New("failed to store signet: " + err.Error())
+	}
+	if !wasNew {
+		return nil
 	}
 	err = rm.forwardSignet(signet, uri)
 	if err != nil {
@@ -48,11 +51,14 @@ func (rm *RecordManager) DeleteSignet(uri string, ctx context.Context) error {
 }
 
 func (rm *RecordManager) AcceptSignet(s *types.Signet, ctx context.Context) error {
-	err := rm.storeSignet(s, ctx)
+	wasNew, err := rm.storeSignet(s, ctx)
 	if err != nil {
-		return errors.New("failed to store signet")
+		return errors.New("failed to store signet: " + err.Error())
 	}
-	return nil
+	if !wasNew {
+		return nil
+	}
+	return rm.forwardSignet(s, s.ChannelURI)
 }
 
 func (rm *RecordManager) AcceptSignetDelete(uri string, ctx context.Context) error {
@@ -104,7 +110,7 @@ func (rm *RecordManager) createSignet(lsr *lex.SignetRecord, now *time.Time, id 
 	return &sr, nil
 }
 
-func (rm *RecordManager) storeSignet(signet *types.Signet, ctx context.Context) error {
+func (rm *RecordManager) storeSignet(signet *types.Signet, ctx context.Context) (bool, error) {
 	return rm.db.StoreSignet(signet, ctx)
 }
 

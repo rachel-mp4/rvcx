@@ -127,8 +127,8 @@ func (s *Store) GetProfileView(did string, ctx context.Context) (*types.ProfileV
 	return &p, nil
 }
 
-func (s *Store) StoreChannel(channel *types.Channel, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `
+func (s *Store) StoreChannel(channel *types.Channel, ctx context.Context) (wasNew bool, err error) {
+	commandTag, err := s.pool.Exec(ctx, `
 		INSERT INTO channels (
 		  uri,
 			cid,
@@ -141,7 +141,11 @@ func (s *Store) StoreChannel(channel *types.Channel, ctx context.Context) error 
 			$1, $2, $3, $4, $5, $6, $7
 		) ON CONFLICT (uri) DO NOTHING
 		`, channel.URI, channel.CID, channel.DID, channel.Host, channel.Title, channel.Topic, channel.CreatedAt)
-	return err
+	if err != nil {
+		return
+	}
+	wasNew = commandTag.RowsAffected() > 0
+	return
 }
 
 func (s *Store) UpdateChannel(channel *types.Channel, ctx context.Context) error {
@@ -167,8 +171,8 @@ func (s *Store) DeleteMessage(uri string, ctx context.Context) error {
 	return err
 }
 
-func (s *Store) StoreMessage(message *types.Message, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `
+func (s *Store) StoreMessage(message *types.Message, ctx context.Context) (wasNew bool, err error) {
+	commandTag, err := s.pool.Exec(ctx, `
 		INSERT INTO messages (
 		  uri,
 			cid,
@@ -182,7 +186,11 @@ func (s *Store) StoreMessage(message *types.Message, ctx context.Context) error 
 			$1, $2, $3, $4, $5, $6, $7, $8
 		) ON CONFLICT (uri) DO NOTHING
 		`, message.URI, message.CID, message.DID, message.SignetURI, message.Body, message.Nick, message.Color, message.PostedAt)
-	return err
+	if err != nil {
+		return
+	}
+	wasNew = commandTag.RowsAffected() > 0
+	return
 }
 
 func (s *Store) UpdateMessage(message *types.Message, ctx context.Context) error {
@@ -198,7 +206,7 @@ func (s *Store) UpdateMessage(message *types.Message, ctx context.Context) error
 			posted_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8
-		) ON CONFLICT (uri) DO NOTHING
+		)
 		`, message.URI, message.CID, message.DID, message.SignetURI, message.Body, message.Nick, message.Color, message.PostedAt)
 	return err
 }
@@ -241,8 +249,8 @@ func (s *Store) GetMsgChannelURI(signetURI string, ctx context.Context) (string,
 	return channelURI, nil
 }
 
-func (s *Store) StoreSignet(signet *types.Signet, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `
+func (s *Store) StoreSignet(signet *types.Signet, ctx context.Context) (wasNew bool, err error) {
+	commandTag, err := s.pool.Exec(ctx, `
 		INSERT INTO signets (
 			uri,
 			issuer_did,
@@ -257,8 +265,10 @@ func (s *Store) StoreSignet(signet *types.Signet, ctx context.Context) error {
 		`, signet.URI, signet.IssuerDID, signet.AuthorHandle, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
 	if err != nil {
 		err = errors.New("SOMETHING BAD HAPPENED: " + err.Error())
+		return
 	}
-	return err
+	wasNew = commandTag.RowsAffected() > 0
+	return
 }
 
 func (s *Store) UpdateSignet(signet *types.Signet, ctx context.Context) error {
@@ -288,8 +298,8 @@ func (s *Store) DeleteSignet(uri string, ctx context.Context) error {
 	return err
 }
 
-func (s *Store) StoreImage(image *types.Image, ctx context.Context) error {
-	_, err := s.pool.Exec(ctx, `INSERT INTO images (
+func (s *Store) StoreImage(image *types.Image, ctx context.Context) (wasNew bool, err error) {
+	commandTag, err := s.pool.Exec(ctx, `INSERT INTO images (
 		uri,
 		did,
 		signet_uri,
@@ -318,9 +328,11 @@ func (s *Store) StoreImage(image *types.Image, ctx context.Context) error {
 		image.CID,
 		image.PostedAt)
 	if err != nil {
-		return errors.New("effor storing image: " + err.Error())
+		err = errors.New("effor storing image: " + err.Error())
+		return
 	}
-	return nil
+	wasNew = commandTag.RowsAffected() > 0
+	return
 }
 
 func (s *Store) UpdateImage(image *types.Image, ctx context.Context) error {

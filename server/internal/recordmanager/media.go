@@ -71,9 +71,12 @@ func (rm *RecordManager) postImageRecord(cs *atoauth.ClientSession, mr *types.Pa
 	if err != nil {
 		return errors.New("coudlnt validate media record: " + err.Error())
 	}
-	err = rm.db.StoreImage(img, ctx)
+	wasNew, err := rm.db.StoreImage(img, ctx)
 	if err != nil {
 		return errors.New("beeped that up!: " + err.Error())
+	}
+	if !wasNew {
+		return nil
 	}
 	err = rm.forwardImage(img, ctx)
 	if err != nil {
