@@ -59,7 +59,7 @@ func main() {
 }
 
 const (
-	defaultServerAddr = "wss://jetstream.atproto.tools/subscribe"
+	defaultServerAddr = "wss://jetstream2.us-east.bsky.network/subscribe"
 )
 
 func consumeLoop(ctx context.Context, db *db.Store, l *log.Logger, cli *oauth.PasswordClient, rm *recordmanager.RecordManager) {
