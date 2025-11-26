@@ -119,6 +119,8 @@ github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0leargg
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
 github.com/rachel-mp4/lrcd v0.2.3 h1:HT3UjFn2ZK2zpFkS8U7KU1+I9kMA/oBF2FVWd7x0TkM=
 github.com/rachel-mp4/lrcd v0.2.3/go.mod h1:CyBPWmy94oQ0sTOj24VJjxWoZ9zSnqCKQ/qlR+vhtVE=
+github.com/rachel-mp4/lrcd v0.2.4 h1:hLL89xn9Liw9iVKrzrHobmRxih9uUeagFzY/obDzZTA=
+github.com/rachel-mp4/lrcd v0.2.4/go.mod h1:CyBPWmy94oQ0sTOj24VJjxWoZ9zSnqCKQ/qlR+vhtVE=
 github.com/rachel-mp4/lrcproto v1.2.1 h1:oKP/4u8JaRzV9vY/BUn24VTrsN7pgty0S4AP8hWc/JI=
 github.com/rachel-mp4/lrcproto v1.2.1/go.mod h1:hQzO36tQELGbkmRnUtKeM6NMU34t79ZcTlhM+MO7pHw=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
