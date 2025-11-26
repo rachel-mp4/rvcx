@@ -107,6 +107,7 @@ func (m *Model) BroadcastSignet(uri string, s *types.Signet) error {
 		Issuer:       s.IssuerDID,
 		ChannelURI:   s.ChannelURI,
 		LrcId:        s.MessageID,
+		Author:       s.Author,
 		AuthorHandle: s.AuthorHandle,
 		StartedAt:    s.StartedAt,
 	}
