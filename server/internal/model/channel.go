@@ -65,7 +65,7 @@ func Init(store *db.Store, logger *log.Logger, cli *oauth.PasswordClient, rm *re
 		panic(err)
 	}
 	uriToServerModel := make(map[string]*channelModel, len(uris))
-	myid := os.Getenv("MY_IDENTITY")
+	myid := os.Getenv("MY_DID")
 	for _, uri := range uris {
 		valid := (uri.Host == myid)
 		beep := channelModel{
@@ -94,7 +94,7 @@ func (m *Model) AddChannel(c *types.Channel) error {
 	if ok {
 		return errors.New("tried to add existing server!")
 	}
-	valid := (c.Host == os.Getenv("MY_IDENTITY"))
+	valid := (c.Host == os.Getenv("MY_DID"))
 	var welcome string
 	if c.Topic == nil {
 		welcome = "and now you're connected"
