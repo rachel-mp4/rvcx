@@ -54,14 +54,14 @@ org.xcvr
       title: string, bytes<=640, chars<=64 
       topic?: string, bytes<=2560, chars<=256
       createdAt: string
-      host: handle
+      host: did
 
     sub: record
       channelUri: uri
 
     channelView?: def
       uri: uri
-      host: handle
+      host: did
       creator: org.xcvr.actor.profileView
       title: string, bytes<=640, chars<=64
       topic?: string, bytes<=2560, chars<=256
@@ -88,7 +88,8 @@ org.xcvr
     signet: record
       channelURI: uri
       lrcID: int, [0 4294967295]
-      author: string
+      author: did
+      authorHandle?: string
       startedAt?: date
 
     media: record

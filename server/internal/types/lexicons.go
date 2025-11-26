@@ -1,7 +1,9 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"rvcx/internal/lex"
 	"time"
 )
@@ -111,7 +113,8 @@ func (c ChannelView) MarshalJSON() ([]byte, error) {
 type Signet struct {
 	URI          string
 	IssuerDID    string
-	AuthorHandle string
+	Author       string
+	AuthorHandle *string
 	ChannelURI   string
 	MessageID    uint32
 	CID          string
@@ -122,10 +125,11 @@ type Signet struct {
 type SignetView struct {
 	Type         string    `json:"$type,const=org.xcvr.lrc.defs#signetView"`
 	URI          string    `json:"uri"`
-	IssuerHandle string    `json:"issuerHandle"`
+	Issuer       string    `json:"issuer"`
 	ChannelURI   string    `json:"channelURI"`
 	LrcId        uint32    `json:"lrcID"`
-	AuthorHandle string    `json:"authorHandle"`
+	Author       string    `json:"author"`
+	AuthorHandle *string   `json:"authorHandle,omitempty"`
 	StartedAt    time.Time `json:"startedAt"`
 }
 
@@ -285,4 +289,77 @@ func (m SignedMediaView) MarshalJSON() ([]byte, error) {
 		Type:  "org.xcvr.lrc.defs#signedMediaView",
 		Alias: (*Alias)(&m),
 	})
+}
+
+type SignedItemView interface {
+	IsMedia() bool
+	IsMessage() bool
+	ToSignedMessageView() (*SignedMessageView, error)
+	ToSignedMediaView() (*SignedMediaView, error)
+}
+
+func MarshalItems(items []SignedItemView) ([]byte, error) {
+	bb := make([][]byte, 2*len(items)+1)
+	bb[0] = []byte("[")
+	for i, item := range items {
+		if i != 0 {
+			bb[2*i] = []byte(",")
+		}
+		if item.IsMedia() {
+			smv, err := item.ToSignedMediaView()
+			if err != nil {
+				return nil, err
+			}
+			b, err := smv.MarshalJSON()
+			if err != nil {
+				return nil, err
+			}
+			bb[2*i+1] = b
+		} else if item.IsMessage() {
+			smv, err := item.ToSignedMessageView()
+			if err != nil {
+				return nil, err
+			}
+			b, err := smv.MarshalJSON()
+			if err != nil {
+				return nil, err
+			}
+			bb[2*i+1] = b
+		} else {
+			return nil, errors.New("item is neither media nor message")
+		}
+	}
+	bb[2*len(items)] = []byte("]")
+	return bytes.Join(bb, nil), nil
+}
+
+func (s SignedMediaView) IsMedia() bool {
+	return true
+}
+
+func (s SignedMessageView) IsMedia() bool {
+	return false
+}
+
+func (s SignedMediaView) IsMessage() bool {
+	return false
+}
+
+func (s SignedMessageView) IsMessage() bool {
+	return true
+}
+
+func (s SignedMediaView) ToSignedMessageView() (*SignedMessageView, error) {
+	return nil, errors.New("i am not a message")
+}
+
+func (s SignedMessageView) ToSignedMediaView() (*SignedMediaView, error) {
+	return nil, errors.New("i am not a media")
+}
+func (s SignedMessageView) ToSignedMessageView() (*SignedMessageView, error) {
+	return &s, nil
+}
+
+func (s SignedMediaView) ToSignedMediaView() (*SignedMediaView, error) {
+	return &s, nil
 }

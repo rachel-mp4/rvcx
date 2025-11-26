@@ -1,0 +1,2 @@
+ALTER TABLE signets ADD COLUMN author TEXT NOT NULL;
+ALTER TABLE signets ALTER COLUMN author_handle DROP NOT NULL;

@@ -104,7 +104,7 @@ func (m *Model) BroadcastSignet(uri string, s *types.Signet) error {
 	}
 	sv := types.SignetView{
 		URI:          s.URI,
-		IssuerHandle: ihandle,
+		Issuer:       s.IssuerDID,
 		ChannelURI:   s.ChannelURI,
 		LrcId:        s.MessageID,
 		AuthorHandle: s.AuthorHandle,

@@ -34,8 +34,8 @@ type channelModel struct {
 	welcome       string
 	server        *lrcd.Server
 	lastID        uint32
-	initChan      <-chan lrcpb.Event_Init
-	mediainitChan <-chan lrcpb.Event_Mediainit
+	initChan      <-chan lrcd.InitChanMsg
+	mediainitChan <-chan lrcd.MediaInitChanMsg
 	ctx           context.Context
 	cancel        func()
 
@@ -164,10 +164,22 @@ func (m *Model) getServer(uri string) (*lrcd.Server, error) {
 		m.logger.Deprintln("i think the server should exist, so i'm making it")
 		var err error
 		lastID := cm.lastID
-		initChan := make(chan lrcpb.Event_Init, 100)
-		mediainitChan := make(chan lrcpb.Event_Mediainit, 100)
+		initChan := make(chan lrcd.InitChanMsg, 100)
+		mediainitChan := make(chan lrcd.MediaInitChanMsg, 100)
 
 		server, err := lrcd.NewServer(
+			lrcd.WithResolver(func(externalID string, ctx context.Context) *string {
+				did, err := m.store.FullResolveHandle(externalID, ctx)
+				if err != nil {
+					select {
+					case <-ctx.Done():
+						return nil
+					default:
+						return &did
+					}
+				}
+				return &did
+			}),
 			lrcd.WithWelcome(cm.welcome),
 			lrcd.WithLogging(os.Stdout, true),
 			lrcd.WithInitialID(lastID),
@@ -230,7 +242,7 @@ func (m *Model) handleInitEvents(cm *channelModel) {
 				cm.logger.Println("this is a weird case!")
 				return
 			}
-			err := m.rm.PostSignet(e, cm.uri, context.Background())
+			err := m.rm.PostSignet(e.ResolvedId, e.Init, cm.uri, context.Background())
 			if err != nil {
 				m.logger.Println("error posting signet: " + err.Error())
 			}
@@ -241,11 +253,11 @@ func (m *Model) handleInitEvents(cm *channelModel) {
 			}
 			e := lrcpb.Event_Init{
 				Init: &lrcpb.Init{
-					Id:         me.Mediainit.Id,
-					ExternalID: me.Mediainit.ExternalID,
+					Id:         me.Mediainit.Mediainit.Id,
+					ExternalID: me.Mediainit.Mediainit.ExternalID,
 				},
 			}
-			err := m.rm.PostSignet(e, cm.uri, context.Background())
+			err := m.rm.PostSignet(me.ResolvedId, e, cm.uri, context.Background())
 			if err != nil {
 				m.logger.Println("error posting signet: " + err.Error())
 			}

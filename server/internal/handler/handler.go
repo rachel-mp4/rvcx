@@ -42,6 +42,7 @@ func New(db *db.Store, logger *log.Logger, oauthserv *oauth.Service, model *mode
 	mux.HandleFunc("GET /xrpc/org.xcvr.feed.getChannels", h.WithCORS(h.getChannels))
 	mux.HandleFunc("GET /xrpc/org.xcvr.feed.getChannel", h.WithCORS(h.getChannel))
 	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getMessages", h.WithCORS(h.getMessages))
+	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getHistory", h.WithCORS(h.getHistory))
 	mux.HandleFunc("GET /xrpc/org.xcvr.lrc.getImage", h.WithCORS(h.getImage))
 	mux.HandleFunc("GET /xrpc/org.xcvr.actor.resolveChannel", h.WithCORS(h.resolveChannel))
 	mux.HandleFunc("GET /xrpc/org.xcvr.actor.getProfileView", h.WithCORS(h.getProfileView))

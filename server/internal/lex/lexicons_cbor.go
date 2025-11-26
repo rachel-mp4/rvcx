@@ -959,7 +959,11 @@ func (t *SignetRecord) MarshalCBOR(w io.Writer) error {
 	}
 
 	cw := cbg.NewCborWriter(w)
-	fieldCount := 5
+	fieldCount := 6
+
+	if t.AuthorHandle == nil {
+		fieldCount--
+	}
 
 	if t.StartedAt == nil {
 		fieldCount--
@@ -1001,6 +1005,29 @@ func (t *SignetRecord) MarshalCBOR(w io.Writer) error {
 	}
 
 	if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(t.LRCID)); err != nil {
+		return err
+	}
+
+	// t.Author (string) (string)
+	if len("author") > 8192 {
+		return xerrors.Errorf("Value in field \"author\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("author"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("author")); err != nil {
+		return err
+	}
+
+	if len(t.Author) > 8192 {
+		return xerrors.Errorf("Value in field t.Author was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Author))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Author)); err != nil {
 		return err
 	}
 
@@ -1060,26 +1087,35 @@ func (t *SignetRecord) MarshalCBOR(w io.Writer) error {
 	}
 
 	// t.AuthorHandle (string) (string)
-	if len("authorHandle") > 8192 {
-		return xerrors.Errorf("Value in field \"authorHandle\" was too long")
-	}
+	if t.AuthorHandle != nil {
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("authorHandle"))); err != nil {
-		return err
-	}
-	if _, err := cw.WriteString(string("authorHandle")); err != nil {
-		return err
-	}
+		if len("authorHandle") > 8192 {
+			return xerrors.Errorf("Value in field \"authorHandle\" was too long")
+		}
 
-	if len(t.AuthorHandle) > 8192 {
-		return xerrors.Errorf("Value in field t.AuthorHandle was too long")
-	}
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("authorHandle"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("authorHandle")); err != nil {
+			return err
+		}
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.AuthorHandle))); err != nil {
-		return err
-	}
-	if _, err := cw.WriteString(string(t.AuthorHandle)); err != nil {
-		return err
+		if t.AuthorHandle == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.AuthorHandle) > 8192 {
+				return xerrors.Errorf("Value in field t.AuthorHandle was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.AuthorHandle))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.AuthorHandle)); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -1151,6 +1187,17 @@ func (t *SignetRecord) UnmarshalCBOR(r io.Reader) (err error) {
 				t.LRCID = uint64(extra)
 
 			}
+			// t.Author (string) (string)
+		case "author":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 8192)
+				if err != nil {
+					return err
+				}
+
+				t.Author = string(sval)
+			}
 			// t.StartedAt (string) (string)
 		case "startedAt":
 
@@ -1187,12 +1234,22 @@ func (t *SignetRecord) UnmarshalCBOR(r io.Reader) (err error) {
 		case "authorHandle":
 
 			{
-				sval, err := cbg.ReadStringWithMax(cr, 8192)
+				b, err := cr.ReadByte()
 				if err != nil {
 					return err
 				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
 
-				t.AuthorHandle = string(sval)
+					sval, err := cbg.ReadStringWithMax(cr, 8192)
+					if err != nil {
+						return err
+					}
+
+					t.AuthorHandle = (*string)(&sval)
+				}
 			}
 
 		default:

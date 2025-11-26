@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-func (rm *RecordManager) PostSignet(e lrcpb.Event_Init, uri string, ctx context.Context) error {
-	lsr, now, err := rm.validateSignet(e, uri)
+func (rm *RecordManager) PostSignet(resolvedId *string, e lrcpb.Event_Init, uri string, ctx context.Context) error {
+	lsr, now, err := rm.validateSignet(resolvedId, e, uri, ctx)
 	if err != nil {
 		return errors.New("failed to validate signet: " + err.Error())
 	}
@@ -71,14 +71,20 @@ func (rm *RecordManager) AcceptSignetUpdate(s *types.Signet, ctx context.Context
 	return rm.db.UpdateSignet(s, ctx)
 }
 
-func (rm *RecordManager) validateSignet(e lrcpb.Event_Init, uri string) (*lex.SignetRecord, *time.Time, error) {
+func (rm *RecordManager) validateSignet(resolvedId *string, e lrcpb.Event_Init, uri string, ctx context.Context) (*lex.SignetRecord, *time.Time, error) {
 	signet := lex.SignetRecord{}
 	handle := e.Init.ExternalID
-	if handle == nil {
-		h := ""
-		handle = &h
+	if resolvedId == nil {
+		if handle != nil {
+			did, _ := rm.db.FullResolveHandle(*handle, ctx)
+			signet.Author = did
+		} else {
+			signet.Author = ""
+		}
+	} else {
+		signet.Author = *resolvedId
 	}
-	signet.AuthorHandle = *handle
+	signet.AuthorHandle = handle
 	if e.Init.Id == nil {
 		return nil, nil, errors.New("ID should not be nil")
 	}
@@ -103,6 +109,7 @@ func (rm *RecordManager) createSignet(lsr *lex.SignetRecord, now *time.Time, id 
 	sr := types.Signet{
 		URI:          recorduri,
 		IssuerDID:    atputils.GetMyDid(),
+		Author:       lsr.Author,
 		AuthorHandle: lsr.AuthorHandle,
 		ChannelURI:   lsr.ChannelURI,
 		MessageID:    id,

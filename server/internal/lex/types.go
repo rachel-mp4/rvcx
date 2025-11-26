@@ -41,7 +41,8 @@ type SignetRecord struct {
 	LexiconTypeID string  `json:"$type,const=org.xcvr.lrc.signet" cborgen:"$type,const=org.xcvr.lrc.signet"`
 	ChannelURI    string  `json:"channelURI" cborgen:"channelURI"`
 	LRCID         uint64  `json:"lrcID" cborgen:"lrcID"`
-	AuthorHandle  string  `json:"authorHandle" cborgen:"authorHandle"`
+	Author        string  `json:"author" cborgen:"author"`
+	AuthorHandle  *string `json:"authorHandle,omitempty" cborgen:"authorHandle,omitempty"`
 	StartedAt     *string `json:"startedAt,omitempty" cborgen:"startedAt,omitempty"`
 }
 

@@ -220,6 +220,8 @@ func (s *Store) QuerySignet(channelUri string, id uint32, ctx context.Context) (
 	return
 }
 
+// QuerySignetHandle takes a uri an queries the appropriate signet's handle.
+// Deprecated: i should QuerySignetDid instead
 func (s *Store) QuerySignetHandle(uri string, ctx context.Context) (string, error) {
 	row := s.pool.QueryRow(ctx, `SELECT s.author_handle FROM signets s WHERE s.uri = $1`, uri)
 	var handle string
@@ -228,6 +230,15 @@ func (s *Store) QuerySignetHandle(uri string, ctx context.Context) (string, erro
 		return "", errors.New("BOBOBOBOBOBOL " + err.Error())
 	}
 	return handle, nil
+}
+func (s *Store) QuerySignetDid(uri string, ctx context.Context) (string, error) {
+	row := s.pool.QueryRow(ctx, `SELECT s.author FROM signets s WHERE s.uri = $1`, uri)
+	var did string
+	err := row.Scan(&did)
+	if err != nil {
+		return "", errors.New("BOBOBOBOBOBOL " + err.Error())
+	}
+	return did, nil
 }
 
 func (s *Store) QuerySignetChannelIdNum(uri string, ctx context.Context) (channelUri string, messageID uint32, err error) {
@@ -254,15 +265,16 @@ func (s *Store) StoreSignet(signet *types.Signet, ctx context.Context) (wasNew b
 		INSERT INTO signets (
 			uri,
 			issuer_did,
+			author,
 			author_handle,
 			channel_uri,
 			message_id,
 			cid,
 			started_at
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7
+		$1, $2, $3, $4, $5, $6, $7, $8
 		) ON CONFLICT (uri) DO NOTHING
-		`, signet.URI, signet.IssuerDID, signet.AuthorHandle, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
+		`, signet.URI, signet.IssuerDID, signet.Author, signet.AuthorHandle, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
 	if err != nil {
 		err = errors.New("SOMETHING BAD HAPPENED: " + err.Error())
 		return
@@ -276,15 +288,16 @@ func (s *Store) UpdateSignet(signet *types.Signet, ctx context.Context) error {
 		INSERT INTO signets (
 			uri,
 			issuer_did,
-			AuthorHandle,
+			author,
+			author_handle,
 			channel_uri,
 			message_id,
 			cid,
 			started_at
 		) VALUES (
-		$1, $2, $3, $4, $5, $6, $7
+		$1, $2, $3, $4, $5, $6, $7, $8
 		)
-		`, signet.URI, signet.IssuerDID, signet.AuthorHandle, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
+		`, signet.URI, signet.IssuerDID, signet.Author, signet.AuthorHandle, signet.ChannelURI, signet.MessageID, signet.CID, signet.StartedAt)
 	if err != nil {
 		err = errors.New("SOMETHING BAD HAPPENED: " + err.Error())
 	}

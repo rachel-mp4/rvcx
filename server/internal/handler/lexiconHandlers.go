@@ -88,6 +88,61 @@ func (h *Handler) getMessages(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(gmo)
 }
 
+func (h *Handler) getHistory(w http.ResponseWriter, r *http.Request) {
+	limitstr := r.URL.Query().Get("limit")
+	limit := 50
+	if limitstr != "" {
+		l, err := strconv.Atoi(limitstr)
+		if err == nil {
+			limit = max(min(l, 100), 1)
+		}
+	}
+	cursorstr := r.URL.Query().Get("cursor")
+	var cursor *int
+	if cursorstr != "" {
+		c, err := strconv.Atoi(cursorstr)
+		if err == nil {
+			cursor = &c
+		}
+	}
+	channelURI := r.URL.Query().Get("channelURI")
+	items, err := h.db.GetHistory(channelURI, limit, cursor, r.Context())
+	if err != nil {
+		h.serverError(w, errors.New("something went south: "+err.Error()))
+		return
+	}
+	if len(items) != 0 {
+		var signet types.SignetView
+		smv := items[len(items)-1]
+		if smv.IsMedia() {
+			media, _ := smv.ToSignedMediaView()
+			signet = media.Signet
+		} else if smv.IsMessage() {
+			message, _ := smv.ToSignedMessageView()
+			signet = message.Signet
+		} else {
+			h.serverError(w, errors.New("last item is invalid Signed Item"))
+			return
+		}
+		if int(signet.LrcId) > 2 {
+			cursor := strconv.Itoa(int(signet.LrcId))
+			w.Header().Set("Content-Type", "application/json")
+			jsitems, err := types.MarshalItems(items)
+			if err != nil {
+				h.serverError(w, err)
+			}
+			fmt.Fprintf(w, "{\"items\": %s, \"cursor\": %s}", jsitems, cursor)
+			return
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	jsitems, err := types.MarshalItems(items)
+	if err != nil {
+		h.serverError(w, err)
+	}
+	fmt.Fprintf(w, "{\"items\": %s}", jsitems)
+}
+
 func (h *Handler) resolveChannel(w http.ResponseWriter, r *http.Request) {
 	handle := r.URL.Query().Get("handle")
 	did := r.URL.Query().Get("did")

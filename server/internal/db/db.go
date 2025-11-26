@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"rvcx/internal/atputils"
+	"rvcx/internal/lex"
 	"rvcx/internal/types"
 	"time"
 
@@ -55,6 +56,19 @@ func (s *Store) ResolveHandle(handle string, ctx context.Context) (string, error
 	return did, nil
 }
 
+func (s *Store) FullResolveHandle(hdl string, ctx context.Context) (string, error) {
+	did, err := s.ResolveHandle(hdl, ctx)
+	if err == nil {
+		return did, nil
+	}
+	did, err = atputils.TryLookupHandle(ctx, hdl)
+	if err != nil {
+		return "", errors.New("couldn't resolve: " + err.Error())
+	}
+	s.StoreDidHandle(did, hdl, ctx)
+	return did, nil
+}
+
 func (s *Store) ResolveDid(did string, ctx context.Context) (string, error) {
 	row := s.pool.QueryRow(ctx, `SELECT h.handle FROM did_handles h WHERE h.did = $1`, did)
 	var handle string
@@ -99,6 +113,187 @@ func (s *Store) GetLastSeen(did string, ctx context.Context) (where *string, whe
 		ORDER BY m.posted_at DESC`, did)
 	row.Scan(&where, &when)
 	return
+}
+
+func (s *Store) GetHistory(channelURI string, limit int, cursor *int, ctx context.Context) ([]types.SignedItemView, error) {
+	queryFmt := `
+	SELECT
+		'message' AS content_type,
+		m.uri,
+		m.did,
+		dh.handle,
+		p.display_name,
+		p.status,
+		p.color,
+		p.avatar_cid,
+		p.default_nick,
+		m.body,
+		NULL AS blob_cid,
+		NULL AS blob_mime,
+		NULL AS alt,
+		NULL AS height,
+		NULL AS width,
+		m.nick,
+		m.color,
+		s.uri,
+		s.issuer_did,
+		s.channel_uri,
+		s.message_id,
+		s.author,
+		s.author_handle,
+		s.started_at,
+		m.posted_at
+	FROM signets s
+	JOIN messages m ON s.uri = m.signet_uri
+	JOIN did_handles dh ON m.did = dh.did
+	JOIN profiles p ON m.did = p.did
+	WHERE s.channel_uri = $2 AND m.did = s.author %s
+
+	UNION ALL
+
+	SELECT
+		'image' AS content_type,
+		i.uri,
+		i.did,
+		dh.handle,
+		p.display_name,
+		p.status,
+		p.color,
+		p.avatar_cid,
+		p.default_nick,
+		NULL AS body,
+		i.blob_cid,
+		i.blob_mime,
+		i.alt,
+		i.height,
+		i.width,
+		i.nick,
+		i.color,
+		s.uri,
+		s.issuer_did,
+		s.channel_uri,
+		s.message_id,
+		s.author,
+		s.author_handle,
+		s.started_at,
+		i.posted_at
+	FROM signets s
+	JOIN images i ON s.uri = i.signet_uri
+	JOIN did_handles dh ON i.did = dh.did
+	JOIN profiles p ON i.did = p.did
+	WHERE s.channel_uri = $2 AND i.did = s.author %s
+
+	ORDER BY message_id DESC
+	LIMIT $1
+	`
+	var query string
+	if cursor != nil {
+		query = fmt.Sprintf(queryFmt, "AND s.message_id < $3", "AND s.message_id < $3")
+		return s.evalGetItems(query, ctx, limit, *cursor)
+	} else {
+		query = fmt.Sprintf(queryFmt, "", "")
+		return s.evalGetItems(query, ctx, limit)
+	}
+}
+func (s *Store) evalGetItems(query string, ctx context.Context, limit int, params ...any) ([]types.SignedItemView, error) {
+	args := []any{limit}
+	args = append(args, params...)
+	rows, err := s.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items = make([]types.SignedItemView, 0)
+	for rows.Next() {
+		var t string
+		var p types.ProfileView
+		var uri string
+		var body string
+		var image types.Image
+		var nick string
+		var color uint32
+		var s types.SignetView
+		var time time.Time
+
+		err := rows.Scan(
+			&t,
+			&uri,
+			&p.DID,
+			&p.Handle,
+			&p.DisplayName,
+			&p.Status,
+			&p.Color,
+			&p.Avatar,
+			&p.DefaultNick,
+			&body,
+			&image.BlobCID,
+			&image.BlobMIME,
+			&image.Alt,
+			&image.Height,
+			&image.Width,
+
+			&nick,
+			&color,
+
+			&s.URI,
+			&s.Issuer,
+			&s.ChannelURI,
+			&s.LrcId,
+			&s.Author,
+			&s.AuthorHandle,
+			&s.StartedAt,
+			&time,
+		)
+		if err != nil {
+			return nil, err
+		}
+		if t == "message" {
+			var msg types.SignedMessageView
+			msg.Body = body
+			if nick != "" {
+				msg.Nick = &nick
+			}
+			if color != 0 {
+				msg.Color = &color
+			}
+			msg.Author = p
+			msg.Signet = s
+			msg.PostedAt = time
+			msg.URI = uri
+
+			items = append(items, msg)
+		} else if t == "image" {
+			var img types.SignedMediaView
+			var imgview types.ImageView
+			if image.Height != nil && image.Width != nil {
+				var aspect lex.AspectRatio
+				aspect.Width = *image.Width
+				aspect.Height = *image.Height
+				imgview.AspectRatio = &aspect
+			}
+			imgview.Alt = image.Alt
+			base := os.Getenv("MY_IDENTITY")
+			src := fmt.Sprintf("https://%s/xrpc/org.xcvr.lrc.getImage?uri=%s", base, uri)
+			imgview.Src = &src
+			img.Image = &imgview
+			if nick != "" {
+				img.Nick = &nick
+			}
+			if color != 0 {
+				img.Color = &color
+			}
+			img.Author = p
+			img.Signet = s
+			img.PostedAt = time
+			img.URI = uri
+
+			items = append(items, img)
+		} else {
+			return nil, errors.New("recieved strange type t: " + t)
+		}
+	}
+	return items, nil
+
 }
 
 func (s *Store) GetMessages(channelURI string, limit int, cursor *int, ctx context.Context) ([]types.SignedMessageView, error) {
@@ -168,7 +363,7 @@ func (s *Store) evalGetMessages(query string, ctx context.Context, limit int, pa
 			&msg.Color,
 
 			&msg.Signet.URI,
-			&msg.Signet.IssuerHandle,
+			&msg.Signet.Issuer,
 			&msg.Signet.ChannelURI,
 			&msg.Signet.LrcId,
 			&msg.Signet.AuthorHandle,
