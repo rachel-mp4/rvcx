@@ -10,8 +10,8 @@ import (
 
 type Profile struct {
 	DID         string
-	DisplayName string
-	DefaultNick string
+	DisplayName *string
+	DefaultNick *string
 	Status      *string
 	AvatarCID   *string
 	AvatarMIME  *string
