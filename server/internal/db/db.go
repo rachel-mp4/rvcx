@@ -208,8 +208,9 @@ func (s *Store) evalGetItems(query string, ctx context.Context, limit int, param
 		var t string
 		var p types.ProfileView
 		var uri string
-		var body string
+		var body *string
 		var image types.Image
+		var alt *string
 		var nick string
 		var color uint32
 		var s types.SignetView
@@ -228,7 +229,7 @@ func (s *Store) evalGetItems(query string, ctx context.Context, limit int, param
 			&body,
 			&image.BlobCID,
 			&image.BlobMIME,
-			&image.Alt,
+			&alt,
 			&image.Height,
 			&image.Width,
 
@@ -249,7 +250,10 @@ func (s *Store) evalGetItems(query string, ctx context.Context, limit int, param
 		}
 		if t == "message" {
 			var msg types.SignedMessageView
-			msg.Body = body
+			if body != nil {
+
+				msg.Body = *body
+			}
 			if nick != "" {
 				msg.Nick = &nick
 			}
@@ -271,7 +275,9 @@ func (s *Store) evalGetItems(query string, ctx context.Context, limit int, param
 				aspect.Height = *image.Height
 				imgview.AspectRatio = &aspect
 			}
-			imgview.Alt = image.Alt
+			if alt != nil {
+				imgview.Alt = *alt
+			}
 			base := os.Getenv("MY_IDENTITY")
 			src := fmt.Sprintf("https://%s/xrpc/org.xcvr.lrc.getImage?uri=%s", base, uri)
 			imgview.Src = &src
