@@ -189,10 +189,10 @@ func (s *Store) GetHistory(channelURI string, limit int, cursor *int, ctx contex
 	var query string
 	if cursor != nil {
 		query = fmt.Sprintf(queryFmt, "AND s.message_id < $3", "AND s.message_id < $3")
-		return s.evalGetItems(query, ctx, limit, *cursor)
+		return s.evalGetItems(query, ctx, limit, channelURI, *cursor)
 	} else {
 		query = fmt.Sprintf(queryFmt, "", "")
-		return s.evalGetItems(query, ctx, limit)
+		return s.evalGetItems(query, ctx, limit, channelURI)
 	}
 }
 func (s *Store) evalGetItems(query string, ctx context.Context, limit int, params ...any) ([]types.SignedItemView, error) {
