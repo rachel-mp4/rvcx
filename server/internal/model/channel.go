@@ -144,7 +144,12 @@ func (m *Model) DeleteChannel(uri string) error {
 		return nil
 	}
 	delete(m.uriMap, uri)
-	cm.cancel()
+	// this case is for if a malformed channel record is ingested which
+	// doesn't create a channel, but it still shows up in uriMap. probs
+	// shouldn't be in uriMap but idk
+	if cm != nil {
+		cm.cancel()
+	}
 	return nil
 }
 
